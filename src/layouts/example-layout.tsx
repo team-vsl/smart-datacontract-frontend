@@ -19,7 +19,7 @@ import messages from "@cloudscape-design/components/i18n/messages/all.en";
 
 const LOCALE = import.meta.env.VITE_I8N_LOCALE;
 
-export default function AppLayoutPreview() {
+export default function ExampleLayout() {
   return (
     <I18nProvider locale={LOCALE} messages={[messages]}>
       <AppLayout
