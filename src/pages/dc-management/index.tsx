@@ -4,6 +4,7 @@ import {
   Header,
   Link,
 } from "@cloudscape-design/components";
+import { DataContractAccordion } from "./DataContractAccordion";
 
 export default function DataContractManagementPage() {
   return (
@@ -16,12 +17,12 @@ export default function DataContractManagementPage() {
     >
       <Container
         header={
-          <Header variant="h2" description="Container description">
-            Container header
+          <Header variant="h2" description="Quản lý Data Contract">
+            Data Contract Management
           </Header>
         }
       >
-        <div className="contentPlaceholder" />
+        <DataContractAccordion />
       </Container>
     </ContentLayout>
   );
