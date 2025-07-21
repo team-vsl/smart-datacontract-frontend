@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Container,
   ContentLayout,
@@ -5,8 +6,13 @@ import {
   Link,
 } from "@cloudscape-design/components";
 import { DataContractAccordion } from "./DataContractAccordion";
+import { CheckDataContract } from "./CheckDataContract";
+import { initialDataContracts } from "../../states/data-contract-state";
 
 export default function DataContractManagementPage() {
+  // Quản lý state chung cho cả hai component
+  const [dataContracts, setDataContracts] = useState(initialDataContracts);
+
   return (
     <ContentLayout
       header={
@@ -22,7 +28,16 @@ export default function DataContractManagementPage() {
           </Header>
         }
       >
-        <DataContractAccordion />
+        <div className="space-y-4">
+          <DataContractAccordion 
+            dataContracts={dataContracts} 
+            setDataContracts={setDataContracts} 
+          />
+          <CheckDataContract 
+            dataContracts={dataContracts} 
+            setDataContracts={setDataContracts} 
+          />
+        </div>
       </Container>
     </ContentLayout>
   );

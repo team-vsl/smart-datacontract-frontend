@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getDataContractsByState, getDataContractById } from "../../states/data-contract-state";
 
-export function DataContractAccordion() {
-  // State cho danh sách data contract
-  const [dataContracts, setDataContracts] = useState([]);
+export function DataContractAccordion({ dataContracts, setDataContracts }) {
+  
   // State cho data contract chi tiết
   const [selectedContract, setSelectedContract] = useState(null);
   // State cho các input
@@ -10,53 +10,40 @@ export function DataContractAccordion() {
   const [contractId, setContractId] = useState("");
   // State cho accordion
   const [isOpen, setIsOpen] = useState(false);
+  
+  // State cho danh sách đã lọc
+  const [filteredContracts, setFilteredContracts] = useState([]);
+  
+  // Cập nhật filteredContracts khi contractState hoặc dataContracts thay đổi
+  useEffect(() => {
+    if (contractState) {
+      const filtered = getDataContractsByState(dataContracts, contractState);
+      setFilteredContracts(filtered);
+    }
+  }, [dataContracts, contractState]);
 
   // Hàm xử lý khi chọn trạng thái
   const handleStateChange = (value) => {
     setContractState(value);
-    // Gọi API để lấy danh sách data contract theo trạng thái
-    fetchDataContractsByState(value);
+    // Lọc danh sách data contract theo trạng thái
+    if (value) {
+      const filtered = getDataContractsByState(dataContracts, value);
+      setFilteredContracts(filtered);
+    } else {
+      setFilteredContracts([]);
+    }
   };
 
   // Hàm xử lý khi submit ID/tên data contract
   const handleGetContract = () => {
     if (!contractId) return;
-    // Gọi API để lấy thông tin chi tiết của data contract
-    fetchDataContractById(contractId);
-  };
-
-  // Giả lập hàm gọi API lấy danh sách data contract theo trạng thái
-  const fetchDataContractsByState = (state) => {
-    // Giả lập dữ liệu
-    const mockData = [
-      { id: "dc-001", name: "Customer Data", version: "1.2.0", state: state },
-      { id: "dc-002", name: "Product Catalog", version: "2.0.1", state: state },
-      { id: "dc-003", name: "Transaction History", version: "1.0.5", state: state },
-    ];
-    setDataContracts(mockData);
-  };
-
-  // Giả lập hàm gọi API lấy chi tiết data contract
-  const fetchDataContractById = (id) => {
-    // Giả lập dữ liệu
-    const mockContract = {
-      id: id,
-      name: "Sample Data Contract",
-      version: "1.0.0",
-      state: "active",
-      description: "This is a sample data contract for demonstration",
-      schema: {
-        type: "object",
-        properties: {
-          id: { type: "string" },
-          name: { type: "string" },
-          value: { type: "number" }
-        }
-      },
-      owner: "Data Engineering Team",
-      createdAt: "2023-10-15"
-    };
-    setSelectedContract(mockContract);
+    // Lấy thông tin chi tiết của data contract
+    const contract = getDataContractById(dataContracts, contractId);
+    if (contract) {
+      setSelectedContract(contract);
+    } else {
+      alert(`Không tìm thấy Data Contract với ID: ${contractId}`);
+    }
   };
 
   return (
@@ -115,7 +102,7 @@ export function DataContractAccordion() {
               {/* Phần kết quả (view) */}
               <div className="space-y-4">
                 {/* Hiển thị danh sách data contract */}
-                {dataContracts.length > 0 && contractState && !selectedContract && (
+                {filteredContracts.length > 0 && contractState && !selectedContract && (
                   <div>
                     <h3 className="font-medium mb-2">Danh sách Data Contract - Trạng thái: {contractState}</h3>
                     <div className="border rounded-md overflow-hidden">
@@ -129,7 +116,7 @@ export function DataContractAccordion() {
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                          {dataContracts.map((contract) => (
+                          {filteredContracts.map((contract) => (
                             <tr key={contract.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => setSelectedContract(contract)}>
                               <td className="px-6 py-4 whitespace-nowrap text-sm">{contract.id}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm">{contract.name}</td>
