@@ -1,75 +1,103 @@
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { approveDataContract, rejectDataContract, getDataContractById } from "../../states/data-contract-state";
 
 export function CheckDataContract({ dataContracts, setDataContracts }) {
+  // Lấy queryClient để invalidate queries
+  const queryClient = useQueryClient();
+  
   // State cho input và kết quả
   const [dataContractId, setDataContractId] = useState("");
   const [result, setResult] = useState(null);
   // State cho accordion
   const [isOpen, setIsOpen] = useState(true);
+  
+  // Sử dụng useMutation để approve data contract
+  const approveMutation = useMutation({
+    mutationFn: (id) => {
+      // Kiểm tra data contract có tồn tại không
+      const contract = getDataContractById(dataContracts, id);
+      if (!contract) {
+        throw new Error(`Không tìm thấy Data Contract với ID: ${id}`);
+      }
+      
+      // Approve data contract và cập nhật state
+      const updatedContracts = approveDataContract(dataContracts, id);
+      setDataContracts(updatedContracts);
+      
+      // Lấy contract đã cập nhật
+      return getDataContractById(updatedContracts, id);
+    },
+    onSuccess: (updatedContract) => {
+      // Invalidate queries để cập nhật danh sách
+      queryClient.invalidateQueries({ queryKey: ['dataContracts'] });
+      
+      setResult({
+        status: "approved",
+        message: `Data Contract ${dataContractId} đã được chấp thuận`,
+        data: {
+          ...updatedContract,
+          status: "approved"
+        }
+      });
+    },
+    onError: (error) => {
+      setResult({
+        status: "error",
+        message: error.message,
+        data: null
+      });
+    }
+  });
+  
+  // Sử dụng useMutation để reject data contract
+  const rejectMutation = useMutation({
+    mutationFn: (id) => {
+      // Kiểm tra data contract có tồn tại không
+      const contract = getDataContractById(dataContracts, id);
+      if (!contract) {
+        throw new Error(`Không tìm thấy Data Contract với ID: ${id}`);
+      }
+      
+      // Reject data contract và cập nhật state
+      const updatedContracts = rejectDataContract(dataContracts, id);
+      setDataContracts(updatedContracts);
+      
+      // Lấy contract đã cập nhật
+      return getDataContractById(updatedContracts, id);
+    },
+    onSuccess: (updatedContract) => {
+      // Invalidate queries để cập nhật danh sách
+      queryClient.invalidateQueries({ queryKey: ['dataContracts'] });
+      
+      setResult({
+        status: "rejected",
+        message: `Data Contract ${dataContractId} đã bị từ chối`,
+        data: {
+          ...updatedContract,
+          status: "rejected"
+        }
+      });
+    },
+    onError: (error) => {
+      setResult({
+        status: "error",
+        message: error.message,
+        data: null
+      });
+    }
+  });
 
   // Hàm xử lý khi approve data contract
   const handleApprove = () => {
     if (!dataContractId) return;
-    
-    // Kiểm tra data contract có tồn tại không
-    const contract = getDataContractById(dataContracts, dataContractId);
-    if (!contract) {
-      setResult({
-        status: "error",
-        message: `Không tìm thấy Data Contract với ID: ${dataContractId}`,
-        data: null
-      });
-      return;
-    }
-    
-    // Approve data contract và cập nhật state
-    const updatedContracts = approveDataContract(dataContracts, dataContractId);
-    setDataContracts(updatedContracts);
-    
-    // Lấy contract đã cập nhật
-    const updatedContract = getDataContractById(updatedContracts, dataContractId);
-    
-    setResult({
-      status: "approved",
-      message: `Data Contract ${dataContractId} đã được chấp thuận`,
-      data: {
-        ...updatedContract,
-        status: "approved"
-      }
-    });
+    approveMutation.mutate(dataContractId);
   };
 
   // Hàm xử lý khi reject data contract
   const handleReject = () => {
     if (!dataContractId) return;
-    
-    // Kiểm tra data contract có tồn tại không
-    const contract = getDataContractById(dataContracts, dataContractId);
-    if (!contract) {
-      setResult({
-        status: "error",
-        message: `Không tìm thấy Data Contract với ID: ${dataContractId}`,
-        data: null
-      });
-      return;
-    }
-    
-    // Reject data contract và cập nhật state
-    const updatedContracts = rejectDataContract(dataContracts, dataContractId);
-    setDataContracts(updatedContracts);
-    
-    // Lấy contract đã cập nhật
-    const updatedContract = getDataContractById(updatedContracts, dataContractId);
-    
-    setResult({
-      status: "rejected",
-      message: `Data Contract ${dataContractId} đã bị từ chối`,
-      data: {
-        ...updatedContract,
-        status: "rejected"
-      }
-    });
+    rejectMutation.mutate(dataContractId);
   };
 
   return (
@@ -101,16 +129,16 @@ export function CheckDataContract({ dataContracts, setDataContracts }) {
                   <button 
                     className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
                     onClick={handleApprove}
-                    disabled={!dataContractId}
+                    disabled={!dataContractId || approveMutation.isPending || rejectMutation.isPending}
                   >
-                    Approve
+                    {approveMutation.isPending ? 'Đang xử lý...' : 'Approve'}
                   </button>
                   <button 
                     className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
                     onClick={handleReject}
-                    disabled={!dataContractId}
+                    disabled={!dataContractId || approveMutation.isPending || rejectMutation.isPending}
                   >
-                    Reject
+                    {rejectMutation.isPending ? 'Đang xử lý...' : 'Reject'}
                   </button>
                 </div>
               </div>
@@ -119,7 +147,11 @@ export function CheckDataContract({ dataContracts, setDataContracts }) {
               <div className="space-y-4">
                 <h3 className="font-medium">Kết quả</h3>
                 <div className="border rounded-md p-4 bg-gray-50">
-                  {result ? (
+                  {approveMutation.isPending || rejectMutation.isPending ? (
+                    <div className="text-center py-4">
+                      <p>Đang xử lý yêu cầu...</p>
+                    </div>
+                  ) : result ? (
                     <div>
                       <p className={`font-medium ${
                         result.status === "approved" ? "text-green-600" :

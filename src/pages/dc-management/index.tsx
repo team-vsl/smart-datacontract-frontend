@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Container,
   ContentLayout,
@@ -10,8 +11,15 @@ import { CheckDataContract } from "./CheckDataContract";
 import { initialDataContracts } from "../../states/data-contract-state";
 
 export default function DataContractManagementPage() {
-  // Quản lý state chung cho cả hai component
+  // Sử dụng state để lưu trữ danh sách data contracts
   const [dataContracts, setDataContracts] = useState(initialDataContracts);
+
+  // Sử dụng useQuery để lưu trữ danh sách trong cache
+  useQuery({
+    queryKey: ['allDataContracts'],
+    queryFn: () => dataContracts,
+    initialData: initialDataContracts,
+  });
 
   return (
     <ContentLayout

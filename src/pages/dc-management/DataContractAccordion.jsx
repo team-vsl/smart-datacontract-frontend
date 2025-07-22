@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { getDataContractsByState, getDataContractById } from "../../states/data-contract-state";
 
 export function DataContractAccordion({ dataContracts, setDataContracts }) {
@@ -11,39 +12,46 @@ export function DataContractAccordion({ dataContracts, setDataContracts }) {
   // State cho accordion
   const [isOpen, setIsOpen] = useState(false);
   
-  // State cho danh sách đã lọc
-  const [filteredContracts, setFilteredContracts] = useState([]);
-  
-  // Cập nhật filteredContracts khi contractState hoặc dataContracts thay đổi
-  useEffect(() => {
-    if (contractState) {
-      const filtered = getDataContractsByState(dataContracts, contractState);
-      setFilteredContracts(filtered);
-    }
-  }, [dataContracts, contractState]);
+  // Sử dụng useQuery để lấy danh sách data contracts theo trạng thái
+  const { 
+    data: filteredContracts = [], 
+    isPending, 
+    isError, 
+    error 
+  } = useQuery({
+    queryKey: ['dataContracts', contractState, dataContracts],
+    queryFn: () => getDataContractsByState(dataContracts, contractState),
+    enabled: !!contractState, // Chỉ gọi khi có contractState
+  });
 
   // Hàm xử lý khi chọn trạng thái
   const handleStateChange = (value) => {
     setContractState(value);
-    // Lọc danh sách data contract theo trạng thái
-    if (value) {
-      const filtered = getDataContractsByState(dataContracts, value);
-      setFilteredContracts(filtered);
-    } else {
-      setFilteredContracts([]);
-    }
+    // useQuery sẽ tự động fetch lại dữ liệu khi contractState thay đổi
   };
+
+  // Sử dụng useQuery để lấy chi tiết data contract
+  const { 
+    refetch: fetchContract,
+    data: contractDetail,
+    isPending: isPendingDetail,
+    isError: isErrorDetail,
+  } = useQuery({
+    queryKey: ['dataContract', contractId],
+    queryFn: () => getDataContractById(dataContracts, contractId),
+    enabled: false, // Không tự động gọi, chỉ gọi khi nhấn nút Tìm kiếm
+    onSuccess: (data) => {
+      setSelectedContract(data);
+    },
+    onError: (err) => {
+      alert(`Không tìm thấy Data Contract với ID: ${contractId}`);
+    }
+  });
 
   // Hàm xử lý khi submit ID/tên data contract
   const handleGetContract = () => {
     if (!contractId) return;
-    // Lấy thông tin chi tiết của data contract
-    const contract = getDataContractById(dataContracts, contractId);
-    if (contract) {
-      setSelectedContract(contract);
-    } else {
-      alert(`Không tìm thấy Data Contract với ID: ${contractId}`);
-    }
+    fetchContract();
   };
 
   return (
@@ -101,8 +109,22 @@ export function DataContractAccordion({ dataContracts, setDataContracts }) {
 
               {/* Phần kết quả (view) */}
               <div className="space-y-4">
+                {/* Hiển thị loading state */}
+                {isPending && contractState && (
+                  <div className="text-center py-4">
+                    <p>Đang tải dữ liệu...</p>
+                  </div>
+                )}
+                
+                {/* Hiển thị lỗi */}
+                {isError && (
+                  <div className="text-center py-4 text-red-500">
+                    <p>Có lỗi xảy ra: {error?.message || 'Không thể tải dữ liệu'}</p>
+                  </div>
+                )}
+
                 {/* Hiển thị danh sách data contract */}
-                {filteredContracts.length > 0 && contractState && !selectedContract && (
+                {!isPending && !isError && filteredContracts.length > 0 && contractState && !selectedContract && (
                   <div>
                     <h3 className="font-medium mb-2">Danh sách Data Contract - Trạng thái: {contractState}</h3>
                     <div className="border rounded-md overflow-hidden">
