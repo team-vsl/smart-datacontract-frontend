@@ -63,6 +63,11 @@ export default function MainLayout(props: PropsWithChildren) {
                 text: RouteConfigs.DCManagement.Name,
                 href: RouteConfigs.DCManagement.Path,
               },
+              {
+                type: "link",
+                text: RouteConfigs.RulesetManagement.Name,
+                href: RouteConfigs.RulesetManagement.Path,
+              },
             ]}
           />
         }
