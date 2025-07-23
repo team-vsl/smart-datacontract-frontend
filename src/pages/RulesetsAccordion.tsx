@@ -1,5 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { getRulesetsByState } from "../states/ruleset-state";
+import {
+  Button,
+  Container,
+  Header,
+  Select,
+  Input,
+  SpaceBetween,
+  StatusIndicator,
+  ExpandableSection,
+  FormField,
+  Box,
+  ColumnLayout,
+  Table,
+  TextFilter
+} from "@cloudscape-design/components";
 
 // Define interfaces for ruleset data
 interface Rule {
@@ -37,34 +53,25 @@ export function RulesetsAccordion({ rulesets }: RulesetsAccordionProps) {
   const [rulesetId, setRulesetId] = useState<string>("");
   // State cho accordion
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  // State cho loading
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isError, setIsError] = useState<boolean>(false);
-  const [error, setError] = useState<Error | null>(null);
   
-  // State cho danh sách đã lọc
-  const [filteredRulesets, setFilteredRulesets] = useState<Ruleset[]>([]);
-
-  // Cập nhật filteredRulesets khi rulesetState hoặc rulesets thay đổi
-  useEffect(() => {
-    if (rulesetState) {
-      setIsLoading(true);
-      try {
-        // Lọc ruleset theo trạng thái
-        console.log("Danh sách rulesets hiện tại:", rulesets);
-        console.log("Đang lọc theo trạng thái:", rulesetState);
-        const filtered = getRulesetsByState(rulesets, rulesetState);
-        console.log("Kết quả lọc:", filtered);
-        setFilteredRulesets(filtered);
-        setIsError(false);
-      } catch (err) {
-        setIsError(true);
-        setError(err as Error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  }, [rulesetState, rulesets]);
+  // Sử dụng useQuery để lọc ruleset theo trạng thái
+  const {
+    data: filteredRulesets = [],
+    isLoading,
+    isError,
+    error
+  } = useQuery({
+    queryKey: ['rulesets', rulesetState, rulesets],
+    queryFn: () => {
+      if (!rulesetState) return [];
+      console.log("Danh sách rulesets hiện tại:", rulesets);
+      console.log("Đang lọc theo trạng thái:", rulesetState);
+      const filtered = getRulesetsByState(rulesets, rulesetState);
+      console.log("Kết quả lọc:", filtered);
+      return filtered;
+    },
+    enabled: !!rulesetState, // Chỉ gọi khi có rulesetState
+  });
 
   // Hàm xử lý khi chọn trạng thái
   const handleStateChange = (value: string) => {
@@ -91,228 +98,225 @@ export function RulesetsAccordion({ rulesets }: RulesetsAccordionProps) {
     setIsLoading(false);
   };
 
+  // Chuyển đổi danh sách trạng thái cho Select component
+  const stateOptions = [
+    { label: "Chọn trạng thái", value: "" },
+    { label: "Đang hoạt động", value: "active" },
+    { label: "Đang chờ xử lý", value: "pending" },
+    { label: "Đã từ chối", value: "rejected" }
+  ];
+
   return (
-    <div className="w-full">
-      <div className="border rounded-md mb-4">
-        {/* Accordion Header */}
-        <div 
-          className="p-4 flex justify-between items-center cursor-pointer bg-gray-50 hover:bg-gray-100"
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          <h2 className="text-lg font-medium">Get/List Rulesets</h2>
-          <span>{isOpen ? "▲" : "▼"}</span>
-        </div>
-        
-        {/* Accordion Content */}
-        {isOpen && (
-          <div className="p-4 border-t">
-            <div className="space-y-6">
-              {/* Phần tương tác */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-b pb-4">
-                {/* List Rulesets - Dropdown chọn state */}
-                <div className="space-y-2">
-                  <h3 className="font-medium">List Rulesets</h3>
-                  <select 
-                    className="w-full p-2 border rounded-md" 
-                    onChange={(e) => handleStateChange(e.target.value)}
-                    value={rulesetState}
-                  >
-                    <option value="">Chọn trạng thái</option>
-                    <option value="active">Đang hoạt động</option>
-                    <option value="pending">Đang chờ xử lý</option>
-                    <option value="rejected">Đã từ chối</option>
-                  </select>
-                </div>
+    <ExpandableSection
+      headerText="Get/List Rulesets"
+      variant="container"
+      defaultExpanded={isOpen}
+      onChange={({ detail }) => setIsOpen(detail.expanded)}
+    >
+        <SpaceBetween size="l">
+          {/* Phần tương tác */}
+          <ColumnLayout columns={2}>
+            {/* List Rulesets - Dropdown chọn state */}
+            <Container header={<Header variant="h3">List Rulesets</Header>}>
+              <FormField label="Trạng thái">
+                <Select
+                  selectedOption={stateOptions.find(option => option.value === rulesetState) || null}
+                  onChange={({ detail }) => detail.selectedOption && handleStateChange(detail.selectedOption.value as string)}
+                  options={stateOptions}
+                  placeholder="Chọn trạng thái"
+                />
+              </FormField>
+            </Container>
 
-                {/* Get Ruleset - Input ID/Name và nút Submit */}
-                <div className="space-y-2">
-                  <h3 className="font-medium">Get Ruleset</h3>
-                  <div className="flex space-x-2">
-                    <input
-                      className="flex-1 p-2 border rounded-md"
-                      placeholder="Nhập ID hoặc tên Ruleset"
-                      value={rulesetId}
-                      onChange={(e) => setRulesetId(e.target.value)}
-                    />
-                    <button 
-                      className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                      onClick={handleGetRuleset}
-                    >
-                      Tìm kiếm
-                    </button>
-                  </div>
-                </div>
-              </div>
+            {/* Get Ruleset - Input ID/Name và nút Submit */}
+            <Container header={<Header variant="h3">Get Ruleset</Header>}>
+              <SpaceBetween size="xs" direction="horizontal">
+                <Input
+                  value={rulesetId}
+                  onChange={({ detail }) => setRulesetId(detail.value)}
+                  placeholder="Nhập ID hoặc tên Ruleset"
+                />
+                <Button
+                  onClick={handleGetRuleset}
+                  variant="primary"
+                >
+                  Tìm kiếm
+                </Button>
+              </SpaceBetween>
+            </Container>
+          </ColumnLayout>
 
-              {/* Phần kết quả (view) */}
-              <div className="space-y-4">
-                {/* Hiển thị loading state */}
-                {isLoading && (
-                  <div className="text-center py-4">
-                    <p>Đang tải dữ liệu...</p>
-                  </div>
+          {/* Phần kết quả (view) */}
+          <Container>
+            {/* Hiển thị loading state */}
+            {isLoading && (
+              <StatusIndicator type="loading">Đang tải dữ liệu...</StatusIndicator>
+            )}
+            
+            {/* Hiển thị lỗi */}
+            {isError && (
+              <Box padding="m" variant="error">
+                <StatusIndicator type="error">{error?.message || 'Không thể tải dữ liệu'}</StatusIndicator>
+              </Box>
+            )}
+
+            {/* Hiển thị danh sách ruleset */}
+            {!isLoading && !isError && filteredRulesets.length > 0 && rulesetState && !selectedRuleset && (
+              <Container header={<Header variant="h3">Danh sách Ruleset - Trạng thái: {rulesetState}</Header>}>
+                <Table
+                  columnDefinitions={[
+                    {
+                      id: "id",
+                      header: "ID",
+                      cell: item => item.id,
+                      sortingField: "id"
+                    },
+                    {
+                      id: "name",
+                      header: "Tên",
+                      cell: item => item.name,
+                      sortingField: "name"
+                    },
+                    {
+                      id: "version",
+                      header: "Version",
+                      cell: item => item.version || "1.0.0",
+                      sortingField: "version"
+                    },
+                    {
+                      id: "state",
+                      header: "Trạng thái",
+                      cell: item => (
+                        <StatusIndicator type={
+                          item.state === 'active' ? "success" :
+                          item.state === 'pending' ? "in-progress" :
+                          item.state === 'rejected' ? "error" : "stopped"
+                        }>
+                          {item.state}
+                        </StatusIndicator>
+                      )
+                    }
+                  ]}
+                  items={filteredRulesets}
+                  onSelectionChange={({ detail }) => {
+                    if (detail.selectedItems.length > 0) {
+                      setSelectedRuleset(detail.selectedItems[0]);
+                    }
+                  }}
+                  selectionType="single"
+                  trackBy="id"
+                  empty={
+                    <Box textAlign="center" color="inherit">
+                      <b>Không có dữ liệu</b>
+                      <Box padding={{ bottom: "s" }} variant="p" color="inherit">
+                        Không tìm thấy ruleset nào với trạng thái đã chọn.
+                      </Box>
+                    </Box>
+                  }
+                />
+              </Container>
+            )}
+
+            {/* Hiển thị thông báo khi không có ruleset */}
+            {!isLoading && !isError && filteredRulesets.length === 0 && rulesetState && !selectedRuleset && (
+              <Box textAlign="center" color="text-body-secondary">
+                {rulesetState === 'active' && (
+                  <p>Không có ruleset nào ở trạng thái active.</p>
                 )}
-                
-                {/* Hiển thị lỗi */}
-                {isError && (
-                  <div className="text-center py-4 text-red-500">
-                    <p>Có lỗi xảy ra: {error?.message || 'Không thể tải dữ liệu'}</p>
-                  </div>
+                {rulesetState === 'rejected' && (
+                  <p>Không có ruleset nào ở trạng thái rejected.</p>
                 )}
-
-                {/* Hiển thị danh sách ruleset */}
-                {!isLoading && !isError && filteredRulesets.length > 0 && rulesetState && !selectedRuleset && (
-                  <div>
-                    <h3 className="font-medium mb-2">Danh sách Ruleset - Trạng thái: {rulesetState}</h3>
-                    <div className="border rounded-md overflow-hidden">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Version</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {filteredRulesets.map((ruleset) => (
-                            <tr key={ruleset.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => setSelectedRuleset(ruleset)}>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm">{ruleset.id}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm">{ruleset.name}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm">{ruleset.version || "1.0.0"}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                <span className={`px-2 py-1 rounded-full text-xs ${
-                                  ruleset.state === 'active' ? 'bg-green-100 text-green-800' :
-                                  ruleset.state === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                  ruleset.state === 'rejected' ? 'bg-red-100 text-red-800' :
-                                  'bg-gray-100 text-gray-800'
-                                }`}>
-                                  {ruleset.state}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
+                {rulesetState === 'pending' && (
+                  <p>Không có ruleset nào ở trạng thái pending.</p>
                 )}
+              </Box>
+            )}
 
-                {/* Hiển thị thông báo khi không có ruleset */}
-                {!isLoading && !isError && filteredRulesets.length === 0 && rulesetState && !selectedRuleset && (
-                  <div className="text-center py-4">
-                    {rulesetState === 'active' && (
-                      <p>Không có ruleset nào ở trạng thái active.</p>
-                    )}
-                    {rulesetState === 'rejected' && (
-                      <p>Không có ruleset nào ở trạng thái rejected.</p>
-                    )}
-                    {rulesetState === 'pending' && (
-                      <p>Không có ruleset nào ở trạng thái pending.</p>
-                    )}
-                  </div>
-                )}
-
-                {/* Hiển thị chi tiết ruleset */}
-                {selectedRuleset && (
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <h3 className="font-medium">Chi tiết Ruleset</h3>
-                      <button 
-                        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+            {/* Hiển thị chi tiết ruleset */}
+            {selectedRuleset && (
+              <Container
+                header={
+                  <Header
+                    variant="h3"
+                    actions={
+                      <Button
                         onClick={() => setSelectedRuleset(null)}
+                        variant="primary"
                       >
                         Quay lại danh sách
-                      </button>
-                    </div>
-                    <div className="border rounded-md p-4 bg-white">
-                      <div className="grid grid-cols-2 gap-4 mb-4">
-                        <div>
-                          <p className="text-sm text-gray-500">ID</p>
-                          <p>{selectedRuleset.id}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Tên</p>
-                          <p>{selectedRuleset.name}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Version</p>
-                          <p>{selectedRuleset.version || "1.0.0"}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Trạng thái</p>
-                          <p>
-                            <span className={`px-2 py-1 rounded-full text-xs ${
-                              selectedRuleset.state === 'active' ? 'bg-green-100 text-green-800' :
-                              selectedRuleset.state === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                              selectedRuleset.state === 'rejected' ? 'bg-red-100 text-red-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {selectedRuleset.state}
-                            </span>
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Ngày tạo</p>
-                          <p>{selectedRuleset.createdAt}</p>
-                        </div>
-                        {selectedRuleset.reason && (
-                          <div className="col-span-2">
-                            <p className="text-sm text-gray-500">Lý do từ chối</p>
-                            <p className="text-red-600">{selectedRuleset.reason}</p>
-                          </div>
-                        )}
-                      </div>
+                      </Button>
+                    }
+                  >
+                    Chi tiết Ruleset
+                  </Header>
+                }
+              >
+                <ColumnLayout columns={2} variant="text-grid">
+                  <FormField label="ID">{selectedRuleset.id}</FormField>
+                  <FormField label="Tên">{selectedRuleset.name}</FormField>
+                  <FormField label="Version">{selectedRuleset.version || "1.0.0"}</FormField>
+                  <FormField label="Trạng thái">
+                    <StatusIndicator type={
+                      selectedRuleset.state === 'active' ? "success" :
+                      selectedRuleset.state === 'pending' ? "in-progress" :
+                      selectedRuleset.state === 'rejected' ? "error" : "stopped"
+                    }>
+                      {selectedRuleset.state}
+                    </StatusIndicator>
+                  </FormField>
+                  <FormField label="Ngày tạo">{selectedRuleset.createdAt}</FormField>
+                  {selectedRuleset.reason && (
+                    <FormField label="Lý do từ chối">
+                      <Box color="text-status-error">{selectedRuleset.reason}</Box>
+                    </FormField>
+                  )}
+                </ColumnLayout>
 
-                      {selectedRuleset.description && (
-                        <div className="mt-4">
-                          <p className="text-sm text-gray-500">Mô tả</p>
-                          <p>{selectedRuleset.description}</p>
-                        </div>
-                      )}
-
-                      {selectedRuleset.content && (
-                        <div className="mt-4">
-                          <p className="text-sm text-gray-500">Nội dung</p>
-                          {selectedRuleset.content.rules ? (
-                            <div className="mt-2 border rounded-md overflow-hidden">
-                              <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                  <tr>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Rule ID</th>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Condition</th>
-                                  </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                  {selectedRuleset.content.rules.map((rule) => (
-                                    <tr key={rule.id}>
-                                      <td className="px-4 py-2 whitespace-nowrap text-sm">{rule.id}</td>
-                                      <td className="px-4 py-2 whitespace-nowrap text-sm">{rule.name}</td>
-                                      <td className="px-4 py-2 text-sm font-mono">{rule.condition}</td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          ) : selectedRuleset.content.raw ? (
-                            <div className="mt-2">
-                              <p className="text-sm text-red-500 mb-2">Nội dung không hợp lệ:</p>
-                              <pre className="bg-gray-50 p-2 rounded-md text-xs overflow-auto mt-1 border border-red-200">
-                                {selectedRuleset.content.raw}
-                              </pre>
-                            </div>
-                          ) : null}
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                {selectedRuleset.description && (
+                  <Box margin={{top: "l"}}>
+                    <FormField label="Mô tả">{selectedRuleset.description}</FormField>
+                  </Box>
                 )}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+
+                {selectedRuleset.content && (
+                  <Box margin={{top: "l"}}>
+                    <Header variant="h4">Nội dung</Header>
+                    {selectedRuleset.content.rules ? (
+                      <Table
+                        columnDefinitions={[
+                          {
+                            id: "id",
+                            header: "Rule ID",
+                            cell: item => item.id
+                          },
+                          {
+                            id: "name",
+                            header: "Name",
+                            cell: item => item.name
+                          },
+                          {
+                            id: "condition",
+                            header: "Condition",
+                            cell: item => item.condition
+                          }
+                        ]}
+                        items={selectedRuleset.content.rules}
+                        trackBy="id"
+                      />
+                    ) : selectedRuleset.content.raw ? (
+                      <Box>
+                        <Box color="text-status-error" margin={{bottom: "s"}}>Nội dung không hợp lệ:</Box>
+                        <Box variant="code">
+                          {selectedRuleset.content.raw}
+                        </Box>
+                      </Box>
+                    ) : null}
+                  </Box>
+                )}
+              </Container>
+            )}
+          </Container>
+        </SpaceBetween>
+    </ExpandableSection>
   );
 }

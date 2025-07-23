@@ -1,17 +1,29 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Container,
   ContentLayout,
   Header,
   Link,
+  SpaceBetween
 } from "@cloudscape-design/components";
 import { RulesetsAccordion } from "./RulesetsAccordion";
 import { UploadRulesetAccordion } from "./UploadRulesetAccordion";
+import { RunJobAccordion } from "./RunJobAccordion";
+import { JobInfoAccordion } from "./JobInfoAccordion";
 import { initialRulesets } from "../states/ruleset-state";
 
 export default function RulesetManagementPage() {
-  // Quản lý state chung cho cả hai component
+  // Quản lý state chung cho các component
   const [rulesets, setRulesets] = useState(initialRulesets);
+  const [lastJobRunId, setLastJobRunId] = useState<string | null>(null);
+
+  // Sử dụng useQuery để lưu trữ danh sách trong cache
+  useQuery({
+    queryKey: ['allRulesets'],
+    queryFn: () => rulesets,
+    initialData: initialRulesets,
+  });
 
   return (
     <ContentLayout
@@ -28,15 +40,17 @@ export default function RulesetManagementPage() {
           </Header>
         }
       >
-        <div className="space-y-4">
+        <SpaceBetween size="l">
           <RulesetsAccordion 
-            rulesets={rulesets} 
+            rulesets={rulesets}
           />
           <UploadRulesetAccordion 
             rulesets={rulesets}
             setRulesets={setRulesets}
           />
-        </div>
+          <RunJobAccordion onJobRunComplete={setLastJobRunId} />
+          <JobInfoAccordion lastJobRunId={lastJobRunId} />
+        </SpaceBetween>
       </Container>
     </ContentLayout>
   );

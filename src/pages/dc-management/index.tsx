@@ -5,6 +5,7 @@ import {
   ContentLayout,
   Header,
   Link,
+  SpaceBetween
 } from "@cloudscape-design/components";
 import { DataContractAccordion } from "./DataContractAccordion";
 import { CheckDataContract } from "./CheckDataContract";
@@ -36,7 +37,7 @@ export default function DataContractManagementPage() {
           </Header>
         }
       >
-        <div className="space-y-4">
+        <SpaceBetween size="l">
           <DataContractAccordion 
             dataContracts={dataContracts} 
             setDataContracts={setDataContracts} 
@@ -45,7 +46,7 @@ export default function DataContractManagementPage() {
             dataContracts={dataContracts} 
             setDataContracts={setDataContracts} 
           />
-        </div>
+        </SpaceBetween>
       </Container>
     </ContentLayout>
   );
