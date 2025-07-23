@@ -1,5 +1,19 @@
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { addRuleset } from "../states/ruleset-state";
+import {
+  Button,
+  Container,
+  Header,
+  Input,
+  SpaceBetween,
+  StatusIndicator,
+  ExpandableSection,
+  FormField,
+  Box,
+  ColumnLayout,
+  Textarea
+} from "@cloudscape-design/components";
 
 // Define interfaces for ruleset data
 interface Rule {
@@ -57,12 +71,14 @@ function findExistingRulesetId(rulesets: Ruleset[], name: string, defaultId: str
 }
 
 export function UploadRulesetAccordion({ rulesets, setRulesets }: UploadRulesetAccordionProps) {
+  // Lấy queryClient để invalidate queries
+  const queryClient = useQueryClient();
+  
   // Form state
   const [rulesetName, setRulesetName] = useState<string>("");
   const [rulesetContent, setRulesetContent] = useState<string>("");
 
   // Upload status
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
 
   // Form validation
@@ -70,6 +86,54 @@ export function UploadRulesetAccordion({ rulesets, setRulesets }: UploadRulesetA
   
   // State cho accordion
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  
+  // Sử dụng useMutation để upload ruleset
+  const uploadMutation = useMutation({
+    mutationFn: async (newRuleset: Ruleset) => {
+      // Giả lập API call với delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Sử dụng hàm addRuleset để xóa ruleset có cùng tên khỏi trạng thái pending
+      const updatedRulesets = addRuleset(rulesets, newRuleset);
+      setRulesets(updatedRulesets);
+      return newRuleset;
+    },
+    onSuccess: (data) => {
+      // Invalidate queries để cập nhật danh sách
+      queryClient.invalidateQueries({ queryKey: ['rulesets'] });
+      queryClient.invalidateQueries({ queryKey: ['allRulesets'] });
+      
+      // Hiển thị kết quả
+      setUploadResult({
+        success: data.state === "active",
+        message: data.state === "active" 
+          ? "Ruleset đã được upload thành công và được kích hoạt!" 
+          : "Upload ruleset thất bại do cú pháp không hợp lệ.",
+        data: data
+      });
+      
+      // Clear form sau khi upload thành công
+      if (data.state === "active") {
+        setRulesetName("");
+        setRulesetContent("");
+      }
+    },
+    onError: (error) => {
+      console.error("Lỗi khi upload ruleset:", error);
+      setUploadResult({
+        success: false,
+        message: "Upload ruleset thất bại.",
+        data: {
+          id: `rs-${Math.floor(Math.random() * 1000)}`,
+          name: rulesetName || "Ruleset lỗi",
+          state: "rejected",
+          createdAt: new Date().toISOString().split('T')[0],
+          reason: "Lỗi khi xử lý upload",
+          content: { raw: rulesetContent || "Không có nội dung" }
+        }
+      });
+    }
+  });
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -207,115 +271,70 @@ export function UploadRulesetAccordion({ rulesets, setRulesets }: UploadRulesetA
           newErrors.content = "Cấu trúc ruleset không hợp lệ";
         }
       }
-      
-      // Lưu trạng thái hợp lệ để sử dụng trong handleSubmit
-      (window as any).isRulesetValid = isValidFormat && isValidStructure;
     }
 
     setErrors(newErrors);
+    setUploadResult(null);
     
     // Nếu có lỗi trong form, vẫn tiếp tục nhưng đặt ruleset vào trạng thái rejected
     const hasErrors = Object.keys(newErrors).length > 0;
+    const randomId = `rs-${Math.floor(Math.random() * 1000)}`;
 
-    setIsSubmitting(true);
-    setUploadResult(null);
-
+    // Nếu tên ruleset trống, tạo ruleset với trạng thái rejected
+    if (!rulesetName.trim()) {
+      // Không cần tìm ruleset có sẵn vì tên trống
+      const newRuleset: Ruleset = {
+        id: randomId,
+        name: "Ruleset không tên",
+        state: "rejected",
+        createdAt: new Date().toISOString().split('T')[0],
+        reason: "Tên ruleset không được để trống",
+        content: { raw: rulesetContent || "Không có nội dung" }
+      };
+      
+      // Sử dụng mutation để upload ruleset
+      uploadMutation.mutate(newRuleset);
+      return;
+    }
+    
+    // Nếu nội dung ruleset trống, tạo ruleset với trạng thái rejected
+    if (!rulesetContent.trim()) {
+      // Tìm ID của ruleset có cùng tên trong trạng thái pending
+      const rulesetId = findExistingRulesetId(rulesets, rulesetName, randomId);
+      
+      const newRuleset: Ruleset = {
+        id: rulesetId,
+        name: rulesetName,
+        state: "rejected",
+        createdAt: new Date().toISOString().split('T')[0],
+        reason: "Nội dung ruleset không được để trống",
+        content: { raw: "Không có nội dung" }
+      };
+      
+      // Sử dụng mutation để upload ruleset
+      uploadMutation.mutate(newRuleset);
+      return;
+    }
+    
     try {
-      // Luôn tạo ruleset mới, nếu có lỗi thì đặt trạng thái rejected
-      const randomId = `rs-${Math.floor(Math.random() * 1000)}`;
-      console.log("ID ngẫu nhiên được tạo:", randomId);
-      
-      // Nếu tên ruleset trống, tạo ruleset với trạng thái rejected
-      if (!rulesetName.trim()) {
-        // Không cần tìm ruleset có sẵn vì tên trống
-        const newRuleset: Ruleset = {
-          id: randomId,
-          name: "Ruleset không tên",
-          state: "rejected",
-          createdAt: new Date().toISOString().split('T')[0],
-          reason: "Tên ruleset không được để trống",
-          content: { raw: rulesetContent || "Không có nội dung" }
-        };
-        
-        // Sử dụng hàm addRuleset để xóa ruleset có cùng tên khỏi trạng thái pending
-        setRulesets(prevRulesets => addRuleset(prevRulesets, newRuleset));
-        
-        setUploadResult({
-          success: false,
-          message: "Upload ruleset thất bại do tên ruleset trống. Ruleset đã được đặt vào trạng thái 'Đã từ chối'.",
-          data: newRuleset
-        });
-        
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // Nếu nội dung ruleset trống, tạo ruleset với trạng thái rejected
-      if (!rulesetContent.trim()) {
-        // Tìm ID của ruleset có cùng tên trong trạng thái pending
-        const rulesetId = findExistingRulesetId(rulesets, rulesetName, randomId);
-        
-        const newRuleset: Ruleset = {
-          id: rulesetId,
-          name: rulesetName,
-          state: "rejected",
-          createdAt: new Date().toISOString().split('T')[0],
-          reason: "Nội dung ruleset không được để trống",
-          content: { raw: "Không có nội dung" }
-        };
-        
-        // Sử dụng hàm addRuleset để xóa ruleset có cùng tên khỏi trạng thái pending
-        setRulesets(prevRulesets => addRuleset(prevRulesets, newRuleset));
-        
-        setUploadResult({
-          success: false,
-          message: "Upload ruleset thất bại do nội dung ruleset trống. Ruleset đã được đặt vào trạng thái 'Đã từ chối'.",
-          data: newRuleset
-        });
-        
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // Giả lập API call với delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Lấy kết quả validation từ biến toàn cục hoặc kiểm tra lỗi form
-      // Bỏ qua kiểm tra lỗi form vì chúng ta muốn luôn tạo ruleset
-      const isValid = ((window as any).isRulesetValid || false);
+      // Kiểm tra nội dung có hợp lệ không
+      const isValid = !hasErrors;
       
       if (isValid) {
         // Tìm ID của ruleset có cùng tên trong trạng thái pending
         const rulesetId = findExistingRulesetId(rulesets, rulesetName, randomId);
         
         // Nếu ruleset hợp lệ, trạng thái là "active"
-        const state = "active";
-        const message = "Ruleset đã được upload thành công và được kích hoạt!";
-        
-        // Nếu ruleset hợp lệ
         const newRuleset: Ruleset = {
           id: rulesetId,
           name: rulesetName,
-          state: state,
+          state: "active",
           createdAt: new Date().toISOString().split('T')[0],
           content: JSON.parse(rulesetContent)
         };
         
-        // Thêm ruleset mới vào danh sách và xóa ruleset có cùng tên khỏi trạng thái pending
-        console.log("Thêm ruleset hợp lệ:", newRuleset);
-        console.log("Danh sách rulesets trước khi thêm:", rulesets);
-        // Sử dụng cách cập nhật state đảm bảo React nhận biết thay đổi
-        setRulesets(prevRulesets => {
-          const newRulesets = addRuleset(prevRulesets, newRuleset);
-          console.log("Danh sách rulesets sau khi thêm:", newRulesets);
-          return newRulesets;
-        });
-        
-        setUploadResult({
-          success: true,
-          message: message,
-          data: newRuleset
-        });
+        // Sử dụng mutation để upload ruleset
+        uploadMutation.mutate(newRuleset);
       } else {
         // Tìm ID của ruleset có cùng tên trong trạng thái pending
         const rulesetId = findExistingRulesetId(rulesets, rulesetName, randomId);
@@ -330,36 +349,13 @@ export function UploadRulesetAccordion({ rulesets, setRulesets }: UploadRulesetA
           content: { raw: rulesetContent }
         };
         
-        // Thêm ruleset mới vào danh sách và xóa ruleset có cùng tên khỏi trạng thái pending
-        console.log("Thêm ruleset không hợp lệ:", newRuleset);
-        console.log("Danh sách rulesets trước khi thêm:", rulesets);
-        // Sử dụng cách cập nhật state đảm bảo React nhận biết thay đổi
-        setRulesets(prevRulesets => {
-          const newRulesets = addRuleset(prevRulesets, newRuleset);
-          console.log("Danh sách rulesets sau khi thêm:", newRulesets);
-          console.log("Kiểm tra ruleset rejected:", newRulesets.filter(r => r.state === "rejected"));
-          return newRulesets;
-        });
-        
-        setUploadResult({
-          success: false,
-          message: "Upload ruleset thất bại do cú pháp không hợp lệ. Ruleset đã được đặt vào trạng thái 'Đã từ chối'.",
-          data: newRuleset
-        });
+        // Sử dụng mutation để upload ruleset
+        uploadMutation.mutate(newRuleset);
       }
-
-      // Clear form sau khi upload
-      setRulesetName("");
-      setRulesetContent("");
-      
-      // Xóa biến toàn cục
-      delete (window as any).isRulesetValid;
-      
     } catch (error) {
-      console.error("Lỗi khi upload ruleset:", error);
+      console.error("Lỗi khi xử lý form:", error);
       
       // Tạo ruleset với trạng thái rejected khi có lỗi
-      const randomId = `rs-${Math.floor(Math.random() * 1000)}`;
       const rulesetId = findExistingRulesetId(rulesets, rulesetName, randomId);
       
       const newRuleset: Ruleset = {
@@ -371,188 +367,136 @@ export function UploadRulesetAccordion({ rulesets, setRulesets }: UploadRulesetA
         content: { raw: rulesetContent || "Không có nội dung" }
       };
       
-      // Sử dụng hàm addRuleset để xóa ruleset có cùng tên khỏi trạng thái pending
-      setRulesets(prevRulesets => addRuleset(prevRulesets, newRuleset));
-      
-      setUploadResult({
-        success: false,
-        message: "Upload ruleset thất bại. Ruleset đã được đặt vào trạng thái 'Đã từ chối'.",
-        data: newRuleset
-      });
-    } finally {
-      setIsSubmitting(false);
+      // Sử dụng mutation để upload ruleset
+      uploadMutation.mutate(newRuleset);
     }
   };
 
   return (
-    <div className="w-full">
-      <div className="border rounded-md mb-4">
-        {/* Accordion Header */}
-        <div 
-          className="p-4 flex justify-between items-center cursor-pointer bg-gray-50 hover:bg-gray-100"
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          <h2 className="text-lg font-medium">Upload Ruleset</h2>
-          <span>{isOpen ? "▲" : "▼"}</span>
-        </div>
-        
-        {/* Accordion Content */}
-        {isOpen && (
-          <div className="p-4 border-t">
-            <div className="space-y-6">
-              {/* Phần tương tác - Form */}
-              <div className="mb-4 p-4 border rounded-md bg-gray-50">
-                <h3 className="font-medium mb-3">Upload Ruleset Mới</h3>
+    <ExpandableSection
+      headerText="Upload Ruleset"
+      variant="container"
+      defaultExpanded={isOpen}
+      onChange={({ detail }) => setIsOpen(detail.expanded)}
+    >
+        <SpaceBetween size="l">
+          {/* Phần tương tác - Form */}
+          <Container>
+            <Header variant="h3">Upload Ruleset Mới</Header>
+            
+            <form onSubmit={handleSubmit}>
+              <SpaceBetween size="m" direction="vertical">
+                {/* Ruleset Name Input */}
+                <FormField
+                  label="Tên Ruleset"
+                  errorText={errors.name}
+                >
+                  <Input
+                    value={rulesetName}
+                    onChange={({ detail }) => {
+                      setRulesetName(detail.value);
+                      // Xóa lỗi khi người dùng nhập
+                      if (errors.name) {
+                        setErrors({...errors, name: null});
+                      }
+                    }}
+                    placeholder="Nhập tên ruleset"
+                  />
+                </FormField>
 
-                <form onSubmit={handleSubmit}>
-                  {/* Ruleset Name Input */}
-                  <div className="mb-3">
-                    <label htmlFor="ruleset-name" className="block text-sm font-medium mb-1">
-                      Tên Ruleset
-                    </label>
-                    <input
-                      id="ruleset-name"
-                      type="text"
-                      value={rulesetName}
-                      onChange={(e) => {
-                        setRulesetName(e.target.value);
-                        // Xóa lỗi khi người dùng nhập
-                        if (errors.name) {
-                          setErrors({...errors, name: null});
-                        }
-                      }}
-                      className={`w-full p-2 border rounded-md ${
-                        errors.name ? "border-red-500" : "border-gray-300"
-                      }`}
-                      placeholder="Nhập tên ruleset"
-                    />
-                    {errors.name && (
-                      <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                {/* Ruleset Content Textarea */}
+                <FormField
+                  label="Nội dung Ruleset"
+                  errorText={errors.content}
+                  description={
+                    <SpaceBetween size="xs">
+                      <Box variant="p">
+                        Ví dụ JSON hợp lệ: {'{"rules": [{"id": "rule1", "name": "Check null", "condition": "value != null"}]}'}
+                      </Box>
+                      <Box variant="p">
+                        Ví dụ YAML hợp lệ: rules:<br/>- id: rule1<br/>  name: Check null<br/>  condition: value != null
+                      </Box>
+                      <Box variant="p" fontWeight="bold">
+                        Lưu ý: Nội dung ruleset phải có trường "rules" là một mảng, và mỗi rule phải có các trường: id, name, condition.
+                      </Box>
+                    </SpaceBetween>
+                  }
+                >
+                  <Textarea
+                    value={rulesetContent}
+                    onChange={({ detail }) => {
+                      setRulesetContent(detail.value);
+                      // Xóa lỗi khi người dùng nhập
+                      if (errors.content) {
+                        setErrors({...errors, content: null});
+                      }
+                    }}
+                    placeholder="Nhập nội dung ruleset (phải là định dạng JSON hoặc YAML hợp lệ)"
+                    rows={10}
+                  />
+                </FormField>
+
+                {/* Submit Button */}
+                <Button
+                  formAction="submit"
+                  variant="primary"
+                  disabled={uploadMutation.isPending}
+                  loading={uploadMutation.isPending}
+                >
+                  {uploadMutation.isPending ? "Đang upload..." : "Upload Ruleset"}
+                </Button>
+              </SpaceBetween>
+            </form>
+          </Container>
+
+          {/* Phần kết quả */}
+          {uploadResult && (
+            <Container
+              header={<Header variant="h3">Kết quả Upload</Header>}
+            >
+              <Box padding="m" variant={uploadResult.success ? "success" : "error"}>
+                <StatusIndicator type={uploadResult.success ? "success" : "error"}>
+                  {uploadResult.message}
+                </StatusIndicator>
+              </Box>
+              
+              {uploadResult.data && (
+                <Box margin={{top: "m"}}>
+                  <Header variant="h4">Thông tin Ruleset</Header>
+                  <ColumnLayout columns={2} variant="text-grid">
+                    <FormField label="ID">{uploadResult.data.id}</FormField>
+                    <FormField label="Tên">{uploadResult.data.name}</FormField>
+                    <FormField label="Trạng thái">
+                      <StatusIndicator type={
+                        uploadResult.data.state === 'active' ? "success" :
+                        uploadResult.data.state === 'pending' ? "in-progress" :
+                        uploadResult.data.state === 'rejected' ? "error" : "stopped"
+                      }>
+                        {uploadResult.data.state}
+                      </StatusIndicator>
+                    </FormField>
+                    <FormField label="Ngày tạo">{uploadResult.data.createdAt}</FormField>
+                    {!uploadResult.success && uploadResult.data.reason && (
+                      <FormField label="Lý do từ chối" columnSpan={2}>
+                        <Box color="text-status-error">{uploadResult.data.reason}</Box>
+                      </FormField>
                     )}
-                  </div>
-
-                  {/* Ruleset Content Textarea */}
-                  <div className="mb-3">
-                    <label htmlFor="ruleset-content" className="block text-sm font-medium mb-1">
-                      Nội dung Ruleset
-                    </label>
-                    <textarea
-                      id="ruleset-content"
-                      value={rulesetContent}
-                      onChange={(e) => {
-                        setRulesetContent(e.target.value);
-                        // Xóa lỗi khi người dùng nhập
-                        if (errors.content) {
-                          setErrors({...errors, content: null});
-                        }
-                      }}
-                      className={`w-full p-2 border rounded-md h-40 ${
-                        errors.content ? "border-red-500" : "border-gray-300"
-                      }`}
-                      placeholder="Nhập nội dung ruleset (phải là định dạng JSON hoặc YAML hợp lệ)"
-                    />
-                    {errors.content && (
-                      <p className="mt-1 text-sm text-red-600">{errors.content}</p>
-                    )}
-                    <p className="mt-1 text-xs text-gray-500">
-                      Ví dụ JSON hợp lệ: {'{"rules": [{"id": "rule1", "name": "Check null", "condition": "value != null"}]}'}
-                    </p>
-                    <p className="mt-1 text-xs text-gray-500">
-                      Ví dụ YAML hợp lệ: rules:<br/>- id: rule1<br/>  name: Check null<br/>  condition: value != null
-                    </p>
-                    <p className="mt-1 text-xs text-gray-500 font-semibold">
-                      Lưu ý: Nội dung ruleset phải có trường "rules" là một mảng, và mỗi rule phải có các trường: id, name, condition.
-                    </p>
-                  </div>
-
-
-
-                  {/* Submit Button */}
-                  <div className="mt-4">
-                    <button
-                      type="submit"
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed"
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? "Đang upload..." : "Upload Ruleset"}
-                    </button>
-                  </div>
-                </form>
-              </div>
-
-              {/* Phần kết quả */}
-              {uploadResult && (
-                <div className={`p-4 border rounded-md ${
-                  uploadResult.success ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
-                }`}>
-                  <div className="flex items-center">
-                    {uploadResult.success ? (
-                      <svg className="h-5 w-5 text-green-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                    ) : (
-                      <svg className="h-5 w-5 text-red-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                      </svg>
-                    )}
-                    <p className={uploadResult.success ? "text-green-700" : "text-red-700"}>
-                      {uploadResult.message}
-                    </p>
-                  </div>
+                  </ColumnLayout>
                   
-                  {uploadResult.data && (
-                    <div className="mt-4 border-t pt-4">
-                      <h4 className="font-medium mb-2">Thông tin Ruleset</h4>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-sm text-gray-500">ID</p>
-                          <p>{uploadResult.data.id}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Tên</p>
-                          <p>{uploadResult.data.name}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Trạng thái</p>
-                          <p>
-                            <span className={`px-2 py-1 rounded-full text-xs ${
-                              uploadResult.data.state === 'active' ? 'bg-green-100 text-green-800' :
-                              uploadResult.data.state === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                              uploadResult.data.state === 'rejected' ? 'bg-red-100 text-red-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {uploadResult.data.state}
-                            </span>
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500">Ngày tạo</p>
-                          <p>{uploadResult.data.createdAt}</p>
-                        </div>
-                        {!uploadResult.success && uploadResult.data.reason && (
-                          <div className="col-span-2">
-                            <p className="text-sm text-gray-500">Lý do từ chối</p>
-                            <p>{uploadResult.data.reason}</p>
-                          </div>
-                        )}
-                      </div>
-                      <p className="mt-4 text-sm text-gray-600">
-                        {uploadResult.data.state === "active" ? (
-                          <>Ruleset đã được tạo với trạng thái <strong>active</strong> (hoạt động).</>
-                        ) : uploadResult.data.state === "rejected" ? (
-                          <>Ruleset đã bị từ chối với trạng thái <strong>rejected</strong> do cú pháp không hợp lệ.</>
-                        ) : (
-                          <>Ruleset đã được tạo với trạng thái <strong>{uploadResult.data.state}</strong>.</>
-                        )}
-                      </p>
-                    </div>
-                  )}
-                </div>
+                  <Box margin={{top: "m"}}>
+                    {uploadResult.data.state === "active" ? (
+                      <Box>Ruleset đã được tạo với trạng thái <Box variant="span" fontWeight="bold">active</Box> (hoạt động).</Box>
+                    ) : uploadResult.data.state === "rejected" ? (
+                      <Box>Ruleset đã bị từ chối với trạng thái <Box variant="span" fontWeight="bold">rejected</Box> do cú pháp không hợp lệ.</Box>
+                    ) : (
+                      <Box>Ruleset đã được tạo với trạng thái <Box variant="span" fontWeight="bold">{uploadResult.data.state}</Box>.</Box>
+                    )}
+                  </Box>
+                </Box>
               )}
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+            </Container>
+          )}
+        </SpaceBetween>
+    </ExpandableSection>
   );
 }
