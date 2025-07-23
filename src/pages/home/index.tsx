@@ -5,7 +5,7 @@ export default function HomePage() {
     <div className="text-center space-y-6">
 
       <Box variant="h1">
-        Chào mừng tới ứng dụng Demo của VP Hackathon Challenge #23
+        Welcome to the VPBank Hackathon Challenge #23 - Demo Application
       </Box>
       <Box variant="samp">Built by VSL Team</Box>
 
