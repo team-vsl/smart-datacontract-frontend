@@ -37,6 +37,7 @@ export default function MainLayout(props: PropsWithChildren) {
   return (
     <I18nProvider locale={LOCALE} messages={[messages]}>
       <AppLayout
+        maxContentWidth={1440}
         navigationOpen={true}
         navigation={
           <SideNavigation
@@ -73,7 +74,7 @@ export default function MainLayout(props: PropsWithChildren) {
         }
         toolsOpen={false}
         tools={<HelpPanel header={<h2>Overview</h2>}>Help content</HelpPanel>}
-        content={props.children}
+        content={<div className="h-full overflow-auto">{props.children}</div>}
       />
     </I18nProvider>
   );
