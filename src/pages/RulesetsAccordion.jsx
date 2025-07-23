@@ -23,7 +23,10 @@ export function RulesetsAccordion({ rulesets }) {
       setIsLoading(true);
       try {
         // Lọc ruleset theo trạng thái
+        console.log("Danh sách rulesets hiện tại:", rulesets);
+        console.log("Đang lọc theo trạng thái:", rulesetState);
         const filtered = getRulesetsByState(rulesets, rulesetState);
+        console.log("Kết quả lọc:", filtered);
         setFilteredRulesets(filtered);
         setIsError(false);
       } catch (err) {
@@ -89,7 +92,7 @@ export function RulesetsAccordion({ rulesets }) {
                     <option value="">Chọn trạng thái</option>
                     <option value="active">Đang hoạt động</option>
                     <option value="pending">Đang chờ xử lý</option>
-                    <option value="archived">Đã lưu trữ</option>
+                    <option value="rejected">Đã từ chối</option>
                   </select>
                 </div>
 
@@ -153,6 +156,7 @@ export function RulesetsAccordion({ rulesets }) {
                                 <span className={`px-2 py-1 rounded-full text-xs ${
                                   ruleset.state === 'active' ? 'bg-green-100 text-green-800' :
                                   ruleset.state === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                  ruleset.state === 'rejected' ? 'bg-red-100 text-red-800' :
                                   'bg-gray-100 text-gray-800'
                                 }`}>
                                   {ruleset.state}
@@ -169,7 +173,15 @@ export function RulesetsAccordion({ rulesets }) {
                 {/* Hiển thị thông báo khi không có ruleset */}
                 {!isLoading && !isError && filteredRulesets.length === 0 && rulesetState && !selectedRuleset && (
                   <div className="text-center py-4">
-                    <p>Không có ruleset nào ở trạng thái {rulesetState}.</p>
+                    {rulesetState === 'active' && (
+                      <p>Không có ruleset nào ở trạng thái active.</p>
+                    )}
+                    {rulesetState === 'rejected' && (
+                      <p>Không có ruleset nào ở trạng thái rejected.</p>
+                    )}
+                    {rulesetState === 'pending' && (
+                      <p>Không có ruleset nào ở trạng thái pending.</p>
+                    )}
                   </div>
                 )}
 
@@ -205,6 +217,7 @@ export function RulesetsAccordion({ rulesets }) {
                             <span className={`px-2 py-1 rounded-full text-xs ${
                               selectedRuleset.state === 'active' ? 'bg-green-100 text-green-800' :
                               selectedRuleset.state === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                              selectedRuleset.state === 'rejected' ? 'bg-red-100 text-red-800' :
                               'bg-gray-100 text-gray-800'
                             }`}>
                               {selectedRuleset.state}
@@ -217,13 +230,7 @@ export function RulesetsAccordion({ rulesets }) {
                         </div>
                         {selectedRuleset.reason && (
                           <div className="col-span-2">
-                            <p className="text-sm text-gray-500">Lý do lưu trữ</p>
-                            <p className="text-red-600">{selectedRuleset.reason}</p>
-                          </div>
-                        )}
-                        {selectedRuleset.reason && (
-                          <div className="col-span-2">
-                            <p className="text-sm text-gray-500">Lý do lưu trữ</p>
+                            <p className="text-sm text-gray-500">Lý do từ chối</p>
                             <p className="text-red-600">{selectedRuleset.reason}</p>
                           </div>
                         )}

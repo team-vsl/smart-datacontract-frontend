@@ -82,29 +82,144 @@ export function UploadRulesetAccordion({ rulesets, setRulesets }) {
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    // Trả về true để form luôn được submit, kể cả khi có lỗi
+    // Chúng ta sẽ xử lý lỗi trong handleSubmit
+    return true;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Validate form before submission
-    if (!validateForm()) {
-      return;
+    const newErrors = {};
+
+    if (!rulesetName.trim()) {
+      newErrors.name = "Tên ruleset không được để trống";
     }
+
+    if (!rulesetContent.trim()) {
+      newErrors.content = "Nội dung ruleset không được để trống";
+    } else {
+      // Kiểm tra định dạng JSON
+      let isValidFormat = false;
+      let isValidStructure = false;
+      
+      // Thử kiểm tra JSON
+      try {
+        const parsedContent = JSON.parse(rulesetContent);
+        isValidFormat = true; // Nếu parse thành công, đây là JSON hợp lệ
+        
+        // Kiểm tra cấu trúc của ruleset
+        if (parsedContent.rules && Array.isArray(parsedContent.rules)) {
+          // Kiểm tra xem mỗi rule có đủ các trường cần thiết không
+          const allRulesValid = parsedContent.rules.every(rule => 
+            rule.id && rule.name && rule.condition
+          );
+          
+          if (allRulesValid) {
+            isValidStructure = true;
+          } else {
+            newErrors.content = "Mỗi rule phải có các trường: id, name, condition";
+          }
+        } else {
+          newErrors.content = "Ruleset phải có trường 'rules' là một mảng";
+        }
+      } catch (jsonError) {
+        // Không phải JSON, kiểm tra YAML đơn giản
+        // Đây chỉ là kiểm tra cơ bản, không chính xác 100%
+        
+        // Một số đặc điểm cơ bản của YAML:
+        // - Có dòng với định dạng key: value
+        // - Hoặc có dòng bắt đầu bằng dấu gạch ngang (-)
+        const hasKeyValuePair = /^\s*[\w\-]+\s*:\s*.+/m.test(rulesetContent);
+        const hasListItem = /^\s*-\s+.+/m.test(rulesetContent);
+        const hasRulesSection = /^\s*rules\s*:/m.test(rulesetContent);
+        
+        if ((hasKeyValuePair || hasListItem) && hasRulesSection) {
+          isValidFormat = true;
+          isValidStructure = true; // Giả định YAML có cấu trúc đúng
+        } else {
+          newErrors.content = "Nội dung phải là định dạng JSON hoặc YAML hợp lệ và có trường 'rules'";
+        }
+      }
+      
+      if (!isValidFormat) {
+        newErrors.content = "Nội dung phải là định dạng JSON hoặc YAML hợp lệ";
+      } else if (!isValidStructure) {
+        // Nếu đã có lỗi cụ thể về cấu trúc, giữ nguyên lỗi đó
+        if (!newErrors.content) {
+          newErrors.content = "Cấu trúc ruleset không hợp lệ";
+        }
+      }
+      
+      // Lưu trạng thái hợp lệ để sử dụng trong handleSubmit
+      window.isRulesetValid = isValidFormat && isValidStructure;
+    }
+
+    setErrors(newErrors);
+    
+    // Nếu có lỗi trong form, vẫn tiếp tục nhưng đặt ruleset vào trạng thái rejected
+    const hasErrors = Object.keys(newErrors).length > 0;
 
     setIsSubmitting(true);
     setUploadResult(null);
 
     try {
+      // Luôn tạo ruleset mới, nếu có lỗi thì đặt trạng thái rejected
+      const newRulesetId = `rs-${Math.floor(Math.random() * 1000)}`;
+      
+      // Nếu tên ruleset trống, tạo ruleset với trạng thái rejected
+      if (!rulesetName.trim()) {
+        const newRuleset = {
+          id: newRulesetId,
+          name: "Ruleset không tên",
+          state: "rejected",
+          createdAt: new Date().toISOString().split('T')[0],
+          reason: "Tên ruleset không được để trống",
+          content: { raw: rulesetContent || "Không có nội dung" }
+        };
+        
+        setRulesets(prevRulesets => [...prevRulesets, newRuleset]);
+        
+        setUploadResult({
+          success: false,
+          message: "Upload ruleset thất bại do tên ruleset trống. Ruleset đã được đặt vào trạng thái 'Đã từ chối'.",
+          data: newRuleset
+        });
+        
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Nếu nội dung ruleset trống, tạo ruleset với trạng thái rejected
+      if (!rulesetContent.trim()) {
+        const newRuleset = {
+          id: newRulesetId,
+          name: rulesetName,
+          state: "rejected",
+          createdAt: new Date().toISOString().split('T')[0],
+          reason: "Nội dung ruleset không được để trống",
+          content: { raw: "Không có nội dung" }
+        };
+        
+        setRulesets(prevRulesets => [...prevRulesets, newRuleset]);
+        
+        setUploadResult({
+          success: false,
+          message: "Upload ruleset thất bại do nội dung ruleset trống. Ruleset đã được đặt vào trạng thái 'Đã từ chối'.",
+          data: newRuleset
+        });
+        
+        setIsSubmitting(false);
+        return;
+      }
+      
       // Giả lập API call với delay
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Lấy kết quả validation từ biến toàn cục
-      const isValid = window.isRulesetValid || false;
-      
-      // Tạo ID mới cho ruleset
-      const newRulesetId = `rs-${Math.floor(Math.random() * 1000)}`;
+      // Lấy kết quả validation từ biến toàn cục hoặc kiểm tra lỗi form
+      // Bỏ qua kiểm tra lỗi form vì chúng ta muốn luôn tạo ruleset
+      const isValid = (window.isRulesetValid || false);
       
       if (isValid) {
         // Nếu ruleset hợp lệ, trạng thái là "active"
@@ -136,13 +251,13 @@ export function UploadRulesetAccordion({ rulesets, setRulesets }) {
           data: newRuleset
         });
       } else {
-        // Nếu ruleset không hợp lệ, trạng thái là "archived"
+        // Nếu ruleset không hợp lệ, trạng thái là "rejected"
         const newRuleset = {
           id: newRulesetId,
           name: rulesetName,
-          state: "archived",
+          state: "rejected",
           createdAt: new Date().toISOString().split('T')[0],
-          reason: "Cú pháp ruleset không hợp lệ",
+          reason: errors.content || "Cú pháp ruleset không hợp lệ",
           content: { raw: rulesetContent }
         };
         
@@ -153,12 +268,13 @@ export function UploadRulesetAccordion({ rulesets, setRulesets }) {
         setRulesets(prevRulesets => {
           const newRulesets = [...prevRulesets, newRuleset];
           console.log("Danh sách rulesets sau khi thêm:", newRulesets);
+          console.log("Kiểm tra ruleset rejected:", newRulesets.filter(r => r.state === "rejected"));
           return newRulesets;
         });
         
         setUploadResult({
           success: false,
-          message: "Upload ruleset thất bại do cú pháp không hợp lệ. Ruleset đã được lưu trữ vào mục 'Đã lưu trữ'.",
+          message: "Upload ruleset thất bại do cú pháp không hợp lệ. Ruleset đã được đặt vào trạng thái 'Đã từ chối'.",
           data: newRuleset
         });
         
@@ -175,9 +291,24 @@ export function UploadRulesetAccordion({ rulesets, setRulesets }) {
       
     } catch (error) {
       console.error("Lỗi khi upload ruleset:", error);
+      
+      // Tạo ruleset với trạng thái rejected khi có lỗi
+      const newRulesetId = `rs-${Math.floor(Math.random() * 1000)}`;
+      const newRuleset = {
+        id: newRulesetId,
+        name: rulesetName || "Ruleset lỗi",
+        state: "rejected",
+        createdAt: new Date().toISOString().split('T')[0],
+        reason: "Lỗi khi xử lý upload",
+        content: { raw: rulesetContent || "Không có nội dung" }
+      };
+      
+      setRulesets(prevRulesets => [...prevRulesets, newRuleset]);
+      
       setUploadResult({
         success: false,
-        message: "Upload ruleset thất bại. Vui lòng thử lại."
+        message: "Upload ruleset thất bại. Ruleset đã được đặt vào trạng thái 'Đã từ chối'.",
+        data: newRuleset
       });
     } finally {
       setIsSubmitting(false);
@@ -214,7 +345,13 @@ export function UploadRulesetAccordion({ rulesets, setRulesets }) {
                       id="ruleset-name"
                       type="text"
                       value={rulesetName}
-                      onChange={(e) => setRulesetName(e.target.value)}
+                      onChange={(e) => {
+                        setRulesetName(e.target.value);
+                        // Xóa lỗi khi người dùng nhập
+                        if (errors.name) {
+                          setErrors({...errors, name: null});
+                        }
+                      }}
                       className={`w-full p-2 border rounded-md ${
                         errors.name ? "border-red-500" : "border-gray-300"
                       }`}
@@ -233,7 +370,13 @@ export function UploadRulesetAccordion({ rulesets, setRulesets }) {
                     <textarea
                       id="ruleset-content"
                       value={rulesetContent}
-                      onChange={(e) => setRulesetContent(e.target.value)}
+                      onChange={(e) => {
+                        setRulesetContent(e.target.value);
+                        // Xóa lỗi khi người dùng nhập
+                        if (errors.content) {
+                          setErrors({...errors, content: null});
+                        }
+                      }}
                       className={`w-full p-2 border rounded-md h-40 ${
                         errors.content ? "border-red-500" : "border-gray-300"
                       }`}
@@ -250,7 +393,7 @@ export function UploadRulesetAccordion({ rulesets, setRulesets }) {
                     </p>
                     <p className="mt-1 text-xs text-gray-500 font-semibold">
                       Lưu ý: Nội dung ruleset phải có trường "rules" là một mảng, và mỗi rule phải có các trường: id, name, condition.
-                      Ruleset hợp lệ sẽ được đặt trạng thái "active", không hợp lệ sẽ được đặt trạng thái "archived".
+                      Ruleset hợp lệ sẽ được đặt trạng thái "active", không hợp lệ sẽ được đặt trạng thái "rejected".
                     </p>
                   </div>
 
@@ -307,6 +450,7 @@ export function UploadRulesetAccordion({ rulesets, setRulesets }) {
                             <span className={`px-2 py-1 rounded-full text-xs ${
                               uploadResult.data.state === 'active' ? 'bg-green-100 text-green-800' :
                               uploadResult.data.state === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                              uploadResult.data.state === 'rejected' ? 'bg-red-100 text-red-800' :
                               'bg-gray-100 text-gray-800'
                             }`}>
                               {uploadResult.data.state}
@@ -319,7 +463,7 @@ export function UploadRulesetAccordion({ rulesets, setRulesets }) {
                         </div>
                         {!uploadResult.success && uploadResult.data.reason && (
                           <div className="col-span-2">
-                            <p className="text-sm text-gray-500">Lý do lưu trữ</p>
+                            <p className="text-sm text-gray-500">Lý do từ chối</p>
                             <p>{uploadResult.data.reason}</p>
                           </div>
                         )}
@@ -327,8 +471,8 @@ export function UploadRulesetAccordion({ rulesets, setRulesets }) {
                       <p className="mt-4 text-sm text-gray-600">
                         {uploadResult.data.state === "active" ? (
                           <>Ruleset đã được tạo với trạng thái <strong>active</strong> (hoạt động).</>
-                        ) : uploadResult.data.state === "archived" ? (
-                          <>Ruleset đã được lưu trữ với trạng thái <strong>archived</strong> do cú pháp không hợp lệ.</>
+                        ) : uploadResult.data.state === "rejected" ? (
+                          <>Ruleset đã bị từ chối với trạng thái <strong>rejected</strong> do cú pháp không hợp lệ.</>
                         ) : (
                           <>Ruleset đã được tạo với trạng thái <strong>{uploadResult.data.state}</strong>.</>
                         )}

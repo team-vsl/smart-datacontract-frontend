@@ -124,39 +124,53 @@ export function DataContractAccordion({ dataContracts, setDataContracts }) {
                 )}
 
                 {/* Hiển thị danh sách data contract */}
-                {!isPending && !isError && filteredContracts.length > 0 && contractState && !selectedContract && (
+                {!isPending && !isError && contractState && !selectedContract && (
                   <div>
                     <h3 className="font-medium mb-2">Danh sách Data Contract - Trạng thái: {contractState}</h3>
-                    <div className="border rounded-md overflow-hidden">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Version</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {filteredContracts.map((contract) => (
-                            <tr key={contract.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => setSelectedContract(contract)}>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm">{contract.id}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm">{contract.name}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm">{contract.version}</td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                <span className={`px-2 py-1 rounded-full text-xs ${
-                                  contract.state === 'active' ? 'bg-green-100 text-green-800' :
-                                  contract.state === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                  'bg-gray-100 text-gray-800'
-                                }`}>
-                                  {contract.state}
-                                </span>
-                              </td>
+                    {filteredContracts.length > 0 ? (
+                      <div className="border rounded-md overflow-hidden">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tên</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Version</th>
+                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {filteredContracts.map((contract) => (
+                              <tr key={contract.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => setSelectedContract(contract)}>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm">{contract.id}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm">{contract.name}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm">{contract.version}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                  <span className={`px-2 py-1 rounded-full text-xs ${
+                                    contract.state === 'active' ? 'bg-green-100 text-green-800' :
+                                    contract.state === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {contract.state}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="p-4 border rounded-md text-center bg-gray-50">
+                        {contractState === 'active' && (
+                          <p>Không có data contract nào ở trạng thái active.</p>
+                        )}
+                        {contractState === 'archived' && (
+                          <p>Không có data contract nào ở trạng thái archived.</p>
+                        )}
+                        {contractState === 'pending' && (
+                          <p>Không có data contract nào ở trạng thái pending.</p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 

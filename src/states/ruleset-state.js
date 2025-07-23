@@ -49,7 +49,11 @@ export function addRuleset(rulesets, ruleset) {
 // Lấy ruleset theo trạng thái
 export function getRulesetsByState(rulesets, state) {
   if (!state) return [];
-  return rulesets.filter(ruleset => ruleset.state === state);
+  console.log("Lọc ruleset theo trạng thái:", state);
+  console.log("Danh sách rulesets trước khi lọc:", rulesets);
+  const filtered = rulesets.filter(ruleset => ruleset.state === state);
+  console.log("Danh sách rulesets sau khi lọc:", filtered);
+  return filtered;
 }
 
 // Lấy ruleset theo ID
