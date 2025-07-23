@@ -1,13 +1,56 @@
 import { useState } from "react";
 
-export function CheckRulesetAccordion({ rulesets, setRulesets }) {
+// Define interfaces for ruleset data
+interface Rule {
+  id: string;
+  name: string;
+  condition: string;
+}
+
+interface RulesetContent {
+  rules?: Rule[];
+  raw?: string;
+}
+
+interface Ruleset {
+  id: string;
+  name: string;
+  version?: string;
+  state: "active" | "pending" | "rejected" | "archived";
+  createdAt: string;
+  description?: string;
+  reason?: string;
+  content: RulesetContent;
+  owner?: string;
+  approvedAt?: string;
+  approvedBy?: string;
+  rejectedAt?: string;
+  rejectedBy?: string;
+}
+
+interface ResultData extends Ruleset {
+  status: "approved" | "rejected";
+}
+
+interface Result {
+  status: "approved" | "rejected";
+  message: string;
+  data: ResultData;
+}
+
+interface CheckRulesetAccordionProps {
+  rulesets: Ruleset[];
+  setRulesets: React.Dispatch<React.SetStateAction<Ruleset[]>>;
+}
+
+export function CheckRulesetAccordion({ rulesets, setRulesets }: CheckRulesetAccordionProps) {
   // State cho input và kết quả
-  const [rulesetId, setRulesetId] = useState("");
-  const [result, setResult] = useState(null);
+  const [rulesetId, setRulesetId] = useState<string>("");
+  const [result, setResult] = useState<Result | null>(null);
   // State cho accordion
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState<boolean>(true);
   // State cho loading
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // Hàm xử lý khi approve ruleset
   const handleApprove = () => {
@@ -18,7 +61,7 @@ export function CheckRulesetAccordion({ rulesets, setRulesets }) {
     // Giả lập API call
     setTimeout(() => {
       // Dữ liệu mẫu
-      const updatedRuleset = {
+      const updatedRuleset: Ruleset = {
         id: rulesetId,
         name: "Sample Ruleset",
         version: "1.0.0",
@@ -58,7 +101,7 @@ export function CheckRulesetAccordion({ rulesets, setRulesets }) {
     // Giả lập API call
     setTimeout(() => {
       // Dữ liệu mẫu
-      const updatedRuleset = {
+      const updatedRuleset: Ruleset = {
         id: rulesetId,
         name: "Sample Ruleset",
         version: "1.0.0",
@@ -174,7 +217,7 @@ export function CheckRulesetAccordion({ rulesets, setRulesets }) {
                               <>
                                 <div>
                                   <p className="text-sm text-gray-500">Thời gian chấp thuận</p>
-                                  <p>{new Date(result.data.approvedAt).toLocaleString()}</p>
+                                  <p>{result.data.approvedAt && new Date(result.data.approvedAt).toLocaleString()}</p>
                                 </div>
                                 <div>
                                   <p className="text-sm text-gray-500">Người chấp thuận</p>
@@ -186,7 +229,7 @@ export function CheckRulesetAccordion({ rulesets, setRulesets }) {
                               <>
                                 <div>
                                   <p className="text-sm text-gray-500">Thời gian từ chối</p>
-                                  <p>{new Date(result.data.rejectedAt).toLocaleString()}</p>
+                                  <p>{result.data.rejectedAt && new Date(result.data.rejectedAt).toLocaleString()}</p>
                                 </div>
                                 <div>
                                   <p className="text-sm text-gray-500">Người từ chối</p>

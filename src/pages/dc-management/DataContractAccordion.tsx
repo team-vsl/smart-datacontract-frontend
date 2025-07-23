@@ -1,16 +1,33 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getDataContractsByState, getDataContractById } from "../../states/data-contract-state";
 
-export function DataContractAccordion({ dataContracts, setDataContracts }) {
+// Define interfaces for props and data contract
+interface DataContract {
+  id: string;
+  name: string;
+  version: string;
+  state: "active" | "pending" | "archived";
+  createdAt: string;
+  owner?: string;
+  description?: string;
+  schema?: any;
+}
+
+interface DataContractAccordionProps {
+  dataContracts: DataContract[];
+  setDataContracts: React.Dispatch<React.SetStateAction<DataContract[]>>;
+}
+
+export function DataContractAccordion({ dataContracts, setDataContracts }: DataContractAccordionProps) {
   
   // State cho data contract chi tiết
-  const [selectedContract, setSelectedContract] = useState(null);
+  const [selectedContract, setSelectedContract] = useState<DataContract | null>(null);
   // State cho các input
-  const [contractState, setContractState] = useState("");
-  const [contractId, setContractId] = useState("");
+  const [contractState, setContractState] = useState<string>("");
+  const [contractId, setContractId] = useState<string>("");
   // State cho accordion
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
   
   // Sử dụng useQuery để lấy danh sách data contracts theo trạng thái
   const { 
@@ -25,7 +42,7 @@ export function DataContractAccordion({ dataContracts, setDataContracts }) {
   });
 
   // Hàm xử lý khi chọn trạng thái
-  const handleStateChange = (value) => {
+  const handleStateChange = (value: string) => {
     setContractState(value);
     // useQuery sẽ tự động fetch lại dữ liệu khi contractState thay đổi
   };
@@ -119,7 +136,7 @@ export function DataContractAccordion({ dataContracts, setDataContracts }) {
                 {/* Hiển thị lỗi */}
                 {isError && (
                   <div className="text-center py-4 text-red-500">
-                    <p>Có lỗi xảy ra: {error?.message || 'Không thể tải dữ liệu'}</p>
+                    <p>Có lỗi xảy ra: {(error as Error)?.message || 'Không thể tải dữ liệu'}</p>
                   </div>
                 )}
 
@@ -139,7 +156,7 @@ export function DataContractAccordion({ dataContracts, setDataContracts }) {
                             </tr>
                           </thead>
                           <tbody className="bg-white divide-y divide-gray-200">
-                            {filteredContracts.map((contract) => (
+                            {filteredContracts.map((contract: DataContract) => (
                               <tr key={contract.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => setSelectedContract(contract)}>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm">{contract.id}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm">{contract.name}</td>

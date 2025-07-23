@@ -2,19 +2,51 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { approveDataContract, rejectDataContract, getDataContractById } from "../../states/data-contract-state";
 
-export function CheckDataContract({ dataContracts, setDataContracts }) {
+// Define interfaces for props and data
+interface DataContract {
+  id: string;
+  name: string;
+  version: string;
+  state: "active" | "pending" | "archived";
+  createdAt: string;
+  owner?: string;
+  description?: string;
+  schema?: any;
+  approvedAt?: string;
+  approvedBy?: string;
+  rejectedAt?: string;
+  rejectedBy?: string;
+  reason?: string;
+}
+
+interface CheckDataContractProps {
+  dataContracts: DataContract[];
+  setDataContracts: React.Dispatch<React.SetStateAction<DataContract[]>>;
+}
+
+interface ResultData extends DataContract {
+  status: "approved" | "rejected" | "error";
+}
+
+interface Result {
+  status: "approved" | "rejected" | "error";
+  message: string;
+  data: ResultData | null;
+}
+
+export function CheckDataContract({ dataContracts, setDataContracts }: CheckDataContractProps) {
   // Lấy queryClient để invalidate queries
   const queryClient = useQueryClient();
   
   // State cho input và kết quả
-  const [dataContractId, setDataContractId] = useState("");
-  const [result, setResult] = useState(null);
+  const [dataContractId, setDataContractId] = useState<string>("");
+  const [result, setResult] = useState<Result | null>(null);
   // State cho accordion
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState<boolean>(true);
   
   // Sử dụng useMutation để approve data contract
   const approveMutation = useMutation({
-    mutationFn: (id) => {
+    mutationFn: (id: string) => {
       // Kiểm tra data contract có tồn tại không
       const contract = getDataContractById(dataContracts, id);
       if (!contract) {
@@ -38,10 +70,10 @@ export function CheckDataContract({ dataContracts, setDataContracts }) {
         data: {
           ...updatedContract,
           status: "approved"
-        }
+        } as ResultData
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       setResult({
         status: "error",
         message: error.message,
@@ -52,7 +84,7 @@ export function CheckDataContract({ dataContracts, setDataContracts }) {
   
   // Sử dụng useMutation để reject data contract
   const rejectMutation = useMutation({
-    mutationFn: (id) => {
+    mutationFn: (id: string) => {
       // Kiểm tra data contract có tồn tại không
       const contract = getDataContractById(dataContracts, id);
       if (!contract) {
@@ -76,10 +108,10 @@ export function CheckDataContract({ dataContracts, setDataContracts }) {
         data: {
           ...updatedContract,
           status: "rejected"
-        }
+        } as ResultData
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       setResult({
         status: "error",
         message: error.message,
@@ -184,7 +216,7 @@ export function CheckDataContract({ dataContracts, setDataContracts }) {
                               <>
                                 <div>
                                   <p className="text-sm text-gray-500">Thời gian chấp thuận</p>
-                                  <p>{new Date(result.data.approvedAt).toLocaleString()}</p>
+                                  <p>{result.data.approvedAt && new Date(result.data.approvedAt).toLocaleString()}</p>
                                 </div>
                                 <div>
                                   <p className="text-sm text-gray-500">Người chấp thuận</p>
@@ -196,7 +228,7 @@ export function CheckDataContract({ dataContracts, setDataContracts }) {
                               <>
                                 <div>
                                   <p className="text-sm text-gray-500">Thời gian từ chối</p>
-                                  <p>{new Date(result.data.rejectedAt).toLocaleString()}</p>
+                                  <p>{result.data.rejectedAt && new Date(result.data.rejectedAt).toLocaleString()}</p>
                                 </div>
                                 <div>
                                   <p className="text-sm text-gray-500">Người từ chối</p>
