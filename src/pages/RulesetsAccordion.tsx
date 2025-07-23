@@ -1,21 +1,49 @@
 import { useState, useEffect } from "react";
 import { getRulesetsByState } from "../states/ruleset-state";
 
-export function RulesetsAccordion({ rulesets }) {
+// Define interfaces for ruleset data
+interface Rule {
+  id: string;
+  name: string;
+  condition: string;
+}
+
+interface RulesetContent {
+  rules?: Rule[];
+  raw?: string;
+}
+
+interface Ruleset {
+  id: string;
+  name: string;
+  version?: string;
+  state: "active" | "pending" | "rejected";
+  createdAt: string;
+  description?: string;
+  reason?: string;
+  content: RulesetContent;
+  validationStatus?: string;
+}
+
+interface RulesetsAccordionProps {
+  rulesets: Ruleset[];
+}
+
+export function RulesetsAccordion({ rulesets }: RulesetsAccordionProps) {
   // State cho ruleset chi tiết
-  const [selectedRuleset, setSelectedRuleset] = useState(null);
+  const [selectedRuleset, setSelectedRuleset] = useState<Ruleset | null>(null);
   // State cho các input
-  const [rulesetState, setRulesetState] = useState("");
-  const [rulesetId, setRulesetId] = useState("");
+  const [rulesetState, setRulesetState] = useState<string>("");
+  const [rulesetId, setRulesetId] = useState<string>("");
   // State cho accordion
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
   // State cho loading
-  const [isLoading, setIsLoading] = useState(false);
-  const [isError, setIsError] = useState(false);
-  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isError, setIsError] = useState<boolean>(false);
+  const [error, setError] = useState<Error | null>(null);
   
   // State cho danh sách đã lọc
-  const [filteredRulesets, setFilteredRulesets] = useState([]);
+  const [filteredRulesets, setFilteredRulesets] = useState<Ruleset[]>([]);
 
   // Cập nhật filteredRulesets khi rulesetState hoặc rulesets thay đổi
   useEffect(() => {
@@ -31,7 +59,7 @@ export function RulesetsAccordion({ rulesets }) {
         setIsError(false);
       } catch (err) {
         setIsError(true);
-        setError(err);
+        setError(err as Error);
       } finally {
         setIsLoading(false);
       }
@@ -39,7 +67,7 @@ export function RulesetsAccordion({ rulesets }) {
   }, [rulesetState, rulesets]);
 
   // Hàm xử lý khi chọn trạng thái
-  const handleStateChange = (value) => {
+  const handleStateChange = (value: string) => {
     setRulesetState(value);
   };
 
