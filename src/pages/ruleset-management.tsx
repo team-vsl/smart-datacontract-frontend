@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Container,
@@ -7,23 +7,30 @@ import {
   Link,
   SpaceBetween
 } from "@cloudscape-design/components";
-import { RulesetsAccordion } from "./RulesetsAccordion";
-import { UploadRulesetAccordion } from "./UploadRulesetAccordion";
-import { RunJobAccordion } from "./RunJobAccordion";
-import { JobInfoAccordion } from "./JobInfoAccordion";
-import { initialRulesets } from "../states/ruleset-state";
+import { Rulesets } from "./Rulesets";
+import { UploadRuleset } from "./UploadRuleset";
+import { RunJob } from "./RunJob";
+import { JobInfo } from "./JobInfo";
+import { RulesetAPI } from "../objects/api";
 
 export default function RulesetManagementPage() {
   // Quản lý state chung cho các component
-  const [rulesets, setRulesets] = useState(initialRulesets);
+  const [rulesets, setRulesets] = useState([]);
   const [lastJobRunId, setLastJobRunId] = useState<string | null>(null);
 
-  // Sử dụng useQuery để lưu trữ danh sách trong cache
-  useQuery({
+  // Sử dụng useQuery để lấy dữ liệu từ API
+  const { data: apiRulesets } = useQuery({
     queryKey: ['allRulesets'],
-    queryFn: () => rulesets,
-    initialData: initialRulesets,
+    queryFn: () => RulesetAPI.getAllRulesets(),
+    refetchInterval: 1000, // Refetch every second to sync with API changes
   });
+
+  // Đồng bộ state với dữ liệu từ API
+  useEffect(() => {
+    if (apiRulesets) {
+      setRulesets(apiRulesets);
+    }
+  }, [apiRulesets]);
 
   return (
     <ContentLayout
@@ -41,15 +48,15 @@ export default function RulesetManagementPage() {
         }
       >
         <SpaceBetween size="l">
-          <RulesetsAccordion 
+          <Rulesets 
             rulesets={rulesets}
           />
-          <UploadRulesetAccordion 
+          <UploadRuleset 
             rulesets={rulesets}
             setRulesets={setRulesets}
           />
-          <RunJobAccordion onJobRunComplete={setLastJobRunId} />
-          <JobInfoAccordion lastJobRunId={lastJobRunId} />
+          <RunJob onJobRunComplete={setLastJobRunId} />
+          <JobInfo lastJobRunId={lastJobRunId} />
         </SpaceBetween>
       </Container>
     </ContentLayout>

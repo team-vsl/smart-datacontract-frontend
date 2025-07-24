@@ -19,11 +19,11 @@ interface JobResult {
   timestamp?: string;
 }
 
-interface RunJobAccordionProps {
+interface RunJobProps {
   onJobRunComplete?: (jobRunId: string) => void;
 }
 
-export function RunJobAccordion({ onJobRunComplete }: RunJobAccordionProps = {}) {
+export function RunJob({ onJobRunComplete }: RunJobProps) {
   // State cho accordion
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
@@ -129,7 +129,6 @@ export function RunJobAccordion({ onJobRunComplete }: RunJobAccordionProps = {})
         </Container>
 
         {/* Phần kết quả */}
-        {/* <Container> */}
         {/* Loading state */}
         {isRunning && (
           <StatusIndicator type="loading">Đang chạy job...</StatusIndicator>
@@ -182,7 +181,6 @@ export function RunJobAccordion({ onJobRunComplete }: RunJobAccordionProps = {})
             Chọn job và nhấn "Chạy Job" để xem kết quả
           </Box>
         )}
-        {/* </Container> */}
       </SpaceBetween>
     </ExpandableSection >
   );

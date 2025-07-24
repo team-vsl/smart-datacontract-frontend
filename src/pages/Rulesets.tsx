@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getRulesetsByState } from "../states/ruleset-state";
+import { RulesetAPI } from "../objects/api";
 import {
   Button,
   Container,
@@ -39,13 +39,18 @@ interface Ruleset {
   reason?: string;
   content: RulesetContent;
   validationStatus?: string;
+  owner?: string;
+  approvedAt?: string;
+  approvedBy?: string;
+  rejectedAt?: string;
+  rejectedBy?: string;
 }
 
-interface RulesetsAccordionProps {
+interface RulesetsProps {
   rulesets: Ruleset[];
 }
 
-export function RulesetsAccordion({ rulesets }: RulesetsAccordionProps) {
+export function Rulesets({ rulesets }: RulesetsProps) {
   // State cho ruleset chi tiết
   const [selectedRuleset, setSelectedRuleset] = useState<Ruleset | null>(null);
   // State cho các input
@@ -61,16 +66,22 @@ export function RulesetsAccordion({ rulesets }: RulesetsAccordionProps) {
     isError,
     error
   } = useQuery({
-    queryKey: ['rulesets', rulesetState, rulesets],
-    queryFn: () => {
+    queryKey: ['rulesets', rulesetState],
+    queryFn: async () => {
       if (!rulesetState) return [];
-      console.log("Danh sách rulesets hiện tại:", rulesets);
       console.log("Đang lọc theo trạng thái:", rulesetState);
-      const filtered = getRulesetsByState(rulesets, rulesetState);
-      console.log("Kết quả lọc:", filtered);
-      return filtered;
+      try {
+        const filtered = await RulesetAPI.getRulesetsByState(rulesetState);
+        console.log("Kết quả lọc:", filtered);
+        return filtered;
+      } catch (error) {
+        console.error('Error fetching rulesets:', error);
+        return [];
+      }
     },
     enabled: !!rulesetState, // Chỉ gọi khi có rulesetState
+    retry: 1,
+    staleTime: 5000, // Cache for 5 seconds
   });
 
   // Hàm xử lý khi chọn trạng thái
@@ -79,23 +90,22 @@ export function RulesetsAccordion({ rulesets }: RulesetsAccordionProps) {
   };
 
   // Hàm xử lý khi submit ID/tên ruleset
-  const handleGetRuleset = () => {
+  const handleGetRuleset = async () => {
     if (!rulesetId) return;
-    setIsLoading(true);
 
-    // Tìm ruleset theo ID hoặc tên
-    const foundRuleset = rulesets.find(
-      ruleset => ruleset.id === rulesetId || ruleset.name === rulesetId
-    );
-
-    if (foundRuleset) {
-      setSelectedRuleset(foundRuleset);
-    } else {
-      setIsError(true);
-      setError(new Error(`Không tìm thấy ruleset với ID hoặc tên: ${rulesetId}`));
+    try {
+      // Tìm ruleset theo ID hoặc tên từ API
+      const foundRuleset = await RulesetAPI.getRulesetById(rulesetId);
+      
+      if (foundRuleset) {
+        setSelectedRuleset(foundRuleset);
+      } else {
+        alert(`Không tìm thấy ruleset với ID hoặc tên: ${rulesetId}`);
+      }
+    } catch (error) {
+      console.error('Error finding ruleset:', error);
+      alert(`Lỗi khi tìm ruleset: ${error}`);
     }
-
-    setIsLoading(false);
   };
 
   // Chuyển đổi danh sách trạng thái cho Select component

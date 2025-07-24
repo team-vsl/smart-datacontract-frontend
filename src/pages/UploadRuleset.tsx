@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { addRuleset } from "../states/ruleset-state";
+import { RulesetAPI } from "../objects/api";
 import {
   Button,
   Container,
@@ -39,7 +39,7 @@ interface Ruleset {
   validationStatus?: string;
 }
 
-interface UploadRulesetAccordionProps {
+interface UploadRulesetProps {
   rulesets: Ruleset[];
   setRulesets: React.Dispatch<React.SetStateAction<Ruleset[]>>;
 }
@@ -70,7 +70,7 @@ function findExistingRulesetId(rulesets: Ruleset[], name: string, defaultId: str
   return existingRuleset ? existingRuleset.id : defaultId;
 }
 
-export function UploadRulesetAccordion({ rulesets, setRulesets }: UploadRulesetAccordionProps) {
+export function UploadRuleset({ rulesets, setRulesets }: UploadRulesetProps) {
   // Lấy queryClient để invalidate queries
   const queryClient = useQueryClient();
   
@@ -93,8 +93,8 @@ export function UploadRulesetAccordion({ rulesets, setRulesets }: UploadRulesetA
       // Giả lập API call với delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Sử dụng hàm addRuleset để xóa ruleset có cùng tên khỏi trạng thái pending
-      const updatedRulesets = addRuleset(rulesets, newRuleset);
+      // Sử dụng RulesetAPI để thêm ruleset mới
+      const updatedRulesets = await RulesetAPI.addRuleset(newRuleset);
       setRulesets(updatedRulesets);
       return newRuleset;
     },
@@ -134,78 +134,6 @@ export function UploadRulesetAccordion({ rulesets, setRulesets }: UploadRulesetA
       });
     }
   });
-
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
-
-    if (!rulesetName.trim()) {
-      newErrors.name = "Tên ruleset không được để trống";
-    }
-
-    if (!rulesetContent.trim()) {
-      newErrors.content = "Nội dung ruleset không được để trống";
-    } else {
-      // Kiểm tra định dạng JSON
-      let isValidFormat = false;
-      let isValidStructure = false;
-      
-      // Thử kiểm tra JSON
-      try {
-        const parsedContent = JSON.parse(rulesetContent);
-        isValidFormat = true; // Nếu parse thành công, đây là JSON hợp lệ
-        
-        // Kiểm tra cấu trúc của ruleset
-        if (parsedContent.rules && Array.isArray(parsedContent.rules)) {
-          // Kiểm tra xem mỗi rule có đủ các trường cần thiết không
-          const allRulesValid = parsedContent.rules.every((rule: any) => 
-            rule.id && rule.name && rule.condition
-          );
-          
-          if (allRulesValid) {
-            isValidStructure = true;
-          } else {
-            newErrors.content = "Mỗi rule phải có các trường: id, name, condition";
-          }
-        } else {
-          newErrors.content = "Ruleset phải có trường 'rules' là một mảng";
-        }
-      } catch (jsonError) {
-        // Không phải JSON, kiểm tra YAML đơn giản
-        // Đây chỉ là kiểm tra cơ bản, không chính xác 100%
-        
-        // Một số đặc điểm cơ bản của YAML:
-        // - Có dòng với định dạng key: value
-        // - Hoặc có dòng bắt đầu bằng dấu gạch ngang (-)
-        const hasKeyValuePair = /^\s*[\w\-]+\s*:\s*.+/m.test(rulesetContent);
-        const hasListItem = /^\s*-\s+.+/m.test(rulesetContent);
-        const hasRulesSection = /^\s*rules\s*:/m.test(rulesetContent);
-        
-        if ((hasKeyValuePair || hasListItem) && hasRulesSection) {
-          isValidFormat = true;
-          isValidStructure = true; // Giả định YAML có cấu trúc đúng
-        } else {
-          newErrors.content = "Nội dung phải là định dạng JSON hoặc YAML hợp lệ và có trường 'rules'";
-        }
-      }
-      
-      if (!isValidFormat) {
-        newErrors.content = "Nội dung phải là định dạng JSON hoặc YAML hợp lệ";
-      } else if (!isValidStructure) {
-        // Nếu đã có lỗi cụ thể về cấu trúc, giữ nguyên lỗi đó
-        if (!newErrors.content) {
-          newErrors.content = "Cấu trúc ruleset không hợp lệ";
-        }
-      }
-      
-      // Lưu trạng thái hợp lệ để sử dụng trong handleSubmit
-      (window as any).isRulesetValid = isValidFormat && isValidStructure;
-    }
-
-    setErrors(newErrors);
-    // Trả về true để form luôn được submit, kể cả khi có lỗi
-    // Chúng ta sẽ xử lý lỗi trong handleSubmit
-    return true;
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

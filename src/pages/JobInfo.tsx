@@ -26,11 +26,11 @@ interface JobRunInfo {
   };
 }
 
-interface JobInfoAccordionProps {
+interface JobInfoProps {
   lastJobRunId: string | null;
 }
 
-export function JobInfoAccordion({ lastJobRunId }: JobInfoAccordionProps) {
+export function JobInfo({ lastJobRunId }: JobInfoProps) {
   // State cho accordion
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
@@ -131,7 +131,6 @@ export function JobInfoAccordion({ lastJobRunId }: JobInfoAccordionProps) {
         </Container>
 
         {/* Phần kết quả */}
-        {/* <Container> */}
         {/* Loading state */}
         {isLoading && (
           <StatusIndicator type="loading">Đang tải thông tin job...</StatusIndicator>
@@ -203,7 +202,6 @@ export function JobInfoAccordion({ lastJobRunId }: JobInfoAccordionProps) {
             Nhập Job Run ID và nhấn "Xem thông tin" để xem chi tiết
           </Box>
         )}
-        {/* </Container> */}
       </SpaceBetween>
     </ExpandableSection>
   );

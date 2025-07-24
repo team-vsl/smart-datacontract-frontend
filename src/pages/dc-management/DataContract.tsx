@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getDataContractsByState, getDataContractById } from "../../states/data-contract-state";
+import { DataContractAPI } from "../../objects/api";
 import {
   Button,
   Container,
@@ -28,12 +28,12 @@ interface DataContract {
   schema?: any;
 }
 
-interface DataContractAccordionProps {
+interface DataContractProps {
   dataContracts: DataContract[];
   setDataContracts: React.Dispatch<React.SetStateAction<DataContract[]>>;
 }
 
-export function DataContractAccordion({ dataContracts, setDataContracts }: DataContractAccordionProps) {
+export function DataContract({ dataContracts, setDataContracts }: DataContractProps) {
   
   // State cho data contract chi tiết
   const [selectedContract, setSelectedContract] = useState<DataContract | null>(null);
@@ -51,7 +51,7 @@ export function DataContractAccordion({ dataContracts, setDataContracts }: DataC
     error 
   } = useQuery({
     queryKey: ['dataContracts', contractState, dataContracts],
-    queryFn: () => getDataContractsByState(dataContracts, contractState),
+    queryFn: async () => await DataContractAPI.getDataContractsByState(contractState),
     enabled: !!contractState, // Chỉ gọi khi có contractState
   });
 
@@ -69,7 +69,7 @@ export function DataContractAccordion({ dataContracts, setDataContracts }: DataC
     isError: isErrorDetail,
   } = useQuery({
     queryKey: ['dataContract', contractId],
-    queryFn: () => getDataContractById(dataContracts, contractId),
+    queryFn: async () => await DataContractAPI.getDataContractById(contractId),
     enabled: false, // Không tự động gọi, chỉ gọi khi nhấn nút Tìm kiếm
     onSuccess: (data) => {
       setSelectedContract(data);

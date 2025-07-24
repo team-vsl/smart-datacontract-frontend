@@ -3,6 +3,9 @@ import { create } from "zustand";
 // Import configs
 import { RouteConfigs } from "@/routes/route-configs";
 
+// Import API from objects
+import { DataContractAPI, RulesetAPI } from "@/objects/api";
+
 type TMainLayoutState = {
   activeHref: string;
 };
@@ -31,6 +34,12 @@ const mainLayoutStActions: TMainLayoutActions = {
       return { ...state, activeHref: href };
     });
   },
+};
+
+// Export API for easy access
+export const API = {
+  DataContract: DataContractAPI,
+  Ruleset: RulesetAPI,
 };
 
 export {

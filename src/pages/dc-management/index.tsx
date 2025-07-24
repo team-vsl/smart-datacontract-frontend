@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Container,
@@ -7,20 +7,27 @@ import {
   Link,
   SpaceBetween
 } from "@cloudscape-design/components";
-import { DataContractAccordion } from "./DataContractAccordion";
+import { DataContract } from "./DataContract";
 import { CheckDataContract } from "./CheckDataContract";
-import { initialDataContracts } from "../../states/data-contract-state";
+import { DataContractAPI } from "../../objects/api";
 
 export default function DataContractManagementPage() {
   // Sử dụng state để lưu trữ danh sách data contracts
-  const [dataContracts, setDataContracts] = useState(initialDataContracts);
+  const [dataContracts, setDataContracts] = useState([]);
 
-  // Sử dụng useQuery để lưu trữ danh sách trong cache
-  useQuery({
+  // Sử dụng useQuery để lấy dữ liệu từ API
+  const { data: apiDataContracts } = useQuery({
     queryKey: ['allDataContracts'],
-    queryFn: () => dataContracts,
-    initialData: initialDataContracts,
+    queryFn: () => DataContractAPI.getAllDataContracts(),
+    refetchInterval: 1000, // Refetch every second to sync with API changes
   });
+
+  // Đồng bộ state với dữ liệu từ API
+  useEffect(() => {
+    if (apiDataContracts) {
+      setDataContracts(apiDataContracts);
+    }
+  }, [apiDataContracts]);
 
   return (
     <ContentLayout
@@ -38,7 +45,7 @@ export default function DataContractManagementPage() {
         }
       >
         <SpaceBetween size="l">
-          <DataContractAccordion 
+          <DataContract 
             dataContracts={dataContracts} 
             setDataContracts={setDataContracts} 
           />
