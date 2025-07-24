@@ -7,15 +7,16 @@ import {
   Link,
   SpaceBetween
 } from "@cloudscape-design/components";
-import { Rulesets } from "./Rulesets";
-import { UploadRuleset } from "./UploadRuleset";
-import { RunJob } from "./RunJob";
-import { JobInfo } from "./JobInfo";
-import { RulesetAPI } from "../objects/api";
+import { Rulesets } from "./components/Rulesets";
+import { UploadRuleset } from "./components/UploadRuleset";
+import { RunJob } from "./components/RunJob";
+import { JobInfo } from "./components/JobInfo";
+import { RulesetAPI } from "../../objects/api";
+import type { Ruleset } from "../../objects/api";
 
 export default function RulesetManagementPage() {
   // Quản lý state chung cho các component
-  const [rulesets, setRulesets] = useState([]);
+  const [rulesets, setRulesets] = useState<Ruleset[]>([]);
   const [lastJobRunId, setLastJobRunId] = useState<string | null>(null);
 
   // Sử dụng useQuery để lấy dữ liệu từ API

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { DataContractAPI } from "../../objects/api";
+import { DataContractAPI } from "../../../objects/api";
+import type { DataContract } from "../../../objects/api";
 import {
   Button,
   Container,
@@ -16,18 +17,7 @@ import {
   Table
 } from "@cloudscape-design/components";
 
-// Define interfaces for props and data contract
-interface DataContract {
-  id: string;
-  name: string;
-  version: string;
-  state: "active" | "pending" | "archived";
-  createdAt: string;
-  owner?: string;
-  description?: string;
-  schema?: any;
-}
-
+// Use DataContract type from API
 interface DataContractProps {
   dataContracts: DataContract[];
   setDataContracts: React.Dispatch<React.SetStateAction<DataContract[]>>;
@@ -71,18 +61,21 @@ export function DataContract({ dataContracts, setDataContracts }: DataContractPr
     queryKey: ['dataContract', contractId],
     queryFn: async () => await DataContractAPI.getDataContractById(contractId),
     enabled: false, // Không tự động gọi, chỉ gọi khi nhấn nút Tìm kiếm
-    onSuccess: (data) => {
-      setSelectedContract(data);
-    },
-    onError: (err) => {
-      alert(`Không tìm thấy Data Contract với ID: ${contractId}`);
-    }
   });
 
   // Hàm xử lý khi submit ID/tên data contract
-  const handleGetContract = () => {
+  const handleGetContract = async () => {
     if (!contractId) return;
-    fetchContract();
+    try {
+      const result = await fetchContract();
+      if (result.data) {
+        setSelectedContract(result.data);
+      } else {
+        alert(`Không tìm thấy Data Contract với ID: ${contractId}`);
+      }
+    } catch (error) {
+      alert(`Lỗi khi tìm Data Contract: ${error}`);
+    }
   };
 
   // Chuyển đổi danh sách trạng thái cho Select component
@@ -142,9 +135,7 @@ export function DataContract({ dataContracts, setDataContracts }: DataContractPr
             
             {/* Hiển thị lỗi */}
             {isError && (
-              <Box padding="m" variant="error">
-                <StatusIndicator type="error">{(error as Error)?.message || 'Không thể tải dữ liệu'}</StatusIndicator>
-              </Box>
+              <StatusIndicator type="error">{(error as Error)?.message || 'Không thể tải dữ liệu'}</StatusIndicator>
             )}
 
             {/* Hiển thị danh sách data contract */}

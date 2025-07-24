@@ -7,7 +7,7 @@ export interface DataContract {
   id: string;
   name: string;
   version: string;
-  state: string;
+  state: "active" | "pending" | "archived";
   createdAt: string;
   owner?: string;
   description?: string;

@@ -7,13 +7,13 @@ import {
   Link,
   SpaceBetween
 } from "@cloudscape-design/components";
-import { DataContract } from "./DataContract";
-import { CheckDataContract } from "./CheckDataContract";
-import { DataContractAPI } from "../../objects/api";
+import { DataContract } from "./components/DataContract";
+import { CheckDataContract } from "./components/CheckDataContract";
+import { DataContractAPI, DataContract as DataContractType } from "../../objects/api";
 
 export default function DataContractManagementPage() {
   // Sử dụng state để lưu trữ danh sách data contracts
-  const [dataContracts, setDataContracts] = useState([]);
+  const [dataContracts, setDataContracts] = useState<DataContractType[]>([]);
 
   // Sử dụng useQuery để lấy dữ liệu từ API
   const { data: apiDataContracts } = useQuery({

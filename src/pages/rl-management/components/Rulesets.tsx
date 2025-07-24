@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { RulesetAPI } from "../objects/api";
+import { RulesetAPI } from "../../../objects/api";
+import type { Ruleset } from "../../../objects/api";
 import {
   Button,
   Container,
@@ -27,23 +28,6 @@ interface Rule {
 interface RulesetContent {
   rules?: Rule[];
   raw?: string;
-}
-
-interface Ruleset {
-  id: string;
-  name: string;
-  version?: string;
-  state: "active" | "pending" | "rejected";
-  createdAt: string;
-  description?: string;
-  reason?: string;
-  content: RulesetContent;
-  validationStatus?: string;
-  owner?: string;
-  approvedAt?: string;
-  approvedBy?: string;
-  rejectedAt?: string;
-  rejectedBy?: string;
 }
 
 interface RulesetsProps {
@@ -164,9 +148,7 @@ export function Rulesets({ rulesets }: RulesetsProps) {
 
         {/* Hiển thị lỗi */}
         {isError && (
-          <Box padding="m" variant="error">
-            <StatusIndicator type="error">{error?.message || 'Không thể tải dữ liệu'}</StatusIndicator>
-          </Box>
+          <StatusIndicator type="error">{error?.message || 'Không thể tải dữ liệu'}</StatusIndicator>
         )}
 
         {/* Hiển thị danh sách ruleset */}
@@ -289,7 +271,7 @@ export function Rulesets({ rulesets }: RulesetsProps) {
 
             {selectedRuleset.content && (
               <Box margin={{ top: "l" }}>
-                <Header variant="h4">Nội dung</Header>
+                <Header variant="h3">Nội dung</Header>
                 {selectedRuleset.content.rules ? (
                   <Table
                     columnDefinitions={[

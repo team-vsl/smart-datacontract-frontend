@@ -136,9 +136,7 @@ export function RunJob({ onJobRunComplete }: RunJobProps) {
 
         {/* Error state */}
         {error && (
-          <Box padding="m" variant="error">
-            <StatusIndicator type="error">{error}</StatusIndicator>
-          </Box>
+          <StatusIndicator type="error">{error}</StatusIndicator>
         )}
 
         {/* Success state */}
@@ -150,18 +148,18 @@ export function RunJob({ onJobRunComplete }: RunJobProps) {
 
             {/* Job Run ID */}
             <Box margin={{ top: "l" }} padding="m">
-              <Header variant="h4">Job Run ID</Header>
+              <Header variant="h3">Job Run ID</Header>
               <Box padding="s" variant="code">{jobResult.id}</Box>
             </Box>
 
             {/* Chi tiết kết quả */}
             {jobResult.details && (
               <Box margin={{ top: "l" }} padding="m">
-                <Header variant="h4">Chi tiết kết quả</Header>
+                <Header variant="h3">Chi tiết kết quả</Header>
                 <SpaceBetween size="m" direction="vertical">
                   {Object.entries(jobResult.details).map(([key, value]) => (
                     <FormField key={key} label={key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}>
-                      {value}
+                      {String(value)}
                     </FormField>
                   ))}
                   {jobResult.timestamp && (

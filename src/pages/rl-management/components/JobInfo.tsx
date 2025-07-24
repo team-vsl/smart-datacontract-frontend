@@ -138,9 +138,7 @@ export function JobInfo({ lastJobRunId }: JobInfoProps) {
 
         {/* Error state */}
         {error && (
-          <Box padding="m" variant="error">
-            <StatusIndicator type="error">{error}</StatusIndicator>
-          </Box>
+          <StatusIndicator type="error">{error}</StatusIndicator>
         )}
 
         {/* Job Info */}
@@ -168,7 +166,7 @@ export function JobInfo({ lastJobRunId }: JobInfoProps) {
             {/* Kết quả job */}
             {jobInfo.result && (
               <Box margin={{ top: "l" }} padding="m">
-                <Header variant="h4">Kết quả</Header>
+                <Header variant="h3">Kết quả</Header>
 
                 <Box padding="s" margin={{ bottom: "m" }}>
                   <StatusIndicator type={
@@ -186,7 +184,7 @@ export function JobInfo({ lastJobRunId }: JobInfoProps) {
                         key={key}
                         label={key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                       >
-                        {value}
+                        {String(value)}
                       </FormField>
                     ))}
                   </ColumnLayout>

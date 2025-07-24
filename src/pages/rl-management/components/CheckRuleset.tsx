@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { DataContractAPI } from "../../objects/api";
+import { RulesetAPI } from "../../../objects/api";
+import type { Ruleset } from "../../../objects/api";
 import {
   Button,
   Container,
@@ -14,29 +15,19 @@ import {
   ColumnLayout
 } from "@cloudscape-design/components";
 
-// Define interfaces for props and data
-interface DataContract {
+// Define interfaces for ruleset data
+interface Rule {
   id: string;
   name: string;
-  version: string;
-  state: "active" | "pending" | "archived";
-  createdAt: string;
-  owner?: string;
-  description?: string;
-  schema?: any;
-  approvedAt?: string;
-  approvedBy?: string;
-  rejectedAt?: string;
-  rejectedBy?: string;
-  reason?: string;
+  condition: string;
 }
 
-interface CheckDataContractProps {
-  dataContracts: DataContract[];
-  setDataContracts: React.Dispatch<React.SetStateAction<DataContract[]>>;
+interface RulesetContent {
+  rules?: Rule[];
+  raw?: string;
 }
 
-interface ResultData extends DataContract {
+interface ResultData extends Ruleset {
   status: "approved" | "rejected" | "error";
 }
 
@@ -46,107 +37,126 @@ interface Result {
   data: ResultData | null;
 }
 
-export function CheckDataContract({ dataContracts, setDataContracts }: CheckDataContractProps) {
+interface CheckRulesetProps {
+  rulesets: Ruleset[];
+  setRulesets: React.Dispatch<React.SetStateAction<Ruleset[]>>;
+}
+
+export function CheckRuleset({ rulesets, setRulesets }: CheckRulesetProps) {
   // Lấy queryClient để invalidate queries
   const queryClient = useQueryClient();
   
   // State cho input và kết quả
-  const [dataContractId, setDataContractId] = useState<string>("");
+  const [rulesetId, setRulesetId] = useState<string>("");
   const [result, setResult] = useState<Result | null>(null);
   // State cho accordion
   const [isOpen, setIsOpen] = useState<boolean>(true);
   
-  // Sử dụng useMutation để approve data contract
+  // Sử dụng useMutation để approve ruleset
   const approveMutation = useMutation({
     mutationFn: async (id: string) => {
-      // Kiểm tra data contract có tồn tại không
-      const contract = await DataContractAPI.getDataContractById(id);
-      if (!contract) {
-        throw new Error(`Không tìm thấy Data Contract với ID: ${id}`);
+      // Kiểm tra ruleset có tồn tại không
+      const ruleset = await RulesetAPI.getRulesetById(id);
+      if (!ruleset) {
+        throw new Error(`Không tìm thấy Ruleset với ID: ${id}`);
       }
       
-      // Approve data contract và cập nhật state
-      const updatedContracts = await DataContractAPI.approveDataContract(id);
-      setDataContracts(updatedContracts);
+      // Approve ruleset và cập nhật state
+      const updatedRulesets = await RulesetAPI.approveRuleset(id);
+      setRulesets(updatedRulesets);
       
-      // Lấy contract đã cập nhật
-      return await DataContractAPI.getDataContractById(id);
+      // Lấy ruleset đã cập nhật
+      return await RulesetAPI.getRulesetById(id);
     },
-    onSuccess: (updatedContract) => {
+    onSuccess: (updatedRuleset) => {
       // Invalidate queries để cập nhật danh sách
-      queryClient.invalidateQueries({ queryKey: ['dataContracts'] });
+      queryClient.invalidateQueries({ queryKey: ['rulesets'] });
       
       setResult({
         status: "approved",
-        message: `Data Contract ${dataContractId} đã được chấp thuận`,
+        message: `Ruleset ${rulesetId} đã được chấp thuận`,
         data: {
-          ...updatedContract,
+          ...updatedRuleset,
           status: "approved"
         } as ResultData
       });
     },
     onError: (error: Error) => {
       setResult({
-        status: "error",
+        status: "rejected",
         message: error.message,
-        data: null
+        data: {
+          id: rulesetId,
+          name: "Error",
+          state: "rejected",
+          createdAt: new Date().toISOString().split('T')[0],
+          content: {},
+          status: "rejected"
+        } as ResultData
       });
     }
   });
   
-  // Sử dụng useMutation để reject data contract
+  // Sử dụng useMutation để reject ruleset
   const rejectMutation = useMutation({
     mutationFn: async (id: string) => {
-      // Kiểm tra data contract có tồn tại không
-      const contract = await DataContractAPI.getDataContractById(id);
-      if (!contract) {
-        throw new Error(`Không tìm thấy Data Contract với ID: ${id}`);
+      // Kiểm tra ruleset có tồn tại không
+      const ruleset = await RulesetAPI.getRulesetById(id);
+      if (!ruleset) {
+        throw new Error(`Không tìm thấy Ruleset với ID: ${id}`);
       }
       
-      // Reject data contract và cập nhật state
-      const updatedContracts = await DataContractAPI.rejectDataContract(id, "Data schema không đáp ứng yêu cầu");
-      setDataContracts(updatedContracts);
+      // Reject ruleset và cập nhật state
+      const updatedRulesets = await RulesetAPI.rejectRuleset(id, "Ruleset không đáp ứng yêu cầu");
+      setRulesets(updatedRulesets);
       
-      // Lấy contract đã cập nhật
-      return await DataContractAPI.getDataContractById(id);
+      // Lấy ruleset đã cập nhật
+      return await RulesetAPI.getRulesetById(id);
     },
-    onSuccess: (updatedContract) => {
+    onSuccess: (updatedRuleset) => {
       // Invalidate queries để cập nhật danh sách
-      queryClient.invalidateQueries({ queryKey: ['dataContracts'] });
+      queryClient.invalidateQueries({ queryKey: ['rulesets'] });
       
       setResult({
         status: "rejected",
-        message: `Data Contract ${dataContractId} đã bị từ chối`,
+        message: `Ruleset ${rulesetId} đã bị từ chối`,
         data: {
-          ...updatedContract,
+          ...updatedRuleset,
           status: "rejected"
         } as ResultData
       });
     },
     onError: (error: Error) => {
       setResult({
-        status: "error",
+        status: "rejected",
         message: error.message,
-        data: null
+        data: {
+          id: rulesetId,
+          name: "Error",
+          state: "rejected",
+          createdAt: new Date().toISOString().split('T')[0],
+          content: {},
+          status: "rejected"
+        } as ResultData
       });
     }
   });
 
-  // Hàm xử lý khi approve data contract
+  // Hàm xử lý khi approve ruleset
   const handleApprove = () => {
-    if (!dataContractId) return;
-    approveMutation.mutate(dataContractId);
+    if (!rulesetId) return;
+    approveMutation.mutate(rulesetId);
   };
 
-  // Hàm xử lý khi reject data contract
+  // Hàm xử lý khi reject ruleset
   const handleReject = () => {
-    if (!dataContractId) return;
-    rejectMutation.mutate(dataContractId);
+    if (!rulesetId) return;
+    rejectMutation.mutate(rulesetId);
   };
 
   return (
     <ExpandableSection
-      headerText="Check Data Contract"
+      headerText="Check Ruleset"
       variant="container"
       defaultExpanded={isOpen}
       onChange={({ detail }) => setIsOpen(detail.expanded)}
@@ -156,15 +166,15 @@ export function CheckDataContract({ dataContracts, setDataContracts }: CheckData
           <Container header={<Header variant="h3">Tương tác</Header>}>
             <SpaceBetween size="xs" direction="horizontal" alignItems="end">
               <Input
-                placeholder="Nhập Data Contract ID hoặc Name"
-                value={dataContractId}
-                onChange={({ detail }) => setDataContractId(detail.value)}
+                placeholder="Nhập Ruleset ID hoặc Name"
+                value={rulesetId}
+                onChange={({ detail }) => setRulesetId(detail.value)}
                 disabled={approveMutation.isPending || rejectMutation.isPending}
               />
               <Button 
                 variant="primary"
                 onClick={handleApprove}
-                disabled={!dataContractId || approveMutation.isPending || rejectMutation.isPending}
+                disabled={!rulesetId || approveMutation.isPending || rejectMutation.isPending}
                 loading={approveMutation.isPending}
               >
                 Approve
@@ -172,7 +182,7 @@ export function CheckDataContract({ dataContracts, setDataContracts }: CheckData
               <Button 
                 variant="normal"
                 onClick={handleReject}
-                disabled={!dataContractId || approveMutation.isPending || rejectMutation.isPending}
+                disabled={!rulesetId || approveMutation.isPending || rejectMutation.isPending}
                 loading={rejectMutation.isPending}
               >
                 Reject
@@ -236,11 +246,11 @@ export function CheckDataContract({ dataContracts, setDataContracts }: CheckData
                       </Box>
                     )}
 
-                    {result.data.schema && (
+                    {result.data.content?.rules && (
                       <Box margin={{top: "m"}}>
-                        <FormField label="Schema">
+                        <FormField label="Rules">
                           <Box variant="code">
-                            {JSON.stringify(result.data.schema, null, 2)}
+                            {JSON.stringify(result.data.content.rules, null, 2)}
                           </Box>
                         </FormField>
                       </Box>
@@ -249,8 +259,8 @@ export function CheckDataContract({ dataContracts, setDataContracts }: CheckData
                 )}
               </SpaceBetween>
             ) : (
-              <Box textAlign="center" color="text-body-secondary" fontStyle="italic">
-                Chưa có kết quả. Vui lòng nhập ID và chọn Approve hoặc Reject.
+              <Box textAlign="center" color="text-body-secondary">
+                <em>Chưa có kết quả. Vui lòng nhập ID và chọn Approve hoặc Reject.</em>
               </Box>
             )}
           </Container>

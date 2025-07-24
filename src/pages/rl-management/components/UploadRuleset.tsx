@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { RulesetAPI } from "../objects/api";
+import { RulesetAPI } from "../../../objects/api";
+import type { Ruleset } from "../../../objects/api";
 import {
   Button,
   Container,
@@ -25,18 +26,6 @@ interface Rule {
 interface RulesetContent {
   rules?: Rule[];
   raw?: string;
-}
-
-interface Ruleset {
-  id: string;
-  name: string;
-  version?: string;
-  state: "active" | "pending" | "rejected";
-  createdAt: string;
-  description?: string;
-  reason?: string;
-  content: RulesetContent;
-  validationStatus?: string;
 }
 
 interface UploadRulesetProps {
@@ -382,15 +371,13 @@ export function UploadRuleset({ rulesets, setRulesets }: UploadRulesetProps) {
             <Container
               header={<Header variant="h3">Kết quả Upload</Header>}
             >
-              <Box padding="m" variant={uploadResult.success ? "success" : "error"}>
-                <StatusIndicator type={uploadResult.success ? "success" : "error"}>
-                  {uploadResult.message}
-                </StatusIndicator>
-              </Box>
+              <StatusIndicator type={uploadResult.success ? "success" : "error"}>
+                {uploadResult.message}
+              </StatusIndicator>
               
               {uploadResult.data && (
                 <Box margin={{top: "m"}}>
-                  <Header variant="h4">Thông tin Ruleset</Header>
+                  <Header variant="h3">Thông tin Ruleset</Header>
                   <ColumnLayout columns={2} variant="text-grid">
                     <FormField label="ID">{uploadResult.data.id}</FormField>
                     <FormField label="Tên">{uploadResult.data.name}</FormField>
@@ -405,9 +392,11 @@ export function UploadRuleset({ rulesets, setRulesets }: UploadRulesetProps) {
                     </FormField>
                     <FormField label="Ngày tạo">{uploadResult.data.createdAt}</FormField>
                     {!uploadResult.success && uploadResult.data.reason && (
-                      <FormField label="Lý do từ chối" columnSpan={2}>
-                        <Box color="text-status-error">{uploadResult.data.reason}</Box>
-                      </FormField>
+                      <Box margin={{top: "m"}}>
+                        <FormField label="Lý do từ chối">
+                          <Box color="text-status-error">{uploadResult.data.reason}</Box>
+                        </FormField>
+                      </Box>
                     )}
                   </ColumnLayout>
                   
