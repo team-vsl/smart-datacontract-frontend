@@ -26,11 +26,13 @@ import { useMainLayoutState, mainLayoutStActions } from "@/states/main-layout";
 
 // Import types
 import type { PropsWithChildren } from "react";
+import { useState } from "react";
 
 const LOCALE = import.meta.env.VITE_I8N_LOCALE;
 
 export default function MainLayout(props: PropsWithChildren) {
   const { activeHref } = useMainLayoutState();
+  const [navigationOpen, setNavigationOpen] = useState(true);
 
   const navigate = useNavigate();
 
@@ -38,7 +40,8 @@ export default function MainLayout(props: PropsWithChildren) {
     <I18nProvider locale={LOCALE} messages={[messages]}>
       <AppLayout
         maxContentWidth={1440}
-        navigationOpen={true}
+        navigationOpen={navigationOpen}
+        onNavigationChange={({ detail }) => setNavigationOpen(detail.open)}
         navigation={
           <SideNavigation
             activeHref={activeHref}
@@ -63,6 +66,11 @@ export default function MainLayout(props: PropsWithChildren) {
                 type: "link",
                 text: RouteConfigs.DCManagement.Name,
                 href: RouteConfigs.DCManagement.Path,
+              },
+              {
+                type: "link",
+                text: RouteConfigs.RulesetManagement.Name,
+                href: RouteConfigs.RulesetManagement.Path,
               },
             ]}
           />

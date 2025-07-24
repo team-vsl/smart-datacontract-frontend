@@ -10,6 +10,7 @@ import MainLayout from "@/layouts/main-layout";
 import HomePage from "@/pages/home";
 import DataContractGeneratorPage from "@/pages/dc-generator";
 import DataContractManagementPage from "@/pages/dc-management";
+import RulesetManagementPage from "@/pages/ruleset-management";
 
 // Import types
 import type { RouteObject } from "react-router-dom";
@@ -37,6 +38,10 @@ const authenticatedRoutes: Array<RouteObject> = [
       {
         path: RouteConfigs.DCManagement.Path,
         element: <DataContractManagementPage />,
+      },
+      {
+        path: RouteConfigs.RulesetManagement.Path,
+        element: <RulesetManagementPage />,
       },
       {
         path: RouteConfigs.Root.Path,

@@ -1,11 +1,27 @@
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Container,
   ContentLayout,
   Header,
   Link,
+  SpaceBetween
 } from "@cloudscape-design/components";
+import { DataContractAccordion } from "./DataContractAccordion";
+import { CheckDataContract } from "./CheckDataContract";
+import { initialDataContracts } from "../../states/data-contract-state";
 
 export default function DataContractManagementPage() {
+  // Sử dụng state để lưu trữ danh sách data contracts
+  const [dataContracts, setDataContracts] = useState(initialDataContracts);
+
+  // Sử dụng useQuery để lưu trữ danh sách trong cache
+  useQuery({
+    queryKey: ['allDataContracts'],
+    queryFn: () => dataContracts,
+    initialData: initialDataContracts,
+  });
+
   return (
     <ContentLayout
       header={
@@ -16,12 +32,21 @@ export default function DataContractManagementPage() {
     >
       <Container
         header={
-          <Header variant="h2" description="Container description">
-            Container header
+          <Header variant="h2" description="Quản lý Data Contract">
+            Data Contract Management
           </Header>
         }
       >
-        <div className="contentPlaceholder" />
+        <SpaceBetween size="l">
+          <DataContractAccordion 
+            dataContracts={dataContracts} 
+            setDataContracts={setDataContracts} 
+          />
+          <CheckDataContract 
+            dataContracts={dataContracts} 
+            setDataContracts={setDataContracts} 
+          />
+        </SpaceBetween>
       </Container>
     </ContentLayout>
   );
