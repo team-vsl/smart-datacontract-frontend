@@ -11,6 +11,9 @@ importers:
       '@cloudscape-design/chat-components':
         specifier: ^1.0.55
         version: 1.0.55(@cloudscape-design/components@3.0.1027(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)
+      '@cloudscape-design/code-view':
+        specifier: ^3.0.67
+        version: 3.0.67(@cloudscape-design/components@3.0.1027(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)
       '@cloudscape-design/components':
         specifier: ^3.0.1027
         version: 3.0.1027(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -23,6 +26,9 @@ importers:
       '@tailwindcss/vite':
         specifier: ^4.1.11
         version: 4.1.11(vite@7.0.5(jiti@2.4.2)(lightningcss@1.30.1))
+      ace-builds:
+        specifier: ^1.43.2
+        version: 1.43.2
       lucide-react:
         specifier: ^0.525.0
         version: 0.525.0(react@19.1.0)
@@ -88,6 +94,12 @@ packages:
 
   '@cloudscape-design/chat-components@1.0.55':
     resolution: {integrity: sha512-eM2SR9QOgElsp8RiJlbcGe8cXexVpgDMOueOM7V+GauIB1vsWL6655BuegmCbHOWOp+FzCwGDdpU6kzegVge+w==}
+    peerDependencies:
+      '@cloudscape-design/components': ^3
+      react: '>=18.2.0'
+
+  '@cloudscape-design/code-view@3.0.67':
+    resolution: {integrity: sha512-jgE5J76hyypePEqg2fQh1hw81IlrHKplOfxveD70qwa4Iia9FWddV9w/+FdTEBgCjZ42aL4zGZFmIIOPGkrQPg==}
     peerDependencies:
       '@cloudscape-design/components': ^3
       react: '>=18.2.0'
@@ -748,6 +760,10 @@ packages:
 
   ace-builds@1.43.2:
     resolution: {integrity: sha512-3wzJUJX0RpMc03jo0V8Q3bSb/cKPnS7Nqqw8fVHsCCHweKMiTIxT3fP46EhjmVy6MCuxwP801ere+RW245phGw==}
+
+  ace-code@1.43.2:
+    resolution: {integrity: sha512-GJnT2CjEJ45Hu4ydAmaRXDRtaujcZTAA0rWW6m2sSpcdGRquaIxLcZwQq/xJ35Mz9gD0+wZbj9jZB0wJPAZJDw==}
+    engines: {node: '>= 0.6.0'}
 
   acorn-jsx@5.3.2:
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
@@ -1481,6 +1497,14 @@ snapshots:
       clsx: 1.2.1
       react: 19.1.0
 
+  '@cloudscape-design/code-view@3.0.67(@cloudscape-design/components@3.0.1027(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      '@cloudscape-design/component-toolkit': 1.0.0-beta.109
+      '@cloudscape-design/components': 3.0.1027(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      ace-code: 1.43.2
+      clsx: 1.2.1
+      react: 19.1.0
+
   '@cloudscape-design/collection-hooks@1.0.73(react@19.1.0)':
     dependencies:
       react: 19.1.0
@@ -2045,6 +2069,8 @@ snapshots:
       - '@swc/helpers'
 
   ace-builds@1.43.2: {}
+
+  ace-code@1.43.2: {}
 
   acorn-jsx@5.3.2(acorn@8.15.0):
     dependencies:

@@ -2,6 +2,7 @@ import {
   Container,
   ContentLayout,
   ColumnLayout,
+  Button,
   Header,
   Link,
 } from "@cloudscape-design/components";
@@ -10,8 +11,20 @@ import {
 import Messages from "./components/messages";
 import ScrollableContainer from "@/components/scrollable-container";
 import UserInput from "./components/user-input";
+import Editor from "./components/editor";
+
+// Import hooks
+import { useStateManager } from "@/hooks/use-state-manager";
+
+// Import states
+import { DCGeneratorStateManager } from "./state";
 
 export default function DataContractGeneratorPage() {
+  const [state, stateFns] = useStateManager(
+    DCGeneratorStateManager.getInitialState(""),
+    DCGeneratorStateManager.buildStateModifiers
+  );
+
   return (
     <ContentLayout
       header={
@@ -54,8 +67,24 @@ export default function DataContractGeneratorPage() {
               Result / Editor
             </Header>
           }
+          footer={
+            <div className="flex gap-2">
+              <Button
+                onClick={() => {
+                  stateFns.setEditable(!state.isEditable);
+                }}
+              >
+                {state.isEditable ? "Done" : "Edit"}
+              </Button>
+              <Button variant="primary">Submit</Button>
+            </div>
+          }
         >
-          <div className="contentPlaceholder" />
+          <Editor
+            isEditable={state.isEditable}
+            code={state.code}
+            onCodeChange={(value) => stateFns.setContent(value)}
+          />
         </Container>
       </div>
     </ContentLayout>
