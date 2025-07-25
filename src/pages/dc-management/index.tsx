@@ -4,12 +4,12 @@ import {
   Container,
   ContentLayout,
   Header,
-  Link,
   SpaceBetween
 } from "@cloudscape-design/components";
 import { DataContract } from "./components/DataContract";
 import { CheckDataContract } from "./components/CheckDataContract";
-import { DataContractAPI, DataContract as DataContractType } from "../../objects/api";
+import { DataContractAPI } from "../../objects/api";
+import type { DataContract as DataContractType } from "../../objects/api";
 
 export default function DataContractManagementPage() {
   // Sử dụng state để lưu trữ danh sách data contracts
@@ -32,26 +32,20 @@ export default function DataContractManagementPage() {
   return (
     <ContentLayout
       header={
-        <Header variant="h1" info={<Link variant="info">Info</Link>}>
+        <Header variant="h1" description="Quản lý Data Contract">
           Data Contract Management
         </Header>
       }
     >
-      <Container
-        header={
-          <Header variant="h2" description="Quản lý Data Contract">
-            Data Contract Management
-          </Header>
-        }
-      >
-        <SpaceBetween size="l">
-          <DataContract 
-            dataContracts={dataContracts} 
-            setDataContracts={setDataContracts} 
+      <Container>
+        <SpaceBetween size="m">
+          <DataContract
+            dataContracts={dataContracts}
+            setDataContracts={setDataContracts}
           />
-          <CheckDataContract 
-            dataContracts={dataContracts} 
-            setDataContracts={setDataContracts} 
+          <CheckDataContract
+            dataContracts={dataContracts}
+            setDataContracts={setDataContracts}
           />
         </SpaceBetween>
       </Container>

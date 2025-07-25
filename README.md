@@ -21,3 +21,9 @@ npm run dev
 # Hoặc
 pnpm run dev
 ```
+
+Cài đặt axios package
+
+```bash
+npm install axios
+```
