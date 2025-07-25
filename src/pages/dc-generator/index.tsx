@@ -18,12 +18,13 @@ import { useStateManager } from "@/hooks/use-state-manager";
 
 // Import states
 import { DCGeneratorStateManager } from "./state";
+import {
+  useDCGeneratorState,
+  dcGeneratorStActions,
+} from "@/states/dc-generator";
 
 export default function DataContractGeneratorPage() {
-  const [state, stateFns] = useStateManager(
-    DCGeneratorStateManager.getInitialState(""),
-    DCGeneratorStateManager.buildStateModifiers
-  );
+  const state = useDCGeneratorState();
 
   return (
     <ContentLayout
@@ -71,7 +72,7 @@ export default function DataContractGeneratorPage() {
             <div className="flex gap-2">
               <Button
                 onClick={() => {
-                  stateFns.setEditable(!state.isEditable);
+                  dcGeneratorStActions.setEditable(!state.isEditable);
                 }}
               >
                 {state.isEditable ? "Done" : "Edit"}
@@ -83,7 +84,7 @@ export default function DataContractGeneratorPage() {
           <Editor
             isEditable={state.isEditable}
             code={state.code}
-            onCodeChange={(value) => stateFns.setContent(value)}
+            onCodeChange={(value) => dcGeneratorStActions.setContent(value)}
           />
         </Container>
       </div>
