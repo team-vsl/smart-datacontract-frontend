@@ -1,5 +1,5 @@
 // Central API file for the application
-import { API } from "./api";
+import { API } from "./api/index";
 import { DataContract } from "./data-contract/types";
 import { Ruleset } from "./ruleset/types";
 
