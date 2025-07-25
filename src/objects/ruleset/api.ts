@@ -1,22 +1,6 @@
 // API functions for ruleset management
 import { initialRulesets } from "../../states/ruleset-state";
-
-// Types
-export interface Ruleset {
-  id: string;
-  name: string;
-  version: string;
-  state: string;
-  createdAt: string;
-  validationStatus: string;
-  content: {
-    rules: Array<{
-      id: string;
-      name: string;
-      condition: string;
-    }>;
-  };
-}
+import { Ruleset } from "./types";
 
 // Get all rulesets
 export async function getAllRulesets(): Promise<Ruleset[]> {
