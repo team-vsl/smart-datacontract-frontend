@@ -4,30 +4,39 @@ import {
   Container,
   ContentLayout,
   Header,
-  SpaceBetween
+  SpaceBetween,
 } from "@cloudscape-design/components";
-import { DataContract } from "./components/DataContract";
-import { CheckDataContract } from "./components/CheckDataContract";
-import { DataContractAPI } from "../../objects/api";
-import type { DataContract as DataContractType } from "../../objects/api";
+
+// Import components
+import { DataContract } from "./components/data-contract";
+import { CheckDataContract } from "./components/check-data-contract";
+
+// Import objects
+import * as DataContractAPI from "@/objects/data-contract/api";
+
+// Import states
+import { dataContractStActions } from "@/states/data-contract";
+
+// Import types
+import type { TDataContract } from "@/objects/data-contract/types";
 
 export default function DataContractManagementPage() {
-  // Sử dụng state để lưu trữ danh sách data contracts
-  const [dataContracts, setDataContracts] = useState<DataContractType[]>([]);
-
   // Sử dụng useQuery để lấy dữ liệu từ API
-  const { data: apiDataContracts } = useQuery({
-    queryKey: ['allDataContracts'],
-    queryFn: () => DataContractAPI.getAllDataContracts(),
+  const { data: dcs } = useQuery({
+    queryKey: ["allDataContracts"],
+    queryFn: () =>
+      DataContractAPI.reqGetAllDataContracts({
+        isMock: true,
+      }),
     refetchInterval: 1000, // Refetch every second to sync with API changes
   });
 
   // Đồng bộ state với dữ liệu từ API
   useEffect(() => {
-    if (apiDataContracts) {
-      setDataContracts(apiDataContracts);
+    if (dcs) {
+      dataContractStActions.setDCS(dcs as TDataContract[]);
     }
-  }, [apiDataContracts]);
+  }, [dcs]);
 
   return (
     <ContentLayout
@@ -39,14 +48,8 @@ export default function DataContractManagementPage() {
     >
       <Container>
         <SpaceBetween size="m">
-          <DataContract
-            dataContracts={dataContracts}
-            setDataContracts={setDataContracts}
-          />
-          <CheckDataContract
-            dataContracts={dataContracts}
-            setDataContracts={setDataContracts}
-          />
+          <DataContract />
+          <CheckDataContract />
         </SpaceBetween>
       </Container>
     </ContentLayout>

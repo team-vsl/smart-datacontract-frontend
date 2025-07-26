@@ -5,33 +5,39 @@ import {
   ContentLayout,
   Header,
   Link,
-  SpaceBetween
+  SpaceBetween,
 } from "@cloudscape-design/components";
-import { Rulesets } from "./components/Rulesets";
-import { UploadRuleset } from "./components/UploadRuleset";
-import { RunJob } from "./components/RunJob";
-import { JobInfo } from "./components/JobInfo";
-import { RulesetAPI } from "../../objects/api";
-import type { Ruleset } from "../../objects/api";
+
+// Import components
+import { Rulesets } from "./components/rulesets";
+import { UploadRuleset } from "./components/upload-ruleset";
+import { RunJob } from "./components/run-job";
+import { JobInfo } from "./components/job-info";
+
+// Import objects
+import * as RulesetAPI from "@/objects/ruleset/api";
+
+// Import types
+import type { TRuleset } from "@/objects/ruleset/types";
 
 export default function RulesetManagementPage() {
   // Quản lý state chung cho các component
-  const [rulesets, setRulesets] = useState<Ruleset[]>([]);
+  const [rulesets, setRulesets] = useState<TRuleset[]>([]);
   const [lastJobRunId, setLastJobRunId] = useState<string | null>(null);
 
   // Sử dụng useQuery để lấy dữ liệu từ API
-  const { data: apiRulesets } = useQuery({
-    queryKey: ['allRulesets'],
-    queryFn: () => RulesetAPI.getAllRulesets(),
+  const { data: responsePayload } = useQuery({
+    queryKey: ["allRulesets"],
+    queryFn: () => RulesetAPI.reqGetAllRulesets(),
     refetchInterval: 1000, // Refetch every second to sync with API changes
   });
 
   // Đồng bộ state với dữ liệu từ API
   useEffect(() => {
-    if (apiRulesets) {
-      setRulesets(apiRulesets);
+    if (responsePayload) {
+      setRulesets(responsePayload.data);
     }
-  }, [apiRulesets]);
+  }, [responsePayload]);
 
   return (
     <ContentLayout
@@ -49,13 +55,8 @@ export default function RulesetManagementPage() {
         }
       >
         <SpaceBetween size="l">
-          <Rulesets 
-            rulesets={rulesets}
-          />
-          <UploadRuleset 
-            rulesets={rulesets}
-            setRulesets={setRulesets}
-          />
+          <Rulesets rulesets={rulesets} />
+          <UploadRuleset rulesets={rulesets} setRulesets={setRulesets} />
           <RunJob onJobRunComplete={setLastJobRunId} />
           <JobInfo lastJobRunId={lastJobRunId} />
         </SpaceBetween>

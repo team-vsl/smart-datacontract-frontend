@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { RulesetAPI } from "../../../objects/api";
-import type { Ruleset } from "../../../objects/api";
 import {
   Button,
   Container,
@@ -15,28 +13,34 @@ import {
   Box,
   ColumnLayout,
   Table,
-  TextFilter
+  TextFilter,
 } from "@cloudscape-design/components";
 
+// Import apis
+import * as RulesetAPI from "@/objects/ruleset/api";
+
+// Import types
+import type { TRuleset } from "@/objects/ruleset/types";
+
 // Define interfaces for ruleset data
-interface Rule {
+type Rule = {
   id: string;
   name: string;
   condition: string;
-}
+};
 
-interface RulesetContent {
+type RulesetContent = {
   rules?: Rule[];
   raw?: string;
-}
+};
 
-interface RulesetsProps {
-  rulesets: Ruleset[];
-}
+type RulesetsProps = {
+  rulesets: TRuleset[];
+};
 
 export function Rulesets({ rulesets }: RulesetsProps) {
   // State cho ruleset chi tiết
-  const [selectedRuleset, setSelectedRuleset] = useState<Ruleset | null>(null);
+  const [selectedRuleset, setSelectedRuleset] = useState<TRuleset | null>(null);
   // State cho các input
   const [rulesetState, setRulesetState] = useState<string>("");
   const [rulesetId, setRulesetId] = useState<string>("");
@@ -48,9 +52,9 @@ export function Rulesets({ rulesets }: RulesetsProps) {
     data: filteredRulesets = [],
     isLoading,
     isError,
-    error
+    error,
   } = useQuery({
-    queryKey: ['rulesets', rulesetState],
+    queryKey: ["rulesets", rulesetState],
     queryFn: async () => {
       if (!rulesetState) return [];
       console.log("Đang lọc theo trạng thái:", rulesetState);
@@ -59,7 +63,7 @@ export function Rulesets({ rulesets }: RulesetsProps) {
         console.log("Kết quả lọc:", filtered);
         return filtered;
       } catch (error) {
-        console.error('Error fetching rulesets:', error);
+        console.error("Error fetching rulesets:", error);
         return [];
       }
     },
@@ -80,14 +84,14 @@ export function Rulesets({ rulesets }: RulesetsProps) {
     try {
       // Tìm ruleset theo ID hoặc tên từ API
       const foundRuleset = await RulesetAPI.getRulesetById(rulesetId);
-      
+
       if (foundRuleset) {
         setSelectedRuleset(foundRuleset);
       } else {
         alert(`Không tìm thấy ruleset với ID hoặc tên: ${rulesetId}`);
       }
     } catch (error) {
-      console.error('Error finding ruleset:', error);
+      console.error("Error finding ruleset:", error);
       alert(`Lỗi khi tìm ruleset: ${error}`);
     }
   };
@@ -97,7 +101,7 @@ export function Rulesets({ rulesets }: RulesetsProps) {
     { label: "Chọn trạng thái", value: "" },
     { label: "Đang hoạt động", value: "active" },
     { label: "Đang chờ xử lý", value: "pending" },
-    { label: "Đã từ chối", value: "rejected" }
+    { label: "Đã từ chối", value: "rejected" },
   ];
 
   return (
@@ -114,8 +118,15 @@ export function Rulesets({ rulesets }: RulesetsProps) {
           <Container header={<Header variant="h3">List Rulesets</Header>}>
             <FormField label="Trạng thái">
               <Select
-                selectedOption={stateOptions.find(option => option.value === rulesetState) || null}
-                onChange={({ detail }) => detail.selectedOption && handleStateChange(detail.selectedOption.value as string)}
+                selectedOption={
+                  stateOptions.find(
+                    (option) => option.value === rulesetState
+                  ) || null
+                }
+                onChange={({ detail }) =>
+                  detail.selectedOption &&
+                  handleStateChange(detail.selectedOption.value as string)
+                }
                 options={stateOptions}
                 placeholder="Chọn trạng thái"
               />
@@ -130,10 +141,7 @@ export function Rulesets({ rulesets }: RulesetsProps) {
                 onChange={({ detail }) => setRulesetId(detail.value)}
                 placeholder="Nhập ID hoặc tên Ruleset"
               />
-              <Button
-                onClick={handleGetRuleset}
-                variant="primary"
-              >
+              <Button onClick={handleGetRuleset} variant="primary">
                 Tìm kiếm
               </Button>
             </SpaceBetween>
@@ -148,80 +156,102 @@ export function Rulesets({ rulesets }: RulesetsProps) {
 
         {/* Hiển thị lỗi */}
         {isError && (
-          <StatusIndicator type="error">{error?.message || 'Không thể tải dữ liệu'}</StatusIndicator>
+          <StatusIndicator type="error">
+            {error?.message || "Không thể tải dữ liệu"}
+          </StatusIndicator>
         )}
 
         {/* Hiển thị danh sách ruleset */}
-        {!isLoading && !isError && filteredRulesets.length > 0 && rulesetState && !selectedRuleset && (
-          <Container header={<Header variant="h3">Danh sách Ruleset - Trạng thái: {rulesetState}</Header>}>
-            <Table
-              columnDefinitions={[
-                {
-                  id: "id",
-                  header: "ID",
-                  cell: item => item.id,
-                  sortingField: "id"
-                },
-                {
-                  id: "name",
-                  header: "Tên",
-                  cell: item => item.name,
-                  sortingField: "name"
-                },
-                {
-                  id: "version",
-                  header: "Version",
-                  cell: item => item.version || "1.0.0",
-                  sortingField: "version"
-                },
-                {
-                  id: "state",
-                  header: "Trạng thái",
-                  cell: item => (
-                    <StatusIndicator type={
-                      item.state === 'active' ? "success" :
-                        item.state === 'pending' ? "in-progress" :
-                          item.state === 'rejected' ? "error" : "stopped"
-                    }>
-                      {item.state}
-                    </StatusIndicator>
-                  )
-                }
-              ]}
-              items={filteredRulesets}
-              onSelectionChange={({ detail }) => {
-                if (detail.selectedItems.length > 0) {
-                  setSelectedRuleset(detail.selectedItems[0]);
-                }
-              }}
-              selectionType="single"
-              trackBy="id"
-              empty={
-                <Box textAlign="center" color="inherit">
-                  <b>Không có dữ liệu</b>
-                  <Box padding={{ bottom: "s" }} variant="p" color="inherit">
-                    Không tìm thấy ruleset nào với trạng thái đã chọn.
-                  </Box>
-                </Box>
+        {!isLoading &&
+          !isError &&
+          filteredRulesets.length > 0 &&
+          rulesetState &&
+          !selectedRuleset && (
+            <Container
+              header={
+                <Header variant="h3">
+                  Danh sách Ruleset - Trạng thái: {rulesetState}
+                </Header>
               }
-            />
-          </Container>
-        )}
+            >
+              <Table
+                columnDefinitions={[
+                  {
+                    id: "id",
+                    header: "ID",
+                    cell: (item) => item.id,
+                    sortingField: "id",
+                  },
+                  {
+                    id: "name",
+                    header: "Tên",
+                    cell: (item) => item.name,
+                    sortingField: "name",
+                  },
+                  {
+                    id: "version",
+                    header: "Version",
+                    cell: (item) => item.version || "1.0.0",
+                    sortingField: "version",
+                  },
+                  {
+                    id: "state",
+                    header: "Trạng thái",
+                    cell: (item) => (
+                      <StatusIndicator
+                        type={
+                          item.state === "active"
+                            ? "success"
+                            : item.state === "pending"
+                            ? "in-progress"
+                            : item.state === "rejected"
+                            ? "error"
+                            : "stopped"
+                        }
+                      >
+                        {item.state}
+                      </StatusIndicator>
+                    ),
+                  },
+                ]}
+                items={filteredRulesets}
+                onSelectionChange={({ detail }) => {
+                  if (detail.selectedItems.length > 0) {
+                    setSelectedRuleset(detail.selectedItems[0]);
+                  }
+                }}
+                selectionType="single"
+                trackBy="id"
+                empty={
+                  <Box textAlign="center" color="inherit">
+                    <b>Không có dữ liệu</b>
+                    <Box padding={{ bottom: "s" }} variant="p" color="inherit">
+                      Không tìm thấy ruleset nào với trạng thái đã chọn.
+                    </Box>
+                  </Box>
+                }
+              />
+            </Container>
+          )}
 
         {/* Hiển thị thông báo khi không có ruleset */}
-        {!isLoading && !isError && filteredRulesets.length === 0 && rulesetState && !selectedRuleset && (
-          <Box textAlign="center" color="text-body-secondary">
-            {rulesetState === 'active' && (
-              <p>Không có ruleset nào ở trạng thái active.</p>
-            )}
-            {rulesetState === 'rejected' && (
-              <p>Không có ruleset nào ở trạng thái rejected.</p>
-            )}
-            {rulesetState === 'pending' && (
-              <p>Không có ruleset nào ở trạng thái pending.</p>
-            )}
-          </Box>
-        )}
+        {!isLoading &&
+          !isError &&
+          filteredRulesets.length === 0 &&
+          rulesetState &&
+          !selectedRuleset && (
+            <Box textAlign="center" color="text-body-secondary">
+              {rulesetState === "active" && (
+                <p>Không có ruleset nào ở trạng thái active.</p>
+              )}
+              {rulesetState === "rejected" && (
+                <p>Không có ruleset nào ở trạng thái rejected.</p>
+              )}
+              {rulesetState === "pending" && (
+                <p>Không có ruleset nào ở trạng thái pending.</p>
+              )}
+            </Box>
+          )}
 
         {/* Hiển thị chi tiết ruleset */}
         {selectedRuleset && (
@@ -245,17 +275,27 @@ export function Rulesets({ rulesets }: RulesetsProps) {
             <ColumnLayout columns={2} variant="text-grid">
               <FormField label="ID">{selectedRuleset.id}</FormField>
               <FormField label="Tên">{selectedRuleset.name}</FormField>
-              <FormField label="Version">{selectedRuleset.version || "1.0.0"}</FormField>
+              <FormField label="Version">
+                {selectedRuleset.version || "1.0.0"}
+              </FormField>
               <FormField label="Trạng thái">
-                <StatusIndicator type={
-                  selectedRuleset.state === 'active' ? "success" :
-                    selectedRuleset.state === 'pending' ? "in-progress" :
-                      selectedRuleset.state === 'rejected' ? "error" : "stopped"
-                }>
+                <StatusIndicator
+                  type={
+                    selectedRuleset.state === "active"
+                      ? "success"
+                      : selectedRuleset.state === "pending"
+                      ? "in-progress"
+                      : selectedRuleset.state === "rejected"
+                      ? "error"
+                      : "stopped"
+                  }
+                >
                   {selectedRuleset.state}
                 </StatusIndicator>
               </FormField>
-              <FormField label="Ngày tạo">{selectedRuleset.createdAt}</FormField>
+              <FormField label="Ngày tạo">
+                {selectedRuleset.createdAt}
+              </FormField>
               {selectedRuleset.reason && (
                 <FormField label="Lý do từ chối">
                   <Box color="text-status-error">{selectedRuleset.reason}</Box>
@@ -265,7 +305,9 @@ export function Rulesets({ rulesets }: RulesetsProps) {
 
             {selectedRuleset.description && (
               <Box margin={{ top: "l" }}>
-                <FormField label="Mô tả">{selectedRuleset.description}</FormField>
+                <FormField label="Mô tả">
+                  {selectedRuleset.description}
+                </FormField>
               </Box>
             )}
 
@@ -278,28 +320,28 @@ export function Rulesets({ rulesets }: RulesetsProps) {
                       {
                         id: "id",
                         header: "Rule ID",
-                        cell: item => item.id
+                        cell: (item) => item.id,
                       },
                       {
                         id: "name",
                         header: "Name",
-                        cell: item => item.name
+                        cell: (item) => item.name,
                       },
                       {
                         id: "condition",
                         header: "Condition",
-                        cell: item => item.condition
-                      }
+                        cell: (item) => item.condition,
+                      },
                     ]}
                     items={selectedRuleset.content.rules}
                     trackBy="id"
                   />
                 ) : selectedRuleset.content.raw ? (
                   <Box>
-                    <Box color="text-status-error" margin={{ bottom: "s" }}>Nội dung không hợp lệ:</Box>
-                    <Box variant="code">
-                      {selectedRuleset.content.raw}
+                    <Box color="text-status-error" margin={{ bottom: "s" }}>
+                      Nội dung không hợp lệ:
                     </Box>
+                    <Box variant="code">{selectedRuleset.content.raw}</Box>
                   </Box>
                 ) : null}
               </Box>

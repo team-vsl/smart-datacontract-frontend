@@ -1,11 +1,18 @@
+import { useMutation } from "@tanstack/react-query";
 import {
   Container,
   ContentLayout,
   ColumnLayout,
+  Box,
+  LiveRegion,
   Button,
   Header,
   Link,
 } from "@cloudscape-design/components";
+import LoadingBar from "@cloudscape-design/chat-components/loading-bar";
+
+// Import apis
+import { reqGenerateDataContract } from "@/objects/data-contract/api";
 
 // Import components
 import Messages from "./components/messages";
@@ -29,7 +36,9 @@ import {
 export default function DataContractGeneratorPage() {
   const state = useDCGeneratorState();
 
-  console.log("Messages:", state.messages);
+  const dcGenerationMutation = useMutation({
+    mutationFn: reqGenerateDataContract,
+  });
 
   return (
     <ContentLayout
@@ -44,20 +53,38 @@ export default function DataContractGeneratorPage() {
           className="w-7/12"
           fitHeight
           header={
-            <Header variant="h2" description="Tạo data contract với GenAI">
-              Generator
-            </Header>
+            <>
+              <Header
+                variant="h2"
+                className="mb-3"
+                description="Tạo data contract với GenAI"
+              >
+                Generator
+              </Header>
+              {dcGenerationMutation.isPending && (
+                <LoadingBar variant="gen-ai" />
+              )}
+            </>
           }
           footer={
             <UserInput
               onAction={(value) => {
-                console.log("Value:", value);
-                dcGeneratorStActions.addMessage(createMessage(value));
-                dcGeneratorStActions.addMessage(
-                  createAIPlaceHolderMessage(
-                    "THIS IS PLACEHOLDER MESSAGE OF AI"
-                  )
+                const userMessage = createMessage(value);
+                const aiPlaceHolderMessage = createAIPlaceHolderMessage(
+                  "THIS IS PLACEHOLDER MESSAGE OF AI"
                 );
+
+                userMessage.id = `msg#${state.messages.length}`;
+                aiPlaceHolderMessage.id = "assistant-placeholder";
+
+                dcGeneratorStActions.addMessage(userMessage);
+                dcGeneratorStActions.addMessage(aiPlaceHolderMessage);
+
+                // Make api request
+                dcGenerationMutation.mutate({
+                  userInput: value,
+                  isMock: true,
+                });
               }}
             />
           }

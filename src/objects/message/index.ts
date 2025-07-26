@@ -16,7 +16,7 @@ export function createMessage(
 
 export function createAIPlaceHolderMessage(content: string = ""): TMessage {
   return {
-    role: CONV_ROLES.USER,
+    role: CONV_ROLES.AI,
     content,
     isPlaceHolder: true,
   };

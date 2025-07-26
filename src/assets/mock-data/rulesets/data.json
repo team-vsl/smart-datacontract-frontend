@@ -1,0 +1,18 @@
+[
+  {
+    "id": "rs-001",
+    "name": "Validation Rules",
+    "version": "1.0.0",
+    "state": "pending",
+    "createdAt": "2024-01-15",
+    "content": {
+      "rules": [
+        {
+          "id": "rule-1",
+          "name": "Required Field Check",
+          "condition": "field != null"
+        }
+      ]
+    }
+  }
+]

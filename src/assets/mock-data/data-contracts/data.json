@@ -1,0 +1,16 @@
+[
+  {
+    "id": "dc-001",
+    "name": "User Data Contract",
+    "version": "1.0.0",
+    "state": "pending",
+    "createdAt": "2024-01-15"
+  },
+  {
+    "id": "dc-002",
+    "name": "User Data Contract #2",
+    "version": "1.0.1",
+    "state": "pending",
+    "createdAt": "2024-01-16"
+  }
+]

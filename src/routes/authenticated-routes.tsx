@@ -10,7 +10,7 @@ import MainLayout from "@/layouts/main-layout";
 import HomePage from "@/pages/home";
 import DataContractGeneratorPage from "@/pages/dc-generator";
 import DataContractManagementPage from "@/pages/dc-management";
-import RulesetManagementPage from "@/pages/rl-management/ruleset-management";
+import RulesetManagementPage from "@/pages/rl-management";
 
 // Import types
 import type { RouteObject } from "react-router-dom";

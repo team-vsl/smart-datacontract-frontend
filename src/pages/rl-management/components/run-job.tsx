@@ -8,20 +8,20 @@ import {
   StatusIndicator,
   ExpandableSection,
   FormField,
-  Box
+  Box,
 } from "@cloudscape-design/components";
 
-interface JobResult {
+type JobResult = {
   id: string;
   status: string;
   message: string;
   details?: any;
   timestamp?: string;
-}
+};
 
-interface RunJobProps {
+type RunJobProps = {
   onJobRunComplete?: (jobRunId: string) => void;
-}
+};
 
 export function RunJob({ onJobRunComplete }: RunJobProps) {
   // State cho accordion
@@ -39,7 +39,7 @@ export function RunJob({ onJobRunComplete }: RunJobProps) {
   const availableJobs = [
     { id: "data_quality_check", name: "Data Quality Check" },
     { id: "data_transformation", name: "Data Transformation" },
-    { id: "data_validation", name: "Data Validation" }
+    { id: "data_validation", name: "Data Validation" },
   ];
 
   // Hàm xử lý khi chạy job
@@ -52,10 +52,14 @@ export function RunJob({ onJobRunComplete }: RunJobProps) {
 
     try {
       // Giả lập API call với delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
       // Tạo một job run ID ngẫu nhiên
-      const jobRunId = `${jobName.substring(0, 2)}_${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+      const jobRunId = `${jobName.substring(0, 2)}_${Math.floor(
+        Math.random() * 10000
+      )
+        .toString()
+        .padStart(4, "0")}`;
 
       // Giả lập kết quả từ FastAPI
       // Trong thực tế, bạn sẽ gọi API thực tế ở đây
@@ -67,9 +71,9 @@ export function RunJob({ onJobRunComplete }: RunJobProps) {
           processed_records: 1250,
           valid_records: 1200,
           invalid_records: 50,
-          execution_time: "2.5s"
+          execution_time: "2.5s",
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       // Thông báo job run ID cho component cha
@@ -87,9 +91,9 @@ export function RunJob({ onJobRunComplete }: RunJobProps) {
   };
 
   // Chuyển đổi danh sách job sang định dạng cho Select component
-  const selectOptions = availableJobs.map(job => ({
+  const selectOptions = availableJobs.map((job) => ({
     label: job.name,
-    value: job.id
+    value: job.id,
   }));
 
   return (
@@ -108,8 +112,14 @@ export function RunJob({ onJobRunComplete }: RunJobProps) {
             {/* Job Selection */}
             <FormField label="Tên Job">
               <Select
-                selectedOption={selectOptions.find(option => option.value === jobName) || null}
-                onChange={({ detail }) => detail.selectedOption && setJobName(detail.selectedOption.value as string)}
+                selectedOption={
+                  selectOptions.find((option) => option.value === jobName) ||
+                  null
+                }
+                onChange={({ detail }) =>
+                  detail.selectedOption &&
+                  setJobName(detail.selectedOption.value as string)
+                }
                 options={selectOptions}
                 disabled={isRunning}
                 placeholder="Chọn job"
@@ -135,21 +145,23 @@ export function RunJob({ onJobRunComplete }: RunJobProps) {
         )}
 
         {/* Error state */}
-        {error && (
-          <StatusIndicator type="error">{error}</StatusIndicator>
-        )}
+        {error && <StatusIndicator type="error">{error}</StatusIndicator>}
 
         {/* Success state */}
         {jobResult && (
           <Container>
-            <StatusIndicator type={jobResult.status === 'success' ? "success" : "warning"}>
+            <StatusIndicator
+              type={jobResult.status === "success" ? "success" : "warning"}
+            >
               {jobResult.message}
             </StatusIndicator>
 
             {/* Job Run ID */}
             <Box margin={{ top: "l" }} padding="m">
               <Header variant="h3">Job Run ID</Header>
-              <Box padding="s" variant="code">{jobResult.id}</Box>
+              <Box padding="s" variant="code">
+                {jobResult.id}
+              </Box>
             </Box>
 
             {/* Chi tiết kết quả */}
@@ -158,7 +170,12 @@ export function RunJob({ onJobRunComplete }: RunJobProps) {
                 <Header variant="h3">Chi tiết kết quả</Header>
                 <SpaceBetween size="m" direction="vertical">
                   {Object.entries(jobResult.details).map(([key, value]) => (
-                    <FormField key={key} label={key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}>
+                    <FormField
+                      key={key}
+                      label={key
+                        .replace(/_/g, " ")
+                        .replace(/\b\w/g, (l) => l.toUpperCase())}
+                    >
                       {String(value)}
                     </FormField>
                   ))}
@@ -180,6 +197,6 @@ export function RunJob({ onJobRunComplete }: RunJobProps) {
           </Box>
         )}
       </SpaceBetween>
-    </ExpandableSection >
+    </ExpandableSection>
   );
 }

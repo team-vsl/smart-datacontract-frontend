@@ -1,9 +1,9 @@
 // Ruleset Types
-export interface Ruleset {
+export type TRuleset = {
   id: string;
   name: string;
   version?: string;
-  state: 'active' | 'pending' | 'rejected';
+  state: "active" | "pending" | "rejected";
   createdAt: string;
   description?: string;
   reason?: string;
@@ -21,4 +21,4 @@ export interface Ruleset {
   approvedBy?: string;
   rejectedAt?: string;
   rejectedBy?: string;
-}
+};

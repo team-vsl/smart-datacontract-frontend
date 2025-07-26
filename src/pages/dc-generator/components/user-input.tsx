@@ -1,9 +1,8 @@
 import { useState } from "react";
-import PromptInput from "@cloudscape-design/components/prompt-input";
-import Box from "@cloudscape-design/components/box";
-import ButtonGroup from "@cloudscape-design/components/button-group";
+import { PromptInput, Box, ButtonGroup } from "@cloudscape-design/components";
 
 export type TUserInputProps = {
+  isDisable?: boolean;
   onAction(value: string): void;
 };
 
@@ -13,7 +12,11 @@ export default function UserInput(props: TUserInputProps) {
   return (
     <PromptInput
       onChange={({ detail }) => setValue(detail.value)}
-      onAction={({ detail }) => props.onAction(detail.value)}
+      onAction={({ detail }) => {
+        props.onAction(detail.value);
+        setValue("");
+      }}
+      disabled={props.isDisable || false}
       value={value}
       actionButtonAriaLabel="Send message"
       actionButtonIconName="send"

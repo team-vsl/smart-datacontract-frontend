@@ -20,9 +20,13 @@ export default function Messages(props: MessagesProps) {
       {props.messages.map((message, index) => (
         <SpaceBetween size="xs">
           {message.role === CONV_ROLES.AI ? (
-            <AIMessage key={`genai#${index}`} message={message} />
+            <AIMessage key={message.id || `genai#${index}`} message={message} />
           ) : (
-            <UserMessage key={`user#${index}`} message={message} user={{}} />
+            <UserMessage
+              key={message.id || `user#${index}`}
+              message={message}
+              user={{}}
+            />
           )}
         </SpaceBetween>
       ))}

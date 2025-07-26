@@ -21,17 +21,17 @@ function buildStateModifiers(
 ) {
   return {
     setCanSubmit(status: boolean) {
-      changeState("canSubmit", function () {
+      changeState("canSubmit", () => {
         return status;
       });
     },
     setContent(code: string) {
-      changeState("code", function () {
+      changeState("code", () => {
         return code;
       });
     },
     setEditable(status: boolean) {
-      changeState("isEditable", function () {
+      changeState("isEditable", () => {
         return status;
       });
     },

@@ -1,9 +1,9 @@
 // Data Contract Types
-export interface DataContract {
+export type TDataContract = {
   id: string;
   name: string;
   version: string;
-  state: 'active' | 'pending' | 'archived';
+  state: "active" | "pending" | "archived";
   createdAt: string;
   owner?: string;
   description?: string;
@@ -13,4 +13,4 @@ export interface DataContract {
   rejectedAt?: string;
   rejectedBy?: string;
   reason?: string;
-}
+};
