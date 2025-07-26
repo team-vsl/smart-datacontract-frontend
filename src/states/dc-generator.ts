@@ -1,15 +1,20 @@
 import { create } from "zustand";
 
+// Import constants
+import { CONV_ROLES } from "@/objects/message/constants";
+
 type TDCGeneratorState = {
   isEditable: boolean;
   canSubmit: boolean;
   code: string;
+  messages: Array<any>;
 };
 
 type TDCGeneratorActions = {
   setCanSubmit(status: boolean): void;
   setContent(code: string): void;
   setEditable(status: boolean): void;
+  addMessage(message: any, options?: any): void;
   reset(): void;
 };
 
@@ -17,6 +22,7 @@ const _initialState: TDCGeneratorState = {
   isEditable: false,
   canSubmit: false,
   code: "string",
+  messages: [],
 };
 
 const useDCGeneratorState = create<TDCGeneratorState>(() => {
@@ -37,6 +43,29 @@ const dcGeneratorStActions: TDCGeneratorActions = {
   setEditable(status: boolean) {
     useDCGeneratorState.setState((state) => {
       return { ...state, isEditable: status };
+    });
+  },
+  addMessage(message, options) {
+    useDCGeneratorState.setState((state) => {
+      const messages = state.messages;
+      const lastMessage = messages[messages.length - 1];
+
+      if (
+        options?.canRemoveAIPlaceHolderMessage &&
+        lastMessage?.role === CONV_ROLES.AI &&
+        lastMessage?.isPlaceHolder
+      ) {
+        messages.pop();
+      }
+
+      if (!lastMessage || lastMessage.id !== message.id) {
+        messages.push(message);
+      }
+
+      return {
+        ...state,
+        messages,
+      };
     });
   },
   reset() {

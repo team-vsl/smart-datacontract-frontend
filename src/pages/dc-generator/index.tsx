@@ -13,6 +13,9 @@ import ScrollableContainer from "@/components/scrollable-container";
 import UserInput from "./components/user-input";
 import Editor from "./components/editor";
 
+// Import helpers
+import { createMessage, createAIPlaceHolderMessage } from "@/objects/message";
+
 // Import hooks
 import { useStateManager } from "@/hooks/use-state-manager";
 
@@ -25,6 +28,8 @@ import {
 
 export default function DataContractGeneratorPage() {
   const state = useDCGeneratorState();
+
+  console.log("Messages:", state.messages);
 
   return (
     <ContentLayout
@@ -43,18 +48,22 @@ export default function DataContractGeneratorPage() {
               Generator
             </Header>
           }
-          footer={<UserInput />}
+          footer={
+            <UserInput
+              onAction={(value) => {
+                console.log("Value:", value);
+                dcGeneratorStActions.addMessage(createMessage(value));
+                dcGeneratorStActions.addMessage(
+                  createAIPlaceHolderMessage(
+                    "THIS IS PLACEHOLDER MESSAGE OF AI"
+                  )
+                );
+              }}
+            />
+          }
         >
           <ScrollableContainer>
-            <Messages
-              messages={[
-                {
-                  role: "ai",
-                  content:
-                    "Mình có thể giúp bạn tạo nhanh một data contract, chỉ cần bạn nhập mô tả dữ liệu mong muốn của bạn bên dưới",
-                },
-              ]}
-            />
+            <Messages messages={state.messages} />
           </ScrollableContainer>
         </Container>
         <Container

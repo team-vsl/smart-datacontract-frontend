@@ -19,7 +19,7 @@ type TMainLayoutActions = {
 };
 
 const _initialState: TMainLayoutState = {
-  activeHref: RouteConfigs.Root.Path,
+  activeHref: location.pathname,
 };
 
 const useMainLayoutState = create<TMainLayoutState>(() => {

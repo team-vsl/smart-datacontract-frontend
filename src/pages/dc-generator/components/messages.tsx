@@ -1,5 +1,8 @@
 import { SpaceBetween } from "@cloudscape-design/components";
 
+// Import constants
+import { CONV_ROLES } from "@/objects/message/constants";
+
 // Import components
 import AIMessage from "./ai-message";
 import UserMessage from "./user-message";
@@ -16,7 +19,7 @@ export default function Messages(props: MessagesProps) {
     <div className="h-full">
       {props.messages.map((message, index) => (
         <SpaceBetween size="xs">
-          {message.role === "ai" ? (
+          {message.role === CONV_ROLES.AI ? (
             <AIMessage key={`genai#${index}`} message={message} />
           ) : (
             <UserMessage key={`user#${index}`} message={message} user={{}} />

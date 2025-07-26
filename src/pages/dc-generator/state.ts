@@ -8,6 +8,7 @@ function getInitialState(code: string) {
     isEditable: false,
     canSubmit: false,
     code: code,
+    messages: [],
   };
 
   return _state;

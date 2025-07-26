@@ -3,12 +3,17 @@ import PromptInput from "@cloudscape-design/components/prompt-input";
 import Box from "@cloudscape-design/components/box";
 import ButtonGroup from "@cloudscape-design/components/button-group";
 
-export default function UserInput() {
+export type TUserInputProps = {
+  onAction(value: string): void;
+};
+
+export default function UserInput(props: TUserInputProps) {
   const [value, setValue] = useState("");
 
   return (
     <PromptInput
       onChange={({ detail }) => setValue(detail.value)}
+      onAction={({ detail }) => props.onAction(detail.value)}
       value={value}
       actionButtonAriaLabel="Send message"
       actionButtonIconName="send"
