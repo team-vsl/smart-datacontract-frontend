@@ -55,20 +55,12 @@ export async function reqGenerateDataContract(
     // Sau này sẽ xử lý sau.
     return new Promise((resolve) => {
       setTimeout(() => {
-        resolve(
-          createMockPayload({
-            output: {
-              message: {
-                content: [
-                  {
-                    text: "Đây là data contract mà bạn mới tạo xong ...",
-                    role: "assistant",
-                  },
-                ],
-              },
-            },
-          })
-        );
+        resolve({
+          message:
+            "Đây là data contract mà mình đã tạo, bằng cách là tổng hợp các yêu cầu " +
+            "của bạn và những dữ liệu mà mình đang có. Bên dưới là kết quả",
+          data: {},
+        });
       }, 2000);
     });
   }
@@ -184,9 +176,13 @@ export async function reqApproveDataContract(
     });
   }
 
-  const response = await api.get<TDataContract>(`/data-contracts/${id}`, {
-    headers: tokenHeader,
-  });
+  const response = await api.post<TDataContract>(
+    `/data-contracts/${id}`,
+    undefined,
+    {
+      headers: tokenHeader,
+    }
+  );
 
   return response.data.data;
 }
@@ -209,9 +205,13 @@ export async function reqRejectDataContract(params: TRejectDataContractParams) {
     });
   }
 
-  const response = await api.get<TDataContract>(`/data-contracts/${id}`, {
-    headers: tokenHeader,
-  });
+  const response = await api.post<TDataContract>(
+    `/data-contracts/${id}`,
+    undefined,
+    {
+      headers: tokenHeader,
+    }
+  );
 
   return response.data.data;
 }

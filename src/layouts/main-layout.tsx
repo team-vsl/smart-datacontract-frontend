@@ -31,8 +31,7 @@ import { useState } from "react";
 const LOCALE = import.meta.env.VITE_I8N_LOCALE;
 
 export default function MainLayout(props: PropsWithChildren) {
-  const { activeHref } = useMainLayoutState();
-  const [navigationOpen, setNavigationOpen] = useState(true);
+  const { activeHref, sideNavigation, helpPanel } = useMainLayoutState();
 
   const navigate = useNavigate();
 
@@ -40,8 +39,10 @@ export default function MainLayout(props: PropsWithChildren) {
     <I18nProvider locale={LOCALE} messages={[messages]}>
       <AppLayout
         maxContentWidth={1440}
-        navigationOpen={navigationOpen}
-        onNavigationChange={({ detail }) => setNavigationOpen(detail.open)}
+        navigationOpen={sideNavigation.isOpen}
+        onNavigationChange={({ detail }) =>
+          mainLayoutStActions.setNavigationOpen(detail.open)
+        }
         navigation={
           <SideNavigation
             activeHref={activeHref}
@@ -75,7 +76,10 @@ export default function MainLayout(props: PropsWithChildren) {
             ]}
           />
         }
-        toolsOpen={false}
+        toolsOpen={helpPanel.isOpen}
+        onToolsChange={({ detail }) => {
+          mainLayoutStActions.setHelpPanelOpen(detail.open);
+        }}
         tools={<HelpPanel header={<h2>Overview</h2>}>Help content</HelpPanel>}
         content={<div className="h-full overflow-auto">{props.children}</div>}
       />
