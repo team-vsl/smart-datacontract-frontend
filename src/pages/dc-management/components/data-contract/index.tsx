@@ -35,7 +35,7 @@ type DataContractProps = {};
 
 const _stateOptions = [
   { label: "Chọn trạng thái", value: "" },
-  { label: "Đang hoạt động", value: DC_STATE_DICT.ACTIVE },
+  { label: "Đang hoạt động", value: DC_STATE_DICT.APPROVED },
   { label: "Đang chờ xử lý", value: DC_STATE_DICT.PENDING },
   { label: "Đã từ chối", value: DC_STATE_DICT.REJECTED },
 ];
@@ -205,7 +205,7 @@ export function DataContract(props: DataContractProps) {
                         cell: (item) => (
                           <StatusIndicator
                             type={
-                              item.state === DC_STATE_DICT.ACTIVE
+                              item.state === DC_STATE_DICT.APPROVED
                                 ? "success"
                                 : item.state === DC_STATE_DICT.PENDING
                                 ? "in-progress"
@@ -243,10 +243,10 @@ export function DataContract(props: DataContractProps) {
                   />
                 ) : (
                   <Box textAlign="center" color="text-body-secondary">
-                    {state.currentContractState === DC_STATE_DICT.ACTIVE && (
+                    {state.currentContractState === DC_STATE_DICT.APPROVED && (
                       <p>
                         Không có data contract nào ở trạng thái{" "}
-                        {DC_STATE_DICT.ACTIVE}.
+                        {DC_STATE_DICT.APPROVED}.
                       </p>
                     )}
                     {state.currentContractState === DC_STATE_DICT.REJECTED && (
@@ -294,7 +294,7 @@ export function DataContract(props: DataContractProps) {
                 <FormField label="Trạng thái">
                   <StatusIndicator
                     type={
-                      state.currentContract.state === DC_STATE_DICT.ACTIVE
+                      state.currentContract.state === DC_STATE_DICT.APPROVED
                         ? "success"
                         : state.currentContract.state === DC_STATE_DICT.PENDING
                         ? "in-progress"

@@ -49,10 +49,12 @@ export function CheckDataContract(props: CheckDataContractProps) {
   // Sử dụng useMutation để approve data contract
   const approveMutation = useMutation({
     mutationFn: async (id: string) => {
+      let isMock = true;
+
       // Kiểm tra data contract có tồn tại không
       const contract = await DataContractAPI.reqGetDataContract({
         id,
-        isMock: true,
+        isMock,
       });
 
       if (!contract) {
@@ -62,6 +64,7 @@ export function CheckDataContract(props: CheckDataContractProps) {
       // Approve data contract và cập nhật state
       const updatedContract = await DataContractAPI.reqApproveDataContract({
         id,
+        isMock,
       });
 
       dataContractStActions.updateDataContract(updatedContract);
@@ -89,8 +92,10 @@ export function CheckDataContract(props: CheckDataContractProps) {
   // Sử dụng useMutation để reject data contract
   const rejectMutation = useMutation({
     mutationFn: async (id: string) => {
+      let isMock = true;
+
       // Kiểm tra data contract có tồn tại không
-      const contract = await DataContractAPI.reqGetDataContract({ id });
+      const contract = await DataContractAPI.reqGetDataContract({ id, isMock });
 
       if (!contract) {
         throw new Error(`Không tìm thấy Data Contract với ID: ${id}`);
@@ -99,12 +104,22 @@ export function CheckDataContract(props: CheckDataContractProps) {
       // Reject data contract và cập nhật state
       const updatedContract = await DataContractAPI.reqRejectDataContract({
         id,
+        isMock,
       });
 
       dataContractStActions.updateDataContract(updatedContract);
 
       // Lấy contract đã cập nhật
       return updatedContract;
+    },
+    onSuccess: (updatedContract: TDataContract | undefined) => {
+      // Invalidate queries để cập nhật danh sách
+      queryClient.invalidateQueries({ queryKey: ["dataContracts"] });
+
+      stateFns.setResult({
+        message: `Data Contract ${state.currentContractId} đã bị từ chối`,
+        data: updatedContract,
+      });
     },
     onError: (error: Error) => {
       stateFns.setResult({

@@ -46,12 +46,10 @@ export default function DataContractManagementPage() {
         </Header>
       }
     >
-      <Container>
-        <SpaceBetween size="m">
-          <DataContract />
-          <CheckDataContract />
-        </SpaceBetween>
-      </Container>
+      <SpaceBetween size="m">
+        <DataContract />
+        <CheckDataContract />
+      </SpaceBetween>
     </ContentLayout>
   );
 }
