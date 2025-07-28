@@ -13,8 +13,11 @@ import {
   ColumnLayout,
 } from "@cloudscape-design/components";
 
-// Import apis
+// Import objects
 import * as RulesetAPI from "@/objects/ruleset/api";
+
+// Import states
+import { useRulesetState, rulesetStActions } from "@/states/ruleset";
 
 // Import types
 import type { TRuleset } from "@/objects/ruleset/types";
@@ -40,7 +43,7 @@ type Result = {
   data: ResultData | null;
 };
 
-type CheckRulesetProps = {
+export type TCheckRulesetProps = {
   rulesets: TRuleset[];
   setRulesets: React.Dispatch<React.SetStateAction<TRuleset[]>>;
 };
@@ -59,17 +62,17 @@ export function CheckRuleset({ rulesets, setRulesets }: CheckRulesetProps) {
   const approveMutation = useMutation({
     mutationFn: async (id: string) => {
       // Kiểm tra ruleset có tồn tại không
-      const ruleset = await RulesetAPI.getRulesetById(id);
+      const ruleset = await RulesetAPI.reqGetRuleset({ id });
+
       if (!ruleset) {
         throw new Error(`Không tìm thấy Ruleset với ID: ${id}`);
       }
 
       // Approve ruleset và cập nhật state
-      const updatedRulesets = await RulesetAPI.approveRuleset(id);
-      setRulesets(updatedRulesets);
+      const updatedRuleset = await RulesetAPI.reqApproveRuleset({ id });
+      rulesetStActions.updateRuleset(updatedRuleset as TRuleset);
 
-      // Lấy ruleset đã cập nhật
-      return await RulesetAPI.getRulesetById(id);
+      return updatedRuleset;
     },
     onSuccess: (updatedRuleset) => {
       // Invalidate queries để cập nhật danh sách
@@ -104,33 +107,18 @@ export function CheckRuleset({ rulesets, setRulesets }: CheckRulesetProps) {
   const rejectMutation = useMutation({
     mutationFn: async (id: string) => {
       // Kiểm tra ruleset có tồn tại không
-      const ruleset = await RulesetAPI.getRulesetById(id);
+      const ruleset = await RulesetAPI.reqGetRuleset({ id });
+
       if (!ruleset) {
         throw new Error(`Không tìm thấy Ruleset với ID: ${id}`);
       }
 
       // Reject ruleset và cập nhật state
-      const updatedRulesets = await RulesetAPI.rejectRuleset(
-        id,
-        "Ruleset không đáp ứng yêu cầu"
-      );
-      setRulesets(updatedRulesets);
+      const updatedRuleset = await RulesetAPI.reqRejectRuleset({ id });
+      rulesetStActions.updateRuleset(updatedRuleset as TRuleset);
 
       // Lấy ruleset đã cập nhật
-      return await RulesetAPI.getRulesetById(id);
-    },
-    onSuccess: (updatedRuleset) => {
-      // Invalidate queries để cập nhật danh sách
-      queryClient.invalidateQueries({ queryKey: ["rulesets"] });
-
-      setResult({
-        status: "rejected",
-        message: `Ruleset ${rulesetId} đã bị từ chối`,
-        data: {
-          ...updatedRuleset,
-          status: "rejected",
-        } as ResultData,
-      });
+      return updatedRuleset;
     },
     onError: (error: Error) => {
       setResult({

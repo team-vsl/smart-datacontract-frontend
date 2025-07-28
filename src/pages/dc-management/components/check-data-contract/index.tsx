@@ -13,6 +13,9 @@ import {
   ColumnLayout,
 } from "@cloudscape-design/components";
 
+// Import constants
+import { DC_STATE_DICT } from "@/utils/constants/dc";
+
 // Import hooks
 import { useStateManager } from "@/hooks/use-state-manager";
 
@@ -29,16 +32,6 @@ import { CheckDCStateManager } from "./state";
 // Import types
 import type { TDataContract } from "@/objects/data-contract/types";
 
-type ResultData = TDataContract & {
-  status: "approved" | "rejected" | "error";
-};
-
-type Result = {
-  status: "approved" | "rejected" | "error";
-  message: string;
-  data: ResultData | null;
-};
-
 type CheckDataContractProps = {};
 
 export function CheckDataContract(props: CheckDataContractProps) {
@@ -52,7 +45,6 @@ export function CheckDataContract(props: CheckDataContractProps) {
     CheckDCStateManager.getInitialState(),
     CheckDCStateManager.buildStateModifiers
   );
-  const [result, setResult] = useState<Result | null>(null);
 
   // Sử dụng useMutation để approve data contract
   const approveMutation = useMutation({
@@ -81,22 +73,15 @@ export function CheckDataContract(props: CheckDataContractProps) {
       // Invalidate queries để cập nhật danh sách
       queryClient.invalidateQueries({ queryKey: ["dataContracts"] });
 
-      setResult({
-        status: "approved",
+      stateFns.setResult({
         message: `Data Contract ${state.currentContractId} đã được chấp thuận`,
-        data: updatedContract
-          ? {
-              ...updatedContract,
-              status: "approved" as const,
-            }
-          : null,
+        data: updatedContract,
       });
     },
-    onError: (error: Error) => {
-      setResult({
-        status: "error",
-        message: error.message,
-        data: null,
+    onError: (error: any) => {
+      stateFns.setResult({
+        error,
+        data: undefined,
       });
     },
   });
@@ -106,6 +91,7 @@ export function CheckDataContract(props: CheckDataContractProps) {
     mutationFn: async (id: string) => {
       // Kiểm tra data contract có tồn tại không
       const contract = await DataContractAPI.reqGetDataContract({ id });
+
       if (!contract) {
         throw new Error(`Không tìm thấy Data Contract với ID: ${id}`);
       }
@@ -120,26 +106,10 @@ export function CheckDataContract(props: CheckDataContractProps) {
       // Lấy contract đã cập nhật
       return updatedContract;
     },
-    onSuccess: (updatedContract: TDataContract | undefined) => {
-      // Invalidate queries để cập nhật danh sách
-      queryClient.invalidateQueries({ queryKey: ["dataContracts"] });
-
-      setResult({
-        status: "rejected",
-        message: `Data Contract ${state.currentContractId} đã bị từ chối`,
-        data: updatedContract
-          ? {
-              ...updatedContract,
-              status: "rejected" as const,
-            }
-          : null,
-      });
-    },
     onError: (error: Error) => {
-      setResult({
-        status: "error",
+      stateFns.setResult({
         message: error.message,
-        data: null,
+        data: undefined,
       });
     },
   });
@@ -208,82 +178,80 @@ export function CheckDataContract(props: CheckDataContractProps) {
             <StatusIndicator type="loading">
               Đang xử lý yêu cầu...
             </StatusIndicator>
-          ) : result ? (
+          ) : state.result && state.result.data ? (
             <SpaceBetween size="m">
               <StatusIndicator
                 type={
-                  result.status === "approved"
+                  state.result.data.state === DC_STATE_DICT.APPROVED
                     ? "success"
-                    : result.status === "rejected"
+                    : state.result.data.state === DC_STATE_DICT.REJECTED
                     ? "error"
                     : "warning"
                 }
               >
-                {result.message}
+                {state.result.message}
               </StatusIndicator>
 
-              {result.data && (
+              {state.result && state.result.data && (
                 <Box>
                   <ColumnLayout columns={2} variant="text-grid">
-                    <FormField label="ID">{result.data.id}</FormField>
-                    <FormField label="Tên">{result.data.name}</FormField>
-                    <FormField label="Version">{result.data.version}</FormField>
+                    <FormField label="ID">{state.result.data.id}</FormField>
+                    <FormField label="Tên">{state.result.data.name}</FormField>
+                    <FormField label="Version">
+                      {state.result.data.version}
+                    </FormField>
                     <FormField label="Trạng thái">
                       <StatusIndicator
                         type={
-                          result.data.status === "approved"
+                          state.result.data.state === DC_STATE_DICT.APPROVED
                             ? "success"
                             : "error"
                         }
                       >
-                        {result.data.status}
+                        {state.result.data.state}
                       </StatusIndicator>
                     </FormField>
 
-                    {result.data.status === "approved" && (
+                    {state.result.data.state === DC_STATE_DICT.APPROVED && (
                       <>
                         <FormField label="Thời gian chấp thuận">
-                          {result.data.approvedAt &&
-                            new Date(result.data.approvedAt).toLocaleString()}
+                          {state.result.data.updatedAt &&
+                            new Date(
+                              state.result.data.updatedAt
+                            ).toLocaleString()}
                         </FormField>
                         <FormField label="Người chấp thuận">
-                          {result.data.approvedBy}
+                          {state.result.data.approvedBy}
                         </FormField>
                       </>
                     )}
 
-                    {result.data.status === "rejected" && (
+                    {state.result.data.state === DC_STATE_DICT.REJECTED && (
                       <>
                         <FormField label="Thời gian từ chối">
-                          {result.data.rejectedAt &&
-                            new Date(result.data.rejectedAt).toLocaleString()}
+                          {state.result.data.updatedAt &&
+                            new Date(
+                              state.result.data.updatedAt
+                            ).toLocaleString()}
                         </FormField>
                         <FormField label="Người từ chối">
-                          {result.data.rejectedBy}
+                          {state.result.data.rejectedBy}
                         </FormField>
                       </>
                     )}
                   </ColumnLayout>
 
-                  {result.data.reason && (
-                    <Box margin={{ top: "m" }}>
-                      <FormField label="Lý do từ chối">
-                        <Box color="text-status-error">
-                          {result.data.reason}
-                        </Box>
-                      </FormField>
-                    </Box>
-                  )}
-
-                  {result.data.schema && (
-                    <Box margin={{ top: "m" }}>
-                      <FormField label="Schema">
-                        <Box variant="code">
-                          {JSON.stringify(result.data.schema, null, 2)}
-                        </Box>
-                      </FormField>
-                    </Box>
-                  )}
+                  {state.result &&
+                    state.result.data &&
+                    state.result.data.reason && (
+                      <Box margin={{ top: "m" }}>
+                        <FormField label="Lý do từ chối">
+                          <Box color="text-status-error">
+                            {state.result.data.reason}
+                          </Box>
+                        </FormField>
+                      </Box>
+                    )}
                 </Box>
               )}
             </SpaceBetween>

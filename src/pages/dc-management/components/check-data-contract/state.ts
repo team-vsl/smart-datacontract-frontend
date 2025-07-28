@@ -1,12 +1,19 @@
 // Import types
 import type { ChangeStateFn, TSetStateFn } from "src/hooks/use-state-manager";
-import type { TDataContract } from "@/objects/data-contract/types";
+import type {
+  TApproveDCReqPayload,
+  TRejectDCReqPayload,
+} from "@/objects/data-contract/types";
+import type { TResPayload } from "@/objects/api/types";
 
 // Define a function to get initial state
 function getInitialState() {
   return {
     isOpen: true,
     currentContractId: null as string | null,
+    result: null as TResPayload<
+      TApproveDCReqPayload | TRejectDCReqPayload | undefined
+    > | null,
   };
 }
 
@@ -19,6 +26,15 @@ function buildStateModifiers(
     setCurrentContractId(contractId: string | null) {
       changeState("currentContractId", () => {
         return contractId;
+      });
+    },
+    setResult(
+      result: TResPayload<
+        TApproveDCReqPayload | TRejectDCReqPayload | undefined
+      > | null
+    ) {
+      changeState("result", () => {
+        return result;
       });
     },
     setIsOpen(status?: boolean) {

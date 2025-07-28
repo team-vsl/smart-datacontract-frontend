@@ -16,7 +16,7 @@ import {
 } from "@cloudscape-design/components";
 
 // Import constants
-import { DC_STATUS_DICT } from "@/utils/constants/dc";
+import { DC_STATE_DICT } from "@/utils/constants/dc";
 
 // Import hooks
 import { useStateManager } from "@/hooks/use-state-manager";
@@ -35,9 +35,9 @@ type DataContractProps = {};
 
 const _stateOptions = [
   { label: "Chọn trạng thái", value: "" },
-  { label: "Đang hoạt động", value: DC_STATUS_DICT.ACTIVE },
-  { label: "Đang chờ xử lý", value: DC_STATUS_DICT.PENDING },
-  { label: "Đã từ chối", value: DC_STATUS_DICT.REJECTED },
+  { label: "Đang hoạt động", value: DC_STATE_DICT.ACTIVE },
+  { label: "Đang chờ xử lý", value: DC_STATE_DICT.PENDING },
+  { label: "Đã từ chối", value: DC_STATE_DICT.REJECTED },
 ];
 
 export function DataContract(props: DataContractProps) {
@@ -205,11 +205,11 @@ export function DataContract(props: DataContractProps) {
                         cell: (item) => (
                           <StatusIndicator
                             type={
-                              item.state === DC_STATUS_DICT.ACTIVE
+                              item.state === DC_STATE_DICT.ACTIVE
                                 ? "success"
-                                : item.state === DC_STATUS_DICT.PENDING
+                                : item.state === DC_STATE_DICT.PENDING
                                 ? "in-progress"
-                                : item.state === DC_STATUS_DICT.REJECTED
+                                : item.state === DC_STATE_DICT.REJECTED
                                 ? "stopped"
                                 : "stopped"
                             }
@@ -243,22 +243,22 @@ export function DataContract(props: DataContractProps) {
                   />
                 ) : (
                   <Box textAlign="center" color="text-body-secondary">
-                    {state.currentContractState === DC_STATUS_DICT.ACTIVE && (
+                    {state.currentContractState === DC_STATE_DICT.ACTIVE && (
                       <p>
                         Không có data contract nào ở trạng thái{" "}
-                        {DC_STATUS_DICT.ACTIVE}.
+                        {DC_STATE_DICT.ACTIVE}.
                       </p>
                     )}
-                    {state.currentContractState === DC_STATUS_DICT.REJECTED && (
+                    {state.currentContractState === DC_STATE_DICT.REJECTED && (
                       <p>
                         Không có data contract nào ở trạng thái{" "}
-                        {DC_STATUS_DICT.REJECTED}.
+                        {DC_STATE_DICT.REJECTED}.
                       </p>
                     )}
-                    {state.currentContractState === DC_STATUS_DICT.PENDING && (
+                    {state.currentContractState === DC_STATE_DICT.PENDING && (
                       <p>
                         Không có data contract nào ở trạng thái{" "}
-                        {DC_STATUS_DICT.PENDING}.
+                        {DC_STATE_DICT.PENDING}.
                       </p>
                     )}
                   </Box>
@@ -294,12 +294,11 @@ export function DataContract(props: DataContractProps) {
                 <FormField label="Trạng thái">
                   <StatusIndicator
                     type={
-                      state.currentContract.state === DC_STATUS_DICT.ACTIVE
+                      state.currentContract.state === DC_STATE_DICT.ACTIVE
                         ? "success"
-                        : state.currentContract.state === DC_STATUS_DICT.PENDING
+                        : state.currentContract.state === DC_STATE_DICT.PENDING
                         ? "in-progress"
-                        : state.currentContract.state ===
-                          DC_STATUS_DICT.REJECTED
+                        : state.currentContract.state === DC_STATE_DICT.REJECTED
                         ? "stopped"
                         : "stopped"
                     }
