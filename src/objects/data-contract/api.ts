@@ -1,7 +1,7 @@
 import { API } from "../api";
 
 // Import constants
-import { DC_STATE_DICT } from "@/utils/constants/dc";
+import { STATE_DICT } from "@/utils/constants/dc";
 
 // Import helpers
 import { createMockPayload } from "../api/helpers";
@@ -173,7 +173,7 @@ export async function reqApproveDataContract(
     const target = dcs.find((dc) => dc.id === id);
 
     return new Promise<TDataContract>((resolve) => {
-      if (target) target.state = DC_STATE_DICT.APPROVED;
+      if (target) target.state = STATE_DICT.APPROVED;
 
       setTimeout(() => {
         resolve(target as TDataContract);
@@ -204,7 +204,7 @@ export async function reqRejectDataContract(params: TRejectDataContractParams) {
     const target = dcs.find((dc) => dc.id === id);
 
     return new Promise<TDataContract>((resolve) => {
-      if (target) target.state = DC_STATE_DICT.REJECTED;
+      if (target) target.state = STATE_DICT.REJECTED;
 
       setTimeout(() => {
         resolve(target as TDataContract);

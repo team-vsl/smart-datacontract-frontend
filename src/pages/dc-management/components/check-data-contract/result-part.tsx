@@ -9,7 +9,7 @@ import {
 } from "@cloudscape-design/components";
 
 // Import constants
-import { DC_STATE_DICT } from "@/utils/constants/dc";
+import { STATE_DICT } from "@/utils/constants/dc";
 
 type CheckDataResultPartProps = {
   isApprovePending: boolean;
@@ -45,9 +45,9 @@ export default function ResultPart(props: CheckDataResultPartProps) {
     <SpaceBetween size="m">
       <StatusIndicator
         type={
-          props.result.data.state === DC_STATE_DICT.APPROVED
+          props.result.data.state === STATE_DICT.APPROVED
             ? "success"
-            : props.result.data.state === DC_STATE_DICT.REJECTED
+            : props.result.data.state === STATE_DICT.REJECTED
             ? "error"
             : "warning"
         }
@@ -63,7 +63,7 @@ export default function ResultPart(props: CheckDataResultPartProps) {
           <FormField label="Trạng thái">
             <StatusIndicator
               type={
-                props.result.data.state === DC_STATE_DICT.APPROVED
+                props.result.data.state === STATE_DICT.APPROVED
                   ? "success"
                   : "error"
               }
@@ -72,7 +72,7 @@ export default function ResultPart(props: CheckDataResultPartProps) {
             </StatusIndicator>
           </FormField>
 
-          {props.result.data.state === DC_STATE_DICT.APPROVED && (
+          {props.result.data.state === STATE_DICT.APPROVED && (
             <>
               <FormField label="Thời gian chấp thuận">
                 {props.result.data.updatedAt &&
@@ -84,7 +84,7 @@ export default function ResultPart(props: CheckDataResultPartProps) {
             </>
           )}
 
-          {props.result.data.state === DC_STATE_DICT.REJECTED && (
+          {props.result.data.state === STATE_DICT.REJECTED && (
             <>
               <FormField label="Thời gian từ chối">
                 {props.result.data.updatedAt &&

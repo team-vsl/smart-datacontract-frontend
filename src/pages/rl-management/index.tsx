@@ -28,39 +28,35 @@ export default function RulesetManagementPage() {
   // Sử dụng useQuery để lấy dữ liệu từ API
   const { data: responsePayload } = useQuery({
     queryKey: ["allRulesets"],
-    queryFn: () => RulesetAPI.reqGetAllRulesets(),
+    queryFn: () => RulesetAPI.reqGetAllRulesets({ isMock: true }),
     refetchInterval: 1000, // Refetch every second to sync with API changes
   });
 
   // Đồng bộ state với dữ liệu từ API
   useEffect(() => {
     if (responsePayload) {
-      setRulesets(responsePayload.data);
+      setRulesets(responsePayload as TRuleset[]);
     }
   }, [responsePayload]);
 
   return (
     <ContentLayout
       header={
-        <Header variant="h1" info={<Link variant="info">Info</Link>}>
+        <Header
+          variant="h1"
+          info={<Link variant="info">Info</Link>}
+          description="Quản lý Ruleset"
+        >
           Ruleset Management
         </Header>
       }
     >
-      <Container
-        header={
-          <Header variant="h2" description="Quản lý Ruleset">
-            Ruleset Management
-          </Header>
-        }
-      >
-        <SpaceBetween size="l">
-          <Rulesets rulesets={rulesets} />
-          <UploadRuleset rulesets={rulesets} setRulesets={setRulesets} />
-          <RunJob onJobRunComplete={setLastJobRunId} />
-          <JobInfo lastJobRunId={lastJobRunId} />
-        </SpaceBetween>
-      </Container>
+      <SpaceBetween size="l">
+        <Rulesets rulesets={rulesets} />
+        <UploadRuleset rulesets={rulesets} setRulesets={setRulesets} />
+        <RunJob onJobRunComplete={setLastJobRunId} />
+        <JobInfo lastJobRunId={lastJobRunId} />
+      </SpaceBetween>
     </ContentLayout>
   );
 }

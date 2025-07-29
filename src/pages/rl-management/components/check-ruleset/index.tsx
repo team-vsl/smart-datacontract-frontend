@@ -13,92 +13,70 @@ import {
   ColumnLayout,
 } from "@cloudscape-design/components";
 
+// Import components
+import InteractionPart from "./interaction-part";
+import ResultPart from "./result-part";
+
 // Import objects
 import * as RulesetAPI from "@/objects/ruleset/api";
 
+// Import hooks
+import { useStateManager } from "@/hooks/use-state-manager";
+
 // Import states
-import { useRulesetState, rulesetStActions } from "@/states/ruleset";
+import { rulesetStActions } from "@/states/ruleset";
+import { CheckRLStateManager } from "./state";
 
 // Import types
 import type { TRuleset } from "@/objects/ruleset/types";
-
-type Rule = {
-  id: string;
-  name: string;
-  condition: string;
-};
-
-type RulesetContent = {
-  rules?: Rule[];
-  raw?: string;
-};
-
-type ResultData = TRuleset & {
-  status: "approved" | "rejected" | "error";
-};
-
-type Result = {
-  status: "approved" | "rejected" | "error";
-  message: string;
-  data: ResultData | null;
-};
 
 export type TCheckRulesetProps = {
   rulesets: TRuleset[];
   setRulesets: React.Dispatch<React.SetStateAction<TRuleset[]>>;
 };
 
-export function CheckRuleset({ rulesets, setRulesets }: CheckRulesetProps) {
+export function CheckRuleset(props: TCheckRulesetProps) {
   // Lấy queryClient để invalidate queries
   const queryClient = useQueryClient();
 
-  // State cho input và kết quả
-  const [rulesetId, setRulesetId] = useState<string>("");
-  const [result, setResult] = useState<Result | null>(null);
-  // State cho accordion
-  const [isOpen, setIsOpen] = useState<boolean>(true);
+  // State
+  const [state, stateFns] = useStateManager(
+    CheckRLStateManager.getInitialState(),
+    CheckRLStateManager.buildStateModifiers
+  );
 
   // Sử dụng useMutation để approve ruleset
   const approveMutation = useMutation({
     mutationFn: async (id: string) => {
+      let isMock = true;
+
       // Kiểm tra ruleset có tồn tại không
-      const ruleset = await RulesetAPI.reqGetRuleset({ id });
+      const ruleset = await RulesetAPI.reqGetRuleset({ id, isMock });
 
       if (!ruleset) {
         throw new Error(`Không tìm thấy Ruleset với ID: ${id}`);
       }
 
       // Approve ruleset và cập nhật state
-      const updatedRuleset = await RulesetAPI.reqApproveRuleset({ id });
+      const updatedRuleset = await RulesetAPI.reqApproveRuleset({ id, isMock });
+
       rulesetStActions.updateRuleset(updatedRuleset as TRuleset);
 
       return updatedRuleset;
     },
-    onSuccess: (updatedRuleset) => {
+    onSuccess: (updatedRuleset: TRuleset | undefined) => {
       // Invalidate queries để cập nhật danh sách
       queryClient.invalidateQueries({ queryKey: ["rulesets"] });
 
-      setResult({
-        status: "approved",
-        message: `Ruleset ${rulesetId} đã được chấp thuận`,
-        data: {
-          ...updatedRuleset,
-          status: "approved",
-        } as ResultData,
+      stateFns.setResult({
+        message: `Ruleset ${state.currentRulesetId} đã được chấp thuận`,
+        data: updatedRuleset,
       });
     },
-    onError: (error: Error) => {
-      setResult({
-        status: "rejected",
-        message: error.message,
-        data: {
-          id: rulesetId,
-          name: "Error",
-          state: "rejected",
-          createdAt: new Date().toISOString().split("T")[0],
-          content: {},
-          status: "rejected",
-        } as ResultData,
+    onError: (error: any) => {
+      stateFns.setResult({
+        error,
+        data: undefined,
       });
     },
   });
@@ -120,171 +98,65 @@ export function CheckRuleset({ rulesets, setRulesets }: CheckRulesetProps) {
       // Lấy ruleset đã cập nhật
       return updatedRuleset;
     },
-    onError: (error: Error) => {
-      setResult({
-        status: "rejected",
-        message: error.message,
-        data: {
-          id: rulesetId,
-          name: "Error",
-          state: "rejected",
-          createdAt: new Date().toISOString().split("T")[0],
-          content: {},
-          status: "rejected",
-        } as ResultData,
+    onSuccess: (updatedRuleset: TRuleset | undefined) => {
+      // Invalidate queries để cập nhật danh sách
+      queryClient.invalidateQueries({ queryKey: ["rulesets"] });
+
+      stateFns.setResult({
+        message: `Ruleset ${state.currentRulesetId} không được chấp thuận`,
+        data: updatedRuleset,
+      });
+    },
+    onError: (error: any) => {
+      stateFns.setResult({
+        error,
+        data: undefined,
       });
     },
   });
 
   // Hàm xử lý khi approve ruleset
   const handleApprove = () => {
-    if (!rulesetId) return;
-    approveMutation.mutate(rulesetId);
+    if (!state.currentRulesetId) return;
+    approveMutation.mutate(state.currentRulesetId);
   };
 
   // Hàm xử lý khi reject ruleset
   const handleReject = () => {
-    if (!rulesetId) return;
-    rejectMutation.mutate(rulesetId);
+    if (!state.currentRulesetId) return;
+    rejectMutation.mutate(state.currentRulesetId);
   };
 
   return (
     <ExpandableSection
       headerText="Check Ruleset"
       variant="container"
-      defaultExpanded={isOpen}
-      onChange={({ detail }) => setIsOpen(detail.expanded)}
+      defaultExpanded={state.isOpen}
+      onChange={({ detail }) => stateFns.setIsOpen(detail.expanded)}
     >
       <SpaceBetween size="l">
         {/* Phần tương tác */}
-        <Container header={<Header variant="h3">Tương tác</Header>}>
-          <SpaceBetween size="xs" direction="horizontal" alignItems="end">
-            <Input
-              placeholder="Nhập Ruleset ID hoặc Name"
-              value={rulesetId}
-              onChange={({ detail }) => setRulesetId(detail.value)}
-              disabled={approveMutation.isPending || rejectMutation.isPending}
-            />
-            <Button
-              variant="primary"
-              onClick={handleApprove}
-              disabled={
-                !rulesetId ||
-                approveMutation.isPending ||
-                rejectMutation.isPending
-              }
-              loading={approveMutation.isPending}
-            >
-              Approve
-            </Button>
-            <Button
-              variant="normal"
-              onClick={handleReject}
-              disabled={
-                !rulesetId ||
-                approveMutation.isPending ||
-                rejectMutation.isPending
-              }
-              loading={rejectMutation.isPending}
-            >
-              Reject
-            </Button>
-          </SpaceBetween>
-        </Container>
+        <InteractionPart
+          isApprovePending={approveMutation.isPending}
+          isRejectPending={rejectMutation.isPending}
+          currentRulesetId={state.currentRulesetId || ""}
+          onCurrentIdInputChange={(detail) => {
+            stateFns.setCurrentRulesetId(detail.value);
+          }}
+          onApproveBtnClick={() => {
+            handleApprove();
+          }}
+          onRejectBtnClick={() => {
+            handleReject();
+          }}
+        />
 
         {/* Phần kết quả */}
-        <Container header={<Header variant="h3">Kết quả</Header>}>
-          {approveMutation.isPending || rejectMutation.isPending ? (
-            <StatusIndicator type="loading">
-              Đang xử lý yêu cầu...
-            </StatusIndicator>
-          ) : result ? (
-            <SpaceBetween size="m">
-              <StatusIndicator
-                type={
-                  result.status === "approved"
-                    ? "success"
-                    : result.status === "rejected"
-                    ? "error"
-                    : "warning"
-                }
-              >
-                {result.message}
-              </StatusIndicator>
-
-              {result.data && (
-                <Box>
-                  <ColumnLayout columns={2} variant="text-grid">
-                    <FormField label="ID">{result.data.id}</FormField>
-                    <FormField label="Tên">{result.data.name}</FormField>
-                    <FormField label="Version">{result.data.version}</FormField>
-                    <FormField label="Trạng thái">
-                      <StatusIndicator
-                        type={
-                          result.data.status === "approved"
-                            ? "success"
-                            : "error"
-                        }
-                      >
-                        {result.data.status}
-                      </StatusIndicator>
-                    </FormField>
-
-                    {result.data.status === "approved" && (
-                      <>
-                        <FormField label="Thời gian chấp thuận">
-                          {result.data.approvedAt &&
-                            new Date(result.data.approvedAt).toLocaleString()}
-                        </FormField>
-                        <FormField label="Người chấp thuận">
-                          {result.data.approvedBy}
-                        </FormField>
-                      </>
-                    )}
-
-                    {result.data.status === "rejected" && (
-                      <>
-                        <FormField label="Thời gian từ chối">
-                          {result.data.rejectedAt &&
-                            new Date(result.data.rejectedAt).toLocaleString()}
-                        </FormField>
-                        <FormField label="Người từ chối">
-                          {result.data.rejectedBy}
-                        </FormField>
-                      </>
-                    )}
-                  </ColumnLayout>
-
-                  {result.data.reason && (
-                    <Box margin={{ top: "m" }}>
-                      <FormField label="Lý do từ chối">
-                        <Box color="text-status-error">
-                          {result.data.reason}
-                        </Box>
-                      </FormField>
-                    </Box>
-                  )}
-
-                  {result.data.content?.rules && (
-                    <Box margin={{ top: "m" }}>
-                      <FormField label="Rules">
-                        <Box variant="code">
-                          {JSON.stringify(result.data.content.rules, null, 2)}
-                        </Box>
-                      </FormField>
-                    </Box>
-                  )}
-                </Box>
-              )}
-            </SpaceBetween>
-          ) : (
-            <Box textAlign="center" color="text-body-secondary">
-              <em>
-                Chưa có kết quả. Vui lòng nhập ID và chọn Approve hoặc Reject.
-              </em>
-            </Box>
-          )}
-        </Container>
+        <ResultPart
+          isApprovePending={approveMutation.isPending}
+          isRejectPending={rejectMutation.isPending}
+          result={state.result}
+        />
       </SpaceBetween>
     </ExpandableSection>
   );
