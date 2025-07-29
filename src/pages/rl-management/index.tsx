@@ -10,9 +10,11 @@ import {
 
 // Import components
 import { Rulesets } from "./components/rulesets";
+import { CheckRuleset } from "./components/check-ruleset";
 import { UploadRuleset } from "./components/upload-ruleset";
-import { RunJob } from "./components/run-job";
-import { JobInfo } from "./components/job-info";
+
+// Import states
+import { useRulesetState, rulesetStActions } from "@/states/ruleset";
 
 // Import objects
 import * as RulesetAPI from "@/objects/ruleset/api";
@@ -22,8 +24,7 @@ import type { TRuleset } from "@/objects/ruleset/types";
 
 export default function RulesetManagementPage() {
   // Quản lý state chung cho các component
-  const [rulesets, setRulesets] = useState<TRuleset[]>([]);
-  const [lastJobRunId, setLastJobRunId] = useState<string | null>(null);
+  const { rls } = useRulesetState();
 
   // Sử dụng useQuery để lấy dữ liệu từ API
   const { data: responsePayload } = useQuery({
@@ -35,7 +36,7 @@ export default function RulesetManagementPage() {
   // Đồng bộ state với dữ liệu từ API
   useEffect(() => {
     if (responsePayload) {
-      setRulesets(responsePayload as TRuleset[]);
+      rulesetStActions.setRLS(responsePayload as TRuleset[]);
     }
   }, [responsePayload]);
 
@@ -52,10 +53,9 @@ export default function RulesetManagementPage() {
       }
     >
       <SpaceBetween size="l">
-        <Rulesets rulesets={rulesets} />
-        <UploadRuleset rulesets={rulesets} setRulesets={setRulesets} />
-        <RunJob onJobRunComplete={setLastJobRunId} />
-        <JobInfo lastJobRunId={lastJobRunId} />
+        <Rulesets rulesets={rls} />
+        <CheckRuleset rulesets={rls} />
+        <UploadRuleset rulesets={rls} />
       </SpaceBetween>
     </ContentLayout>
   );

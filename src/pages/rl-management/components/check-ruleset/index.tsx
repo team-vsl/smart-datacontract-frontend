@@ -32,7 +32,6 @@ import type { TRuleset } from "@/objects/ruleset/types";
 
 export type TCheckRulesetProps = {
   rulesets: TRuleset[];
-  setRulesets: React.Dispatch<React.SetStateAction<TRuleset[]>>;
 };
 
 export function CheckRuleset(props: TCheckRulesetProps) {

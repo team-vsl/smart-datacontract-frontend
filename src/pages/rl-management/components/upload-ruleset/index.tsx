@@ -14,27 +14,24 @@ import {
   Textarea,
 } from "@cloudscape-design/components";
 
-// Import apis
+// Import constants
+import { STATE_DICT } from "@/utils/constants/dc";
+
+// Import hooks
+import { useStateManager } from "@/hooks/use-state-manager";
+
+// Import objects
 import * as RulesetAPI from "@/objects/ruleset/api";
+
+// Import states
+import { RLStateManager } from "../rulesets/state";
+import { rulesetStActions } from "@/states/ruleset";
 
 // Import types
 import type { TRuleset } from "@/objects/ruleset/types";
 
-// Define interfaces for ruleset data
-type Rule = {
-  id: string;
-  name: string;
-  condition: string;
-};
-
-type RulesetContent = {
-  rules?: Rule[];
-  raw?: string;
-};
-
 type UploadRulesetProps = {
   rulesets: TRuleset[];
-  setRulesets: React.Dispatch<React.SetStateAction<TRuleset[]>>;
 };
 
 type FormErrors = {
@@ -60,7 +57,7 @@ function findExistingRulesetId(
   const existingRuleset = rulesets.find(
     (r) =>
       r.name.toLowerCase().trim() === name.toLowerCase().trim() &&
-      r.state === "pending"
+      r.state === STATE_DICT.PENDING
   );
 
   console.log(
@@ -71,9 +68,15 @@ function findExistingRulesetId(
   return existingRuleset ? existingRuleset.id : defaultId;
 }
 
-export function UploadRuleset({ rulesets, setRulesets }: UploadRulesetProps) {
+export function UploadRuleset({ rulesets }: UploadRulesetProps) {
   // Lấy queryClient để invalidate queries
   const queryClient = useQueryClient();
+
+  // State
+  const [state, stateFns] = useStateManager(
+    RLStateManager.getInitialState(),
+    RLStateManager.buildStateModifiers
+  );
 
   // Form state
   const [rulesetName, setRulesetName] = useState<string>("");
@@ -91,13 +94,15 @@ export function UploadRuleset({ rulesets, setRulesets }: UploadRulesetProps) {
   // Sử dụng useMutation để upload ruleset
   const uploadMutation = useMutation({
     mutationFn: async (newRuleset: TRuleset) => {
-      // Giả lập API call với delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
       // Sử dụng RulesetAPI để thêm ruleset mới
-      const updatedRulesets = await RulesetAPI.addRuleset(newRuleset);
-      setRulesets(updatedRulesets);
-      return newRuleset;
+      const uploadedRuleset = await RulesetAPI.reqUploadRuleset({
+        data: newRuleset,
+        isMock: true,
+      });
+
+      rulesetStActions.addRuleset(uploadedRuleset);
+
+      return uploadedRuleset;
     },
     onSuccess: (data) => {
       // Invalidate queries để cập nhật danh sách
@@ -106,33 +111,23 @@ export function UploadRuleset({ rulesets, setRulesets }: UploadRulesetProps) {
 
       // Hiển thị kết quả
       setUploadResult({
-        success: data.state === "active",
-        message:
-          data.state === "active"
-            ? "Ruleset đã được upload thành công và được kích hoạt!"
-            : "Upload ruleset thất bại do cú pháp không hợp lệ.",
-        data: data,
+        success: data.state === STATE_DICT.PENDING,
+        message: "Ruleset đã được upload thành công!",
+        data,
       });
 
       // Clear form sau khi upload thành công
-      if (data.state === "active") {
+      if (data.state === STATE_DICT.PENDING) {
         setRulesetName("");
         setRulesetContent("");
       }
     },
     onError: (error) => {
-      console.error("Lỗi khi upload ruleset:", error);
       setUploadResult({
         success: false,
+        error,
         message: "Upload ruleset thất bại.",
-        data: {
-          id: `rs-${Math.floor(Math.random() * 1000)}`,
-          name: rulesetName || "Ruleset lỗi",
-          state: "rejected",
-          createdAt: new Date().toISOString().split("T")[0],
-          reason: "Lỗi khi xử lý upload",
-          content: { raw: rulesetContent || "Không có nội dung" },
-        },
+        data: undefined,
       });
     },
   });
@@ -221,7 +216,6 @@ export function UploadRuleset({ rulesets, setRulesets }: UploadRulesetProps) {
         state: "rejected",
         createdAt: new Date().toISOString().split("T")[0],
         reason: "Tên ruleset không được để trống",
-        content: { raw: rulesetContent || "Không có nội dung" },
       };
 
       // Sử dụng mutation để upload ruleset
@@ -240,7 +234,6 @@ export function UploadRuleset({ rulesets, setRulesets }: UploadRulesetProps) {
         state: "rejected",
         createdAt: new Date().toISOString().split("T")[0],
         reason: "Nội dung ruleset không được để trống",
-        content: { raw: "Không có nội dung" },
       };
 
       // Sử dụng mutation để upload ruleset
@@ -260,13 +253,12 @@ export function UploadRuleset({ rulesets, setRulesets }: UploadRulesetProps) {
           randomId
         );
 
-        // Nếu ruleset hợp lệ, trạng thái là "active"
+        // Nếu ruleset hợp lệ, trạng thái là STATE_DICT.PENDING
         const newRuleset: TRuleset = {
           id: rulesetId,
           name: rulesetName,
-          state: "active",
+          state: STATE_DICT.PENDING,
           createdAt: new Date().toISOString().split("T")[0],
-          content: JSON.parse(rulesetContent),
         };
 
         // Sử dụng mutation để upload ruleset
@@ -286,7 +278,6 @@ export function UploadRuleset({ rulesets, setRulesets }: UploadRulesetProps) {
           state: "rejected",
           createdAt: new Date().toISOString().split("T")[0],
           reason: errors.content || "Cú pháp ruleset không hợp lệ",
-          content: { raw: rulesetContent },
         };
 
         // Sử dụng mutation để upload ruleset
@@ -304,7 +295,6 @@ export function UploadRuleset({ rulesets, setRulesets }: UploadRulesetProps) {
         state: "rejected",
         createdAt: new Date().toISOString().split("T")[0],
         reason: "Lỗi khi xử lý upload",
-        content: { raw: rulesetContent || "Không có nội dung" },
       };
 
       // Sử dụng mutation để upload ruleset
@@ -409,11 +399,9 @@ export function UploadRuleset({ rulesets, setRulesets }: UploadRulesetProps) {
                   <FormField label="Trạng thái">
                     <StatusIndicator
                       type={
-                        uploadResult.data.state === "active"
+                        uploadResult.data.state === STATE_DICT.PENDING
                           ? "success"
-                          : uploadResult.data.state === "pending"
-                          ? "in-progress"
-                          : uploadResult.data.state === "rejected"
+                          : uploadResult.data.state === STATE_DICT.REJECTED
                           ? "error"
                           : "stopped"
                       }
@@ -436,7 +424,7 @@ export function UploadRuleset({ rulesets, setRulesets }: UploadRulesetProps) {
                 </ColumnLayout>
 
                 <Box margin={{ top: "m" }}>
-                  {uploadResult.data.state === "active" ? (
+                  {uploadResult.data.state === STATE_DICT.PENDING ? (
                     <Box>
                       Ruleset đã được tạo với trạng thái{" "}
                       <Box variant="span" fontWeight="bold">

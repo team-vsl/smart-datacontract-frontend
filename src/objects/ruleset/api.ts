@@ -37,6 +37,10 @@ export type TRejectRulesetParams = _Base & {
   id: string;
 };
 
+export type TUploadRulesetParams = _Base & {
+  data: TRuleset;
+};
+
 /**
  * Gửi một yêu cầu để lấy tất cả các ruleset
  * @param params
@@ -162,6 +166,32 @@ export async function reqRejectRuleset(params: TRejectRulesetParams) {
   const response = await api.post<TRuleset>(
     `/rulesets/${params.id}`,
     undefined,
+    {
+      headers: tokenHeader,
+    }
+  );
+
+  return response.data.data;
+}
+
+export async function reqUploadRuleset(params: TUploadRulesetParams) {
+  const { data, isMock = false } = params || {};
+
+  const tokenHeader = API.generateBearerToken(API.getToken(), true) as object;
+
+  if (isMock) {
+    return new Promise<TRuleset>((resolve) => {
+      setTimeout(() => {
+        resolve(data as TRuleset);
+      }, 500);
+    });
+  }
+
+  const response = await api.post<TRuleset>(
+    `/rulesets`,
+    {
+      ruleset: data,
+    },
     {
       headers: tokenHeader,
     }

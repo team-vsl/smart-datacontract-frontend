@@ -9,7 +9,7 @@ import {
   ExpandableSection,
   FormField,
   Box,
-  ColumnLayout
+  ColumnLayout,
 } from "@cloudscape-design/components";
 
 interface JobRunInfo {
@@ -59,14 +59,17 @@ export function JobInfo({ lastJobRunId }: JobInfoProps) {
 
     try {
       // Giả lập API call với delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Giả lập kết quả từ FastAPI
       // Trong thực tế, bạn sẽ gọi API thực tế ở đây
       const mockJobInfo: JobRunInfo = {
         id: jobRunId,
-        jobName: jobRunId.startsWith("dq") ? "Data Quality Check" :
-          jobRunId.startsWith("dt") ? "Data Transformation" : "Data Validation",
+        jobName: jobRunId.startsWith("dq")
+          ? "Data Quality Check"
+          : jobRunId.startsWith("dt")
+          ? "Data Transformation"
+          : "Data Validation",
         status: "completed",
         startTime: new Date(Date.now() - 120000).toISOString(), // 2 phút trước
         endTime: new Date().toISOString(),
@@ -78,9 +81,9 @@ export function JobInfo({ lastJobRunId }: JobInfoProps) {
             processed_records: 1250,
             valid_records: 1200,
             invalid_records: 50,
-            execution_time: "2.5s"
-          }
-        }
+            execution_time: "2.5s",
+          },
+        },
       };
 
       setJobInfo(mockJobInfo);
@@ -108,7 +111,11 @@ export function JobInfo({ lastJobRunId }: JobInfoProps) {
             {/* Job Run ID Input */}
             <FormField
               label="Job Run ID"
-              description={lastJobRunId ? `Job Run ID gần nhất: ${lastJobRunId}` : undefined}
+              description={
+                lastJobRunId
+                  ? `Job Run ID gần nhất: ${lastJobRunId}`
+                  : undefined
+              }
             >
               <SpaceBetween size="xs" direction="horizontal">
                 <Input
@@ -133,13 +140,13 @@ export function JobInfo({ lastJobRunId }: JobInfoProps) {
         {/* Phần kết quả */}
         {/* Loading state */}
         {isLoading && (
-          <StatusIndicator type="loading">Đang tải thông tin job...</StatusIndicator>
+          <StatusIndicator type="loading">
+            Đang tải thông tin job...
+          </StatusIndicator>
         )}
 
         {/* Error state */}
-        {error && (
-          <StatusIndicator type="error">{error}</StatusIndicator>
-        )}
+        {error && <StatusIndicator type="error">{error}</StatusIndicator>}
 
         {/* Job Info */}
         {jobInfo && (
@@ -150,17 +157,27 @@ export function JobInfo({ lastJobRunId }: JobInfoProps) {
               <FormField label="Job Run ID">{jobInfo.id}</FormField>
               <FormField label="Tên Job">{jobInfo.jobName}</FormField>
               <FormField label="Trạng thái">
-                <StatusIndicator type={
-                  jobInfo.status === 'completed' ? "success" :
-                    jobInfo.status === 'running' ? "in-progress" :
-                      jobInfo.status === 'failed' ? "error" : "stopped"
-                }>
+                <StatusIndicator
+                  type={
+                    jobInfo.status === "completed"
+                      ? "success"
+                      : jobInfo.status === "running"
+                      ? "in-progress"
+                      : jobInfo.status === "failed"
+                      ? "error"
+                      : "stopped"
+                  }
+                >
                   {jobInfo.status}
                 </StatusIndicator>
               </FormField>
               <FormField label="Thời gian chạy">{jobInfo.duration}</FormField>
-              <FormField label="Thời gian bắt đầu">{new Date(jobInfo.startTime).toLocaleString()}</FormField>
-              <FormField label="Thời gian kết thúc">{new Date(jobInfo.endTime).toLocaleString()}</FormField>
+              <FormField label="Thời gian bắt đầu">
+                {new Date(jobInfo.startTime).toLocaleString()}
+              </FormField>
+              <FormField label="Thời gian kết thúc">
+                {new Date(jobInfo.endTime).toLocaleString()}
+              </FormField>
             </ColumnLayout>
 
             {/* Kết quả job */}
@@ -169,24 +186,33 @@ export function JobInfo({ lastJobRunId }: JobInfoProps) {
                 <Header variant="h3">Kết quả</Header>
 
                 <Box padding="s" margin={{ bottom: "m" }}>
-                  <StatusIndicator type={
-                    jobInfo.result.status === 'success' ? "success" :
-                      jobInfo.result.status === 'warning' ? "warning" : "error"
-                  }>
+                  <StatusIndicator
+                    type={
+                      jobInfo.result.status === "success"
+                        ? "success"
+                        : jobInfo.result.status === "warning"
+                        ? "warning"
+                        : "error"
+                    }
+                  >
                     {jobInfo.result.message}
                   </StatusIndicator>
                 </Box>
 
                 {jobInfo.result.details && (
                   <ColumnLayout columns={2} variant="text-grid">
-                    {Object.entries(jobInfo.result.details).map(([key, value]) => (
-                      <FormField
-                        key={key}
-                        label={key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                      >
-                        {String(value)}
-                      </FormField>
-                    ))}
+                    {Object.entries(jobInfo.result.details).map(
+                      ([key, value]) => (
+                        <FormField
+                          key={key}
+                          label={key
+                            .replace(/_/g, " ")
+                            .replace(/\b\w/g, (l) => l.toUpperCase())}
+                        >
+                          {String(value)}
+                        </FormField>
+                      )
+                    )}
                   </ColumnLayout>
                 )}
               </Box>
