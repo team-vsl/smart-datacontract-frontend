@@ -57,11 +57,12 @@ export function DataContract(props: DataContractProps) {
     error,
   } = useQuery({
     queryKey: ["dataContracts", state.currentContractState, dcs],
-    queryFn: async () =>
-      await DataContractAPI.reqGetDataContractsByState({
+    queryFn: async function () {
+      return await DataContractAPI.reqGetDataContractsByState({
         state: state.currentContractState || "",
         isMock: true,
-      }),
+      });
+    },
     enabled: !!state.currentContractState, // Chỉ gọi khi có state.currentContractState
   });
 

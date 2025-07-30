@@ -18,10 +18,10 @@ import { reqGenerateDataContract } from "@/objects/data-contract/api";
 import { CONV_ROLES, CONV_MSG_PLACEHOLDERS } from "@/objects/message/constants";
 
 // Import components
+import AppCodeEditor from "@/components/app-code-editor";
 import Messages from "./components/messages";
 import ScrollableContainer from "@/components/scrollable-container";
 import UserInput from "./components/user-input";
-import Editor from "./components/editor";
 
 // Import helpers
 import { createMessage, createAIPlaceHolderMessage } from "@/objects/message";
@@ -129,7 +129,7 @@ export default function DataContractGeneratorPage() {
             </div>
           }
         >
-          <Editor
+          <AppCodeEditor
             isEditable={state.isEditable}
             code={state.code}
             onCodeChange={(value) => dcGeneratorStActions.setContent(value)}

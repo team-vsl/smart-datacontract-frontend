@@ -25,7 +25,7 @@ export type TEditorProps = {
  * @param props
  * @returns
  */
-export default function Editor(props: TEditorProps) {
+export default function AppCodeEditor(props: TEditorProps) {
   const [preferences, setPreferences] = useState<
     CodeEditorProps.Preferences | undefined
   >(undefined);

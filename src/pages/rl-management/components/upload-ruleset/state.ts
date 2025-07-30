@@ -6,11 +6,27 @@ import type {
   TRejectRLReqPayload,
 } from "@/objects/ruleset/types";
 
+export type TRulesetUploadFormErrors = {
+  name?: string | null;
+  content?: string | null;
+  [key: string]: string | null | undefined;
+};
+export type TRulesetUploadForm = {
+  name?: string;
+  content?: string;
+  errors?: TRulesetUploadFormErrors;
+};
+
 // Define a function to get initial state
 function getInitialState() {
   return {
     isOpen: true,
     currentRulesetId: null as string | null,
+    uploadRulesetForm: {
+      name: "",
+      content: "",
+      errors: {},
+    } as TRulesetUploadForm,
     result: null as TResPayload<
       TApproveRLReqPayload | TRejectRLReqPayload | undefined
     > | null,
@@ -37,6 +53,11 @@ function buildStateModifiers(
         return result;
       });
     },
+    setForm(data: TRulesetUploadForm) {
+      changeState("uploadRulesetForm", (state) => {
+        return { ...state, ...data };
+      });
+    },
     setIsOpen(status?: boolean) {
       changeState("isOpen", () => {
         return Boolean(status);
@@ -48,4 +69,4 @@ function buildStateModifiers(
   };
 }
 
-export const CheckRLStateManager = { getInitialState, buildStateModifiers };
+export const UploadRLStateManager = { getInitialState, buildStateModifiers };

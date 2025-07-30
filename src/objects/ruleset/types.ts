@@ -21,3 +21,5 @@ export type TRuleset = {
 export type TApproveRLReqPayload = TRuleset;
 
 export type TRejectRLReqPayload = TRuleset;
+
+export type TUploadRLReqPayload = TRuleset;

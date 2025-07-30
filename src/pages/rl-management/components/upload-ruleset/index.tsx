@@ -1,21 +1,13 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  Button,
-  Container,
-  Header,
-  Input,
-  SpaceBetween,
-  StatusIndicator,
-  ExpandableSection,
-  FormField,
-  Box,
-  ColumnLayout,
-  Textarea,
-} from "@cloudscape-design/components";
+import { SpaceBetween, ExpandableSection } from "@cloudscape-design/components";
 
 // Import constants
 import { STATE_DICT } from "@/utils/constants/dc";
+
+// Import components
+import ResultPart from "./result-part";
+import InteractionPart from "./interaction-part";
 
 // Import hooks
 import { useStateManager } from "@/hooks/use-state-manager";
@@ -24,7 +16,7 @@ import { useStateManager } from "@/hooks/use-state-manager";
 import * as RulesetAPI from "@/objects/ruleset/api";
 
 // Import states
-import { RLStateManager } from "../rulesets/state";
+import { UploadRLStateManager } from "./state";
 import { rulesetStActions } from "@/states/ruleset";
 
 // Import types
@@ -38,12 +30,6 @@ type FormErrors = {
   name?: string | null;
   content?: string | null;
   [key: string]: string | null | undefined;
-};
-
-type UploadResult = {
-  success: boolean;
-  message: string;
-  data: TRuleset;
 };
 
 // Hàm tìm ID của ruleset có cùng tên trong trạng thái pending
@@ -60,10 +46,11 @@ function findExistingRulesetId(
       r.state === STATE_DICT.PENDING
   );
 
-  console.log(
-    "Tìm thấy ruleset có cùng tên trong trạng thái pending:",
-    existingRuleset
-  );
+  if (existingRuleset)
+    console.log(
+      "Tìm thấy ruleset có cùng tên trong trạng thái pending:",
+      existingRuleset
+    );
 
   return existingRuleset ? existingRuleset.id : defaultId;
 }
@@ -74,26 +61,13 @@ export function UploadRuleset({ rulesets }: UploadRulesetProps) {
 
   // State
   const [state, stateFns] = useStateManager(
-    RLStateManager.getInitialState(),
-    RLStateManager.buildStateModifiers
+    UploadRLStateManager.getInitialState(),
+    UploadRLStateManager.buildStateModifiers
   );
-
-  // Form state
-  const [rulesetName, setRulesetName] = useState<string>("");
-  const [rulesetContent, setRulesetContent] = useState<string>("");
-
-  // Upload status
-  const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
-
-  // Form validation
-  const [errors, setErrors] = useState<FormErrors>({});
-
-  // State cho accordion
-  const [isOpen, setIsOpen] = useState<boolean>(false);
 
   // Sử dụng useMutation để upload ruleset
   const uploadMutation = useMutation({
-    mutationFn: async (newRuleset: TRuleset) => {
+    mutationFn: async function (newRuleset: TRuleset) {
       // Sử dụng RulesetAPI để thêm ruleset mới
       const uploadedRuleset = await RulesetAPI.reqUploadRuleset({
         data: newRuleset,
@@ -104,27 +78,27 @@ export function UploadRuleset({ rulesets }: UploadRulesetProps) {
 
       return uploadedRuleset;
     },
-    onSuccess: (data) => {
+    onSuccess: function (data) {
       // Invalidate queries để cập nhật danh sách
       queryClient.invalidateQueries({ queryKey: ["rulesets"] });
       queryClient.invalidateQueries({ queryKey: ["allRulesets"] });
 
       // Hiển thị kết quả
-      setUploadResult({
-        success: data.state === STATE_DICT.PENDING,
+      stateFns.setResult({
         message: "Ruleset đã được upload thành công!",
         data,
       });
 
       // Clear form sau khi upload thành công
       if (data.state === STATE_DICT.PENDING) {
-        setRulesetName("");
-        setRulesetContent("");
+        stateFns.setForm({
+          name: "",
+          content: "",
+        });
       }
     },
-    onError: (error) => {
-      setUploadResult({
-        success: false,
+    onError: function (error: any) {
+      stateFns.setResult({
         error,
         message: "Upload ruleset thất bại.",
         data: undefined,
@@ -132,17 +106,17 @@ export function UploadRuleset({ rulesets }: UploadRulesetProps) {
     },
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async function (e: React.FormEvent) {
     e.preventDefault();
 
     // Validate form before submission
     const newErrors: FormErrors = {};
 
-    if (!rulesetName.trim()) {
+    if (!state.uploadRulesetForm.name!.trim()) {
       newErrors.name = "Tên ruleset không được để trống";
     }
 
-    if (!rulesetContent.trim()) {
+    if (!state.uploadRulesetForm.content!.trim()) {
       newErrors.content = "Nội dung ruleset không được để trống";
     } else {
       // Kiểm tra định dạng JSON
@@ -151,7 +125,7 @@ export function UploadRuleset({ rulesets }: UploadRulesetProps) {
 
       // Thử kiểm tra JSON
       try {
-        const parsedContent = JSON.parse(rulesetContent);
+        const parsedContent = JSON.parse(state.uploadRulesetForm.content!);
         isValidFormat = true; // Nếu parse thành công, đây là JSON hợp lệ
 
         // Kiểm tra cấu trúc của ruleset
@@ -177,9 +151,15 @@ export function UploadRuleset({ rulesets }: UploadRulesetProps) {
         // Một số đặc điểm cơ bản của YAML:
         // - Có dòng với định dạng key: value
         // - Hoặc có dòng bắt đầu bằng dấu gạch ngang (-)
-        const hasKeyValuePair = /^\s*[\w\-]+\s*:\s*.+/m.test(rulesetContent);
-        const hasListItem = /^\s*-\s+.+/m.test(rulesetContent);
-        const hasRulesSection = /^\s*rules\s*:/m.test(rulesetContent);
+        const hasKeyValuePair = /^\s*[\w\-]+\s*:\s*.+/m.test(
+          state.uploadRulesetForm.content!
+        );
+        const hasListItem = /^\s*-\s+.+/m.test(
+          state.uploadRulesetForm.content!
+        );
+        const hasRulesSection = /^\s*rules\s*:/m.test(
+          state.uploadRulesetForm.content!
+        );
 
         if ((hasKeyValuePair || hasListItem) && hasRulesSection) {
           isValidFormat = true;
@@ -200,260 +180,52 @@ export function UploadRuleset({ rulesets }: UploadRulesetProps) {
       }
     }
 
-    setErrors(newErrors);
-    setUploadResult(null);
+    if (newErrors && Object.keys(newErrors).length > 0) {
+      stateFns.setForm({ errors: newErrors });
+      return;
+    }
 
-    // Nếu có lỗi trong form, vẫn tiếp tục nhưng đặt ruleset vào trạng thái rejected
-    const hasErrors = Object.keys(newErrors).length > 0;
     const randomId = `rs-${Math.floor(Math.random() * 1000)}`;
 
-    // Nếu tên ruleset trống, tạo ruleset với trạng thái rejected
-    if (!rulesetName.trim()) {
-      // Không cần tìm ruleset có sẵn vì tên trống
-      const newRuleset: TRuleset = {
-        id: randomId,
-        name: "Ruleset không tên",
-        state: "rejected",
-        createdAt: new Date().toISOString().split("T")[0],
-        reason: "Tên ruleset không được để trống",
-      };
+    // Tìm ID của ruleset có cùng tên trong trạng thái pending
+    const rulesetId = findExistingRulesetId(
+      rulesets,
+      state.uploadRulesetForm.name!,
+      randomId
+    );
 
-      // Sử dụng mutation để upload ruleset
-      uploadMutation.mutate(newRuleset);
-      return;
-    }
+    // Nếu ruleset hợp lệ, trạng thái là STATE_DICT.PENDING
+    const newRuleset: TRuleset = {
+      id: rulesetId,
+      name: state.uploadRulesetForm.name!,
+      state: STATE_DICT.PENDING,
+      createdAt: new Date().toISOString().split("T")[0],
+    };
 
-    // Nếu nội dung ruleset trống, tạo ruleset với trạng thái rejected
-    if (!rulesetContent.trim()) {
-      // Tìm ID của ruleset có cùng tên trong trạng thái pending
-      const rulesetId = findExistingRulesetId(rulesets, rulesetName, randomId);
-
-      const newRuleset: TRuleset = {
-        id: rulesetId,
-        name: rulesetName,
-        state: "rejected",
-        createdAt: new Date().toISOString().split("T")[0],
-        reason: "Nội dung ruleset không được để trống",
-      };
-
-      // Sử dụng mutation để upload ruleset
-      uploadMutation.mutate(newRuleset);
-      return;
-    }
-
-    try {
-      // Kiểm tra nội dung có hợp lệ không
-      const isValid = !hasErrors;
-
-      if (isValid) {
-        // Tìm ID của ruleset có cùng tên trong trạng thái pending
-        const rulesetId = findExistingRulesetId(
-          rulesets,
-          rulesetName,
-          randomId
-        );
-
-        // Nếu ruleset hợp lệ, trạng thái là STATE_DICT.PENDING
-        const newRuleset: TRuleset = {
-          id: rulesetId,
-          name: rulesetName,
-          state: STATE_DICT.PENDING,
-          createdAt: new Date().toISOString().split("T")[0],
-        };
-
-        // Sử dụng mutation để upload ruleset
-        uploadMutation.mutate(newRuleset);
-      } else {
-        // Tìm ID của ruleset có cùng tên trong trạng thái pending
-        const rulesetId = findExistingRulesetId(
-          rulesets,
-          rulesetName,
-          randomId
-        );
-
-        // Nếu ruleset không hợp lệ, trạng thái là "rejected"
-        const newRuleset: TRuleset = {
-          id: rulesetId,
-          name: rulesetName,
-          state: "rejected",
-          createdAt: new Date().toISOString().split("T")[0],
-          reason: errors.content || "Cú pháp ruleset không hợp lệ",
-        };
-
-        // Sử dụng mutation để upload ruleset
-        uploadMutation.mutate(newRuleset);
-      }
-    } catch (error) {
-      console.error("Lỗi khi xử lý form:", error);
-
-      // Tạo ruleset với trạng thái rejected khi có lỗi
-      const rulesetId = findExistingRulesetId(rulesets, rulesetName, randomId);
-
-      const newRuleset: TRuleset = {
-        id: rulesetId,
-        name: rulesetName || "Ruleset lỗi",
-        state: "rejected",
-        createdAt: new Date().toISOString().split("T")[0],
-        reason: "Lỗi khi xử lý upload",
-      };
-
-      // Sử dụng mutation để upload ruleset
-      uploadMutation.mutate(newRuleset);
-    }
+    // Sử dụng mutation để upload ruleset
+    uploadMutation.mutate(newRuleset);
   };
 
   return (
     <ExpandableSection
       headerText="Upload Ruleset"
       variant="container"
-      defaultExpanded={isOpen}
-      onChange={({ detail }) => setIsOpen(detail.expanded)}
+      defaultExpanded={state.isOpen}
+      onChange={({ detail }) => stateFns.setIsOpen(detail.expanded)}
     >
       <SpaceBetween size="l">
         {/* Phần tương tác - Form */}
-        <Container>
-          <Header variant="h3">Upload Ruleset Mới</Header>
-
-          <form onSubmit={handleSubmit}>
-            <SpaceBetween size="m" direction="vertical">
-              {/* Ruleset Name Input */}
-              <FormField label="Tên Ruleset" errorText={errors.name}>
-                <Input
-                  value={rulesetName}
-                  onChange={({ detail }) => {
-                    setRulesetName(detail.value);
-                    // Xóa lỗi khi người dùng nhập
-                    if (errors.name) {
-                      setErrors({ ...errors, name: null });
-                    }
-                  }}
-                  placeholder="Nhập tên ruleset"
-                />
-              </FormField>
-
-              {/* Ruleset Content Textarea */}
-              <FormField
-                label="Nội dung Ruleset"
-                errorText={errors.content}
-                description={
-                  <SpaceBetween size="xs">
-                    <Box variant="p">
-                      Ví dụ JSON hợp lệ:{" "}
-                      {
-                        '{"rules": [{"id": "rule1", "name": "Check null", "condition": "value != null"}]}'
-                      }
-                    </Box>
-                    <Box variant="p">
-                      Ví dụ YAML hợp lệ: rules:
-                      <br />- id: rule1
-                      <br /> name: Check null
-                      <br /> condition: value != null
-                    </Box>
-                    <Box variant="p" fontWeight="bold">
-                      Lưu ý: Nội dung ruleset phải có trường "rules" là một
-                      mảng, và mỗi rule phải có các trường: id, name, condition.
-                    </Box>
-                  </SpaceBetween>
-                }
-              >
-                <Textarea
-                  value={rulesetContent}
-                  onChange={({ detail }) => {
-                    setRulesetContent(detail.value);
-                    // Xóa lỗi khi người dùng nhập
-                    if (errors.content) {
-                      setErrors({ ...errors, content: null });
-                    }
-                  }}
-                  placeholder="Nhập nội dung ruleset (phải là định dạng JSON hoặc YAML hợp lệ)"
-                  rows={10}
-                />
-              </FormField>
-
-              {/* Submit Button */}
-              <Button
-                formAction="submit"
-                variant="primary"
-                disabled={uploadMutation.isPending}
-                loading={uploadMutation.isPending}
-              >
-                {uploadMutation.isPending ? "Đang upload..." : "Upload Ruleset"}
-              </Button>
-            </SpaceBetween>
-          </form>
-        </Container>
+        <InteractionPart
+          errors={state.uploadRulesetForm.errors}
+          rulesetName={state.uploadRulesetForm.name!}
+          rulesetContent={state.uploadRulesetForm.content!}
+          uploadMutation={uploadMutation}
+          handleSubmit={handleSubmit}
+          setUploadRulesetFormState={stateFns.setForm}
+        />
 
         {/* Phần kết quả */}
-        {uploadResult && (
-          <Container header={<Header variant="h3">Kết quả Upload</Header>}>
-            <StatusIndicator type={uploadResult.success ? "success" : "error"}>
-              {uploadResult.message}
-            </StatusIndicator>
-
-            {uploadResult.data && (
-              <Box margin={{ top: "m" }}>
-                <Header variant="h3">Thông tin Ruleset</Header>
-                <ColumnLayout columns={2} variant="text-grid">
-                  <FormField label="ID">{uploadResult.data.id}</FormField>
-                  <FormField label="Tên">{uploadResult.data.name}</FormField>
-                  <FormField label="Trạng thái">
-                    <StatusIndicator
-                      type={
-                        uploadResult.data.state === STATE_DICT.PENDING
-                          ? "success"
-                          : uploadResult.data.state === STATE_DICT.REJECTED
-                          ? "error"
-                          : "stopped"
-                      }
-                    >
-                      {uploadResult.data.state}
-                    </StatusIndicator>
-                  </FormField>
-                  <FormField label="Ngày tạo">
-                    {uploadResult.data.createdAt}
-                  </FormField>
-                  {!uploadResult.success && uploadResult.data.reason && (
-                    <Box margin={{ top: "m" }}>
-                      <FormField label="Lý do từ chối">
-                        <Box color="text-status-error">
-                          {uploadResult.data.reason}
-                        </Box>
-                      </FormField>
-                    </Box>
-                  )}
-                </ColumnLayout>
-
-                <Box margin={{ top: "m" }}>
-                  {uploadResult.data.state === STATE_DICT.PENDING ? (
-                    <Box>
-                      Ruleset đã được tạo với trạng thái{" "}
-                      <Box variant="span" fontWeight="bold">
-                        active
-                      </Box>{" "}
-                      (hoạt động).
-                    </Box>
-                  ) : uploadResult.data.state === "rejected" ? (
-                    <Box>
-                      Ruleset đã bị từ chối với trạng thái{" "}
-                      <Box variant="span" fontWeight="bold">
-                        rejected
-                      </Box>{" "}
-                      do cú pháp không hợp lệ.
-                    </Box>
-                  ) : (
-                    <Box>
-                      Ruleset đã được tạo với trạng thái{" "}
-                      <Box variant="span" fontWeight="bold">
-                        {uploadResult.data.state}
-                      </Box>
-                      .
-                    </Box>
-                  )}
-                </Box>
-              </Box>
-            )}
-          </Container>
-        )}
+        <ResultPart result={state.result} />
       </SpaceBetween>
     </ExpandableSection>
   );

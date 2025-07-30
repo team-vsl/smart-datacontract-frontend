@@ -50,7 +50,7 @@ export function Rulesets(props: RulesetsProps) {
     error,
   } = useQuery({
     queryKey: ["rulesets", state.currentRulesetState],
-    queryFn: async () => {
+    queryFn: async function () {
       if (!state.currentRulesetState) return [];
       console.log("Đang lọc theo trạng thái:", state.currentRulesetState);
       try {

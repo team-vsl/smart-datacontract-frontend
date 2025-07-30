@@ -46,7 +46,7 @@ export function CheckRuleset(props: TCheckRulesetProps) {
 
   // Sử dụng useMutation để approve ruleset
   const approveMutation = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async function (id: string) {
       let isMock = true;
 
       // Kiểm tra ruleset có tồn tại không
@@ -63,7 +63,7 @@ export function CheckRuleset(props: TCheckRulesetProps) {
 
       return updatedRuleset;
     },
-    onSuccess: (updatedRuleset: TRuleset | undefined) => {
+    onSuccess: function (updatedRuleset: TRuleset | undefined) {
       // Invalidate queries để cập nhật danh sách
       queryClient.invalidateQueries({ queryKey: ["rulesets"] });
 
@@ -72,7 +72,7 @@ export function CheckRuleset(props: TCheckRulesetProps) {
         data: updatedRuleset,
       });
     },
-    onError: (error: any) => {
+    onError: function (error: any) {
       stateFns.setResult({
         error,
         data: undefined,
