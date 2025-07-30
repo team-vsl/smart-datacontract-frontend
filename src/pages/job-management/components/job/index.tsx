@@ -30,7 +30,7 @@ interface JobInfoProps {
   lastJobRunId: string | null;
 }
 
-export function JobInfo({ lastJobRunId }: JobInfoProps) {
+export default function JobInfo({ lastJobRunId }: JobInfoProps) {
   // State cho accordion
   const [isOpen, setIsOpen] = useState<boolean>(false);
 

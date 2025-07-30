@@ -46,6 +46,10 @@ const RouteConfigs = {
     Path: "/ruleset-management",
     Name: "Ruleset Management",
   },
+  JobManagement: {
+    Path: "/job-management",
+    Name: "Job Management",
+  },
 } satisfies Record<string, TRouteConfig>;
 
 export { type TRouteConfig, RouteConfigs, routeGroups };

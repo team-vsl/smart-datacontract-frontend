@@ -5,15 +5,8 @@ import { useNavigate } from "react-router-dom";
 
 import {
   AppLayout,
-  BreadcrumbGroup,
-  Container,
-  ContentLayout,
-  Flashbar,
-  Header,
   HelpPanel,
-  Link,
   SideNavigation,
-  SplitPanel,
 } from "@cloudscape-design/components";
 import { I18nProvider } from "@cloudscape-design/components/i18n";
 import messages from "@cloudscape-design/components/i18n/messages/all.en";
@@ -26,7 +19,6 @@ import { useMainLayoutState, mainLayoutStActions } from "@/states/main-layout";
 
 // Import types
 import type { PropsWithChildren } from "react";
-import { useState } from "react";
 
 const LOCALE = import.meta.env.VITE_I8N_LOCALE;
 
@@ -72,6 +64,11 @@ export default function MainLayout(props: PropsWithChildren) {
                 type: "link",
                 text: RouteConfigs.RulesetManagement.Name,
                 href: RouteConfigs.RulesetManagement.Path,
+              },
+              {
+                type: "link",
+                text: RouteConfigs.JobManagement.Name,
+                href: RouteConfigs.JobManagement.Path,
               },
             ]}
           />

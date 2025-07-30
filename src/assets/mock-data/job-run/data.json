@@ -1,0 +1,22 @@
+[
+  {
+    "id": "jr_bc9a215e2d9e7f9d51677cd71a4d0f314757795a929f0ae7ca503c7dbb4bb168",
+    "attempt": 0,
+    "jobName": "Banking Marketing Job",
+    "jobMode": "VISUAL",
+    "startedOn": "2025-07-20T15:43:33.271000+07:00",
+    "lastModifiedOn": "2025-07-20T15:45:17.831000+07:00",
+    "completedOn": "2025-07-20T15:45:17.831000+07:00",
+    "jobRunState": "SUCCEEDED"
+  },
+  {
+    "id": "jr_7ebe202b239735dcd0e91424ae4ec1b660e3973b9316c5bf5f1b2f20fb1e9b94",
+    "attempt": 0,
+    "jobName": "Banking Marketing Job",
+    "jobMode": "VISUAL",
+    "startedOn": "2025-07-16T20:13:01.821000+07:00",
+    "lastModifiedOn": "2025-07-16T20:14:30.140000+07:00",
+    "completedOn": "2025-07-16T20:14:30.140000+07:00",
+    "jobRunState": "SUCCEEDED"
+  }
+]
