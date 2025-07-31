@@ -1,93 +1,108 @@
 import { create } from "zustand";
 
 // Import types
-import type { TJobRun } from "@/objects/job/types";
+import type { TJob, TJobRun } from "@/objects/job/types";
 
-type TJobRunState = {
-  jrs: Array<TJobRun>;
+type TJobState = {
+  jbrs: Array<TJobRun>;
+  jbs: Array<TJob>;
 };
 
-type TJobRunActions = {
+type TJobActions = {
   /**
-   * Set danh sách ruleset mới
-   * @param jrs
+   * Set danh sách job mới
+   * @param jbs
    */
-  setJRS(jrs: Array<TJobRun>): void;
+  setJBS(jbs: Array<TJob>): void;
   /**
-   * Thêm một ruleset mới và trong list
+   * Set danh sách job run mới
+   * @param jbrs
+   */
+  setJBRS(jbrs: Array<TJobRun>): void;
+  /**
+   * Thêm một job mới và trong list
    * @param rl
    */
   addJobRun(rl: TJobRun): void;
   /**
-   * Xoá một ruleset khỏi list theo id
+   * Xoá một job khỏi list theo id
    * @param rlId
    */
   removeJobRun(rlId: string): void;
   /**
-   * Cập nhật một ruleset mới
+   * Cập nhật một job mới
    * @param rl
    */
   updateJobRun(rl: TJobRun): void;
   reset(): void;
 };
 
-const _initialState: TJobRunState = {
-  jrs: [],
+const _initialState: TJobState = {
+  jbrs: [],
+  jbs: [],
 };
 
-const useJobRunState = create<TJobRunState>(() => {
+const useJobState = create<TJobState>(() => {
   return {
     ..._initialState,
   };
 });
 
-const rulesetStActions: TJobRunActions = {
-  setJRS(jrs: Array<TJobRun>) {
-    useJobRunState.setState((state) => {
+const jobStActions: TJobActions = {
+  setJBS(jbs: Array<TJob>) {
+    useJobState.setState((state) => {
       return {
         ...state,
-        jrs,
+        jbs,
+      };
+    });
+  },
+  setJBRS(jbrs: Array<TJobRun>) {
+    useJobState.setState((state) => {
+      return {
+        ...state,
+        jbrs,
       };
     });
   },
   addJobRun(rl: TJobRun) {
-    useJobRunState.setState((state) => {
-      state.jrs.push(rl);
+    useJobState.setState((state) => {
+      state.jbrs.push(rl);
 
       return {
         ...state,
-        jrs: state.jrs,
+        jbrs: state.jbrs,
       };
     });
   },
   removeJobRun(rlId: string) {
-    useJobRunState.setState((state) => {
-      const idx = state.jrs.findIndex((rl) => rl.id === rlId);
+    useJobState.setState((state) => {
+      const idx = state.jbrs.findIndex((rl) => rl.id === rlId);
 
       if (idx < 0) return state;
 
-      state.jrs.splice(idx, 1);
+      state.jbrs.splice(idx, 1);
 
       return {
         ...state,
-        jrs: state.jrs,
+        jbrs: state.jbrs,
       };
     });
   },
   updateJobRun(rl: TJobRun) {
-    useJobRunState.setState((state) => {
-      const idx = state.jrs.findIndex((rl) => rl.id === rl.id);
+    useJobState.setState((state) => {
+      const idx = state.jbrs.findIndex((rl) => rl.id === rl.id);
 
-      state.jrs.splice(idx, 1, rl);
+      state.jbrs.splice(idx, 1, rl);
 
       return {
         ...state,
-        jrs: state.jrs,
+        jbrs: state.jbrs,
       };
     });
   },
   reset() {
-    useJobRunState.setState(() => {
+    useJobState.setState(() => {
       return {
         ..._initialState,
       };
@@ -95,9 +110,4 @@ const rulesetStActions: TJobRunActions = {
   },
 };
 
-export {
-  type TJobRunState,
-  type TJobRunActions,
-  useJobRunState,
-  rulesetStActions,
-};
+export { type TJobState, type TJobActions, useJobState, jobStActions };

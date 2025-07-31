@@ -31,12 +31,18 @@ export type TGetJobRunParams = _TBase & {
   jobName: string;
 };
 
+export type TGetJobRunsParams = _TBase & {
+  jobName: string;
+};
+
+export type TGetJobsParams = _TBase & {};
+
 export type TGetJobParams = _TBase & {
   jobName: string;
 };
 
 /**
- * Gửi một yêu cầu tới API để tạo Data Contract
+ * Gửi một yêu cầu tới API để chạy một job
  * @param params
  */
 export async function reqStartJobRun(params: TStartJobRunParams) {
@@ -68,7 +74,7 @@ export async function reqStartJobRun(params: TStartJobRunParams) {
 }
 
 /**
- * Gửi một yêu cầu để lấy toàn bộ data contracts
+ * Gửi một yêu cầu để lấy một job run theo tên và id
  * @param params
  */
 export async function reqGetJobRun(params: TGetJobRunParams) {
@@ -76,9 +82,11 @@ export async function reqGetJobRun(params: TGetJobRunParams) {
   const tokenHeader = API.generateBearerToken(API.getToken(), true) as object;
 
   if (isMock) {
-    return new Promise<TJobRun[]>((resolve) => {
+    const target = jbrs.find((jbr) => jbr.id === id && jbr.jobName === jobName);
+
+    return new Promise<TJobRun>((resolve) => {
       setTimeout(() => {
-        resolve(jbrs as TJobRun[]);
+        resolve(target as TJobRun);
       }, 500);
     });
   }
@@ -94,7 +102,56 @@ export async function reqGetJobRun(params: TGetJobRunParams) {
 }
 
 /**
- * Gửi một yêu cầu để lấy toàn bộ data contracts
+ * Gửi một yêu cầu để lấy nhiều job run theo tên
+ * @param params
+ */
+export async function reqGetJobRuns(params: TGetJobRunsParams) {
+  const { jobName, isMock = false } = params || {};
+  const tokenHeader = API.generateBearerToken(API.getToken(), true) as object;
+
+  if (isMock) {
+    return new Promise<TJobRun[]>((resolve) => {
+      setTimeout(() => {
+        resolve(jbrs as TJobRun[]);
+      }, 500);
+    });
+  }
+
+  const response = await api.get<TJobRun[]>(
+    `/glue-jobs/${jobName}/run-status`,
+    {
+      headers: tokenHeader,
+    }
+  );
+
+  return response.data.data;
+}
+
+/**
+ * Gửi một yêu cầu để lấy toàn bộ jobs
+ * @param params
+ */
+export async function reqGetJobs(params: TGetJobsParams) {
+  const { isMock = false } = params || {};
+  const tokenHeader = API.generateBearerToken(API.getToken(), true) as object;
+
+  if (isMock) {
+    return new Promise<TJob[]>((resolve) => {
+      setTimeout(() => {
+        resolve(jbs as TJob[]);
+      }, 500);
+    });
+  }
+
+  const response = await api.get<TJob[]>("/glue-jobs/", {
+    headers: tokenHeader,
+  });
+
+  return response.data.data;
+}
+
+/**
+ * Gửi một yêu cầu để lấy job theo tên
  * @param params
  */
 export async function reqGetJob(params: TGetJobParams) {
@@ -102,11 +159,11 @@ export async function reqGetJob(params: TGetJobParams) {
   const tokenHeader = API.generateBearerToken(API.getToken(), true) as object;
 
   if (isMock) {
-    const target = jbs.filter((dc) => dc.name === jobName);
+    const target = jbs.find((dc) => dc.name === jobName);
 
-    return new Promise<TJob[]>((resolve) => {
+    return new Promise<TJob>((resolve) => {
       setTimeout(() => {
-        resolve(target as TJob[]);
+        resolve(target as TJob);
       }, 500);
     });
   }

@@ -7,24 +7,30 @@ import {
 } from "@cloudscape-design/components";
 
 // Import components
+import Job from "./components/jobs";
+import JobRun from "./components/job-runs";
 import JobInfo from "./components/job";
 import RunJob from "./components/run-job";
 
 // Import objects
-import * as DataContractAPI from "@/objects/data-contract/api";
+import * as JobAPI from "@/objects/job/api";
 
 // Import states
-import { dataContractStActions } from "@/states/data-contract";
+import { jobStActions } from "@/states/job";
 
 // Import types
-import type { TDataContract } from "@/objects/data-contract/types";
+import type { TJob, TJobRun } from "@/objects/job/types";
 
 export default function JobManagementPage() {
   // Sử dụng useQuery để lấy dữ liệu từ API
-  const { data: dcs } = useQuery({
+  const {
+    data: jbs,
+    error,
+    isPending,
+  } = useQuery({
     queryKey: ["allJobs"],
     queryFn: () =>
-      DataContractAPI.reqGetAllDataContracts({
+      JobAPI.reqGetJobs({
         isMock: true,
       }),
     refetchInterval: 1000, // Refetch every second to sync with API changes
@@ -32,10 +38,10 @@ export default function JobManagementPage() {
 
   // Đồng bộ state với dữ liệu từ API
   useEffect(() => {
-    if (dcs) {
-      dataContractStActions.setDCS(dcs as TDataContract[]);
+    if (jbs) {
+      jobStActions.setJBS(jbs as TJob[]);
     }
-  }, [dcs]);
+  }, [jbs]);
 
   return (
     <ContentLayout
@@ -45,7 +51,10 @@ export default function JobManagementPage() {
         </Header>
       }
     >
-      <SpaceBetween size="m"></SpaceBetween>
+      <SpaceBetween size="m">
+        <Job isJobsFetchPending={isPending} jobFetchError={error} />
+        <JobRun />
+      </SpaceBetween>
     </ContentLayout>
   );
 }
