@@ -25,7 +25,7 @@ import { useStateManager } from "@/hooks/use-state-manager";
 import * as JobAPI from "@/objects/job/api";
 
 // Import states
-import { useJobState } from "@/states/job";
+import { jobStActions, useJobState } from "@/states/job";
 import { JobStateManager } from "./state";
 
 // Import types
@@ -48,10 +48,7 @@ type TJobDetailProps = {
   error: Error | null;
 };
 
-type TJobProps = {
-  isJobsFetchPending: boolean;
-  jobFetchError: Error | null;
-};
+type TJobProps = {};
 
 /**
  * Component dùng để hiện thị thông tin của Job theo dạng bảng
@@ -77,6 +74,7 @@ function JobList(props: TJobListProps) {
           {(props.error as Error)?.message || "Không thể tải dữ liệu"}
         </StatusIndicator>
       )}
+
       {canDisplayResult && (
         <Table<TJob>
           selectedItems={selectedItems}
@@ -201,7 +199,6 @@ export default function Job(props: TJobProps) {
     enabled: false,
   });
 
-  // Hàm xử lý khi submit ID/tên job
   const handleGetJob = async function () {
     if (!state.currentJobName) return;
     try {
@@ -215,6 +212,23 @@ export default function Job(props: TJobProps) {
       alert(`Lỗi khi tìm Job: ${error}`);
     }
   };
+
+  const handleGetJobs = async function () {
+    try {
+      const result = await jobsQuerier.refetch();
+      if (result.data) {
+        jobStActions.setJBS(result.data as TJob[]);
+      } else {
+        alert(`Không tìm thấy Jobs`);
+      }
+    } catch (error) {
+      alert(`Lỗi khi tìm Jobs: ${error}`);
+    }
+  };
+
+  useEffect(() => {
+    handleGetJobs();
+  }, []);
 
   useEffect(() => {
     if (state.currentJobName && state.currentJobName !== "") {

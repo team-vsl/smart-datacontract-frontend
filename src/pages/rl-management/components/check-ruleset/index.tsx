@@ -30,9 +30,7 @@ import { CheckRLStateManager } from "./state";
 // Import types
 import type { TRuleset } from "@/objects/ruleset/types";
 
-export type TCheckRulesetProps = {
-  rulesets: TRuleset[];
-};
+export type TCheckRulesetProps = {};
 
 export function CheckRuleset(props: TCheckRulesetProps) {
   // Lấy queryClient để invalidate queries

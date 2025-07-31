@@ -26,7 +26,7 @@ export type TGetRulesetsByStateParams = _Base & {
 };
 
 export type TGetRulesetParams = _Base & {
-  id: string;
+  name: string;
 };
 
 export type TApproveRulesetParams = _Base & {
@@ -99,12 +99,12 @@ export async function reqGetRulesetsByState(params: TGetRulesetsByStateParams) {
  * @returns
  */
 export async function reqGetRuleset(params: TGetRulesetParams) {
-  const { id, isMock = false } = params || {};
+  const { name, isMock = false } = params || {};
 
   const tokenHeader = API.generateBearerToken(API.getToken(), true) as object;
 
   if (isMock) {
-    const target = rls.find((rl) => rl.id === id);
+    const target = rls.find((rl) => rl.name === name);
 
     return new Promise<TRuleset>((resolve) => {
       setTimeout(() => {
@@ -113,7 +113,7 @@ export async function reqGetRuleset(params: TGetRulesetParams) {
     });
   }
 
-  const response = await api.get<TRuleset>(`/rulesets/${id}`, {
+  const response = await api.get<TRuleset>(`/rulesets/${name}`, {
     headers: tokenHeader,
   });
 

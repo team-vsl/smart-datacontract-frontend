@@ -44,7 +44,10 @@ export default function InteractionPart(props: TUploadRulesetInteractionProps) {
             <Input
               value={props.rulesetName}
               onChange={({ detail }) => {
-                props.setUploadRulesetFormState({ name: detail.value });
+                props.setUploadRulesetFormState({
+                  name: detail.value,
+                  errors: {},
+                });
                 // Xóa lỗi khi người dùng nhập
                 if (props.errors.name) {
                   props.setUploadRulesetFormState({
@@ -88,9 +91,9 @@ export default function InteractionPart(props: TUploadRulesetInteractionProps) {
           >
             <AppCodeEditor
               isEditable={true}
-              code=""
+              code={props.rulesetContent}
               onCodeChange={(value) => {
-                props.setUploadRulesetFormState({ content: value });
+                props.setUploadRulesetFormState({ content: value, errors: {} });
               }}
             />
           </FormField>

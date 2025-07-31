@@ -8,6 +8,7 @@ function getInitialState() {
     isOpen: true,
     currentRulesetState: null as string | null,
     currentRulesetId: null as string | null,
+    currentRulesetName: null as string | null,
     currentRuleset: null as TRuleset | null,
   };
 }
@@ -26,6 +27,11 @@ function buildStateModifiers(
     setCurrentRulesetId(contractId: string | null) {
       changeState("currentRulesetId", () => {
         return contractId;
+      });
+    },
+    setCurrentRulesetName(name: string | null) {
+      changeState("currentRulesetName", () => {
+        return name;
       });
     },
     setCurrentRulesetState(contractState: string | null) {

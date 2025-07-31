@@ -17,14 +17,12 @@ import * as RulesetAPI from "@/objects/ruleset/api";
 
 // Import states
 import { UploadRLStateManager } from "./state";
-import { rulesetStActions } from "@/states/ruleset";
+import { useRulesetState, rulesetStActions } from "@/states/ruleset";
 
 // Import types
 import type { TRuleset } from "@/objects/ruleset/types";
 
-type UploadRulesetProps = {
-  rulesets: TRuleset[];
-};
+type UploadRulesetProps = {};
 
 type FormErrors = {
   name?: string | null;
@@ -55,9 +53,11 @@ function findExistingRulesetId(
   return existingRuleset ? existingRuleset.id : defaultId;
 }
 
-export function UploadRuleset({ rulesets }: UploadRulesetProps) {
+export function UploadRuleset(props: UploadRulesetProps) {
   // Lấy queryClient để invalidate queries
   const queryClient = useQueryClient();
+
+  const { rls } = useRulesetState();
 
   // State
   const [state, stateFns] = useStateManager(
@@ -189,7 +189,7 @@ export function UploadRuleset({ rulesets }: UploadRulesetProps) {
 
     // Tìm ID của ruleset có cùng tên trong trạng thái pending
     const rulesetId = findExistingRulesetId(
-      rulesets,
+      rls,
       state.uploadRulesetForm.name!,
       randomId
     );
