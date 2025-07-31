@@ -208,7 +208,7 @@ export default function JobRun(props: TJobRunProps) {
 
   // Sử dụng useQuery để lấy chi tiết job run và job runs
   const jobRunQuerier = useQuery({
-    queryKey: ["dataContract", state.currentJobName, state.currentJobRunId],
+    queryKey: ["jobrun", state.currentJobName, state.currentJobRunId],
     queryFn: async () =>
       await JobAPI.reqGetJobRun({
         id: state.currentJobRunId || "",
@@ -219,7 +219,7 @@ export default function JobRun(props: TJobRunProps) {
   });
 
   const jobRunsQuerier = useQuery({
-    queryKey: ["dataContract", state.currentJobName],
+    queryKey: ["jobruns", state.currentJobName],
     queryFn: async () =>
       await JobAPI.reqGetJobRuns({
         jobName: state.currentJobName || "",
@@ -300,7 +300,7 @@ export default function JobRun(props: TJobRunProps) {
           jbrs={state.jbrs}
           isFetching={jobRunsQuerier.isFetching}
           isError={jobRunsQuerier.isError}
-          isIdle={!jobRunQuerier.isEnabled && !jobRunQuerier.isSuccess}
+          isIdle={!jobRunsQuerier.isEnabled && !jobRunQuerier.isSuccess}
           error={jobRunsQuerier.error}
           setCurrentJobRun={stateFns.setCurrentJobRun}
           setCurrentJobRunId={stateFns.setCurrentJobRunId}

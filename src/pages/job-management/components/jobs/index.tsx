@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Button,
@@ -32,18 +33,19 @@ import type { TJob } from "@/objects/job/types";
 
 type TJobListProps = {
   jbs: Array<TJob>;
-  isPending: boolean;
+  isFetching: boolean;
   isError: boolean;
+  isIdle: boolean;
   error: Error | null;
-  setCurrentJob(jb: TJob): void;
+  setCurrentJobName(name: string): void;
 };
 
 type TJobDetailProps = {
-  currentJob: TJob;
-  isPending: boolean;
+  currentJob: TJob | null;
+  isFetching: boolean;
   isError: boolean;
+  isIdle: boolean;
   error: Error | null;
-  setCurrentJob(job: TJob | null): void;
 };
 
 type TJobProps = {
@@ -57,10 +59,15 @@ type TJobProps = {
  * @returns
  */
 function JobList(props: TJobListProps) {
+  const canDisplayResult =
+    props.jbs.length > 0 && !props.isFetching && !props.isError;
+
+  const [selectedItems, setSelectedItems] = useState();
+
   return (
-    <>
+    <Container header={<Header variant="h3">Job List (Auto-fetching)</Header>}>
       {/* Hiển thị loading state */}
-      {props.isPending && (
+      {props.isFetching && (
         <StatusIndicator type="loading">Đang tải dữ liệu...</StatusIndicator>
       )}
 
@@ -70,55 +77,53 @@ function JobList(props: TJobListProps) {
           {(props.error as Error)?.message || "Không thể tải dữ liệu"}
         </StatusIndicator>
       )}
-      <Container
-        header={<Header variant="h3">Job List (Auto-fetching)</Header>}
-      >
-        {props.jbs.length > 0 ? (
-          <Table<TJob>
-            columnDefinitions={[
-              {
-                id: "id",
-                header: "ID",
-                cell: (item) => item.id,
-                sortingField: "id",
-              },
-              {
-                id: "name",
-                header: "Name",
-                cell: (item) => item.name,
-                sortingField: "name",
-              },
-              {
-                id: "createdOn",
-                header: "Created Date",
-                cell: (item) => new Date(item.createdOn).toLocaleString(),
-                sortingField: "createdOn",
-              },
-            ]}
-            items={props.jbs}
-            onSelectionChange={({ detail }) => {
-              if (detail.selectedItems.length > 0) {
-                props.setCurrentJob(detail.selectedItems[0]);
-              }
-            }}
-            selectionType="single"
-            trackBy="id"
-            empty={
-              <Box textAlign="center" color="inherit">
-                <b>Không có dữ liệu</b>
-                <Box padding={{ bottom: "s" }} variant="p" color="inherit">
-                  Không tìm thấy job nào với trạng thái đã chọn.
-                </Box>
-              </Box>
+      {canDisplayResult && (
+        <Table<TJob>
+          selectedItems={selectedItems}
+          ariaLabels={{
+            selectionGroupLabel: "Items selection",
+            itemSelectionLabel: ({ selectedItems }, item) => item.name,
+          }}
+          columnDefinitions={[
+            {
+              id: "id",
+              header: "ID",
+              cell: (item) => item.id,
+              sortingField: "id",
+            },
+            {
+              id: "name",
+              header: "Name",
+              cell: (item) => item.name,
+              sortingField: "name",
+            },
+            {
+              id: "createdOn",
+              header: "Created Date",
+              cell: (item) => new Date(item.createdOn).toLocaleString(),
+              sortingField: "createdOn",
+            },
+          ]}
+          items={props.jbs}
+          onSelectionChange={({ detail }) => {
+            if (detail.selectedItems.length > 0) {
+              setSelectedItems(detail.selectedItems as any);
+              props.setCurrentJobName(detail.selectedItems[0].name);
             }
-          />
-        ) : (
-          <Box textAlign="center" color="text-body-secondary">
-            <p>Không tìm thấy job</p>
-          </Box>
-        )}
-      </Container>
-    </>
+          }}
+          selectionType="single"
+          trackBy="id"
+          empty={
+            <Box textAlign="center" color="inherit">
+              <b>Không có dữ liệu</b>
+              <Box padding={{ bottom: "s" }} variant="p" color="inherit">
+                Không tìm thấy job nào với trạng thái đã chọn.
+              </Box>
+            </Box>
+          }
+        />
+      )}
+    </Container>
   );
 }
 
@@ -128,10 +133,18 @@ function JobList(props: TJobListProps) {
  * @returns
  */
 function JobDetail(props: TJobDetailProps) {
+  const canDisplayResult = !props.isFetching && !props.isError && !props.isIdle;
+
   return (
-    <>
+    <Container header={<Header variant="h3">Job Detail</Header>}>
+      {props.isIdle && (
+        <Box variant="p" textAlign="center">
+          Chọn một Job trên list để xem chi tiết
+        </Box>
+      )}
+
       {/* Hiển thị loading state */}
-      {props.isPending && (
+      {props.isFetching && (
         <StatusIndicator type="loading">Đang tải dữ liệu...</StatusIndicator>
       )}
 
@@ -141,24 +154,7 @@ function JobDetail(props: TJobDetailProps) {
           {(props.error as Error)?.message || "Không thể tải dữ liệu"}
         </StatusIndicator>
       )}
-
-      <Container
-        header={
-          <Header
-            variant="h3"
-            actions={
-              <Button
-                onClick={() => props.setCurrentJob(null)}
-                variant="primary"
-              >
-                Quay lại danh sách
-              </Button>
-            }
-          >
-            Job Detail
-          </Header>
-        }
-      >
+      {canDisplayResult && props.currentJob && (
         <ColumnLayout columns={2} variant="text-grid">
           <FormField label="Name">{props.currentJob.name}</FormField>
           <FormField label="Mode">{props.currentJob.jobMode}</FormField>
@@ -166,8 +162,8 @@ function JobDetail(props: TJobDetailProps) {
             {new Date(props.currentJob.createdOn).toLocaleString()}
           </FormField>
         </ColumnLayout>
-      </Container>
-    </>
+      )}
+    </Container>
   );
 }
 
@@ -186,15 +182,20 @@ export default function Job(props: TJobProps) {
   );
 
   // Sử dụng useQuery để lấy chi tiết job
-  const {
-    refetch: fetchJob,
-    error,
-    isPending,
-  } = useQuery({
-    queryKey: ["dataContract", state.currentJobName],
+  const jobQuerier = useQuery({
+    queryKey: ["job", state.currentJobName],
     queryFn: async () =>
       await JobAPI.reqGetJob({
         jobName: state.currentJobName || "",
+        isMock: true,
+      }),
+    enabled: false,
+  });
+
+  const jobsQuerier = useQuery({
+    queryKey: ["jobs", state.currentJobName],
+    queryFn: async () =>
+      await JobAPI.reqGetJobs({
         isMock: true,
       }),
     enabled: false,
@@ -204,7 +205,7 @@ export default function Job(props: TJobProps) {
   const handleGetJob = async function () {
     if (!state.currentJobName) return;
     try {
-      const result = await fetchJob();
+      const result = await jobQuerier.refetch();
       if (result.data) {
         stateFns.setCurrentJob(result.data as TJob);
       } else {
@@ -214,6 +215,12 @@ export default function Job(props: TJobProps) {
       alert(`Lỗi khi tìm Job: ${error}`);
     }
   };
+
+  useEffect(() => {
+    if (state.currentJobName && state.currentJobName !== "") {
+      handleGetJob();
+    }
+  }, [state.currentJobName]);
 
   return (
     <ExpandableSection
@@ -244,26 +251,23 @@ export default function Job(props: TJobProps) {
 
         {/* Phần kết quả (view) */}
         {/* Hiển thị danh sách job */}
-        {!state.currentJob && (
-          <JobList
-            jbs={jbs}
-            isPending={props.isJobsFetchPending}
-            isError={Boolean(props.jobFetchError)}
-            error={props.jobFetchError}
-            setCurrentJob={stateFns.setCurrentJob}
-          />
-        )}
+        <JobList
+          jbs={jbs}
+          isFetching={jobsQuerier.isFetching}
+          isError={jobsQuerier.isError}
+          isIdle={!jobsQuerier.isEnabled && !jobsQuerier.isSuccess}
+          error={jobsQuerier.error}
+          setCurrentJobName={stateFns.setCurrentJobName}
+        />
 
         {/* Hiển thị chi tiết job */}
-        {state.currentJob && (
-          <JobDetail
-            currentJob={state.currentJob}
-            isPending={isPending}
-            isError={Boolean(error)}
-            error={error}
-            setCurrentJob={stateFns.setCurrentJob}
-          />
-        )}
+        <JobDetail
+          currentJob={state.currentJob}
+          isFetching={jobQuerier.isFetching}
+          isError={jobQuerier.isError}
+          isIdle={!jobQuerier.isEnabled && !jobQuerier.isSuccess}
+          error={jobQuerier.error}
+        />
       </SpaceBetween>
     </ExpandableSection>
   );
