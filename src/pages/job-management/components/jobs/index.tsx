@@ -62,65 +62,70 @@ function JobList(props: TJobListProps) {
   const [selectedItems, setSelectedItems] = useState();
 
   return (
-    <Container header={<Header variant="h3">Job List (Auto-fetching)</Header>}>
-      {/* Hiển thị loading state */}
-      {props.isFetching && (
-        <StatusIndicator type="loading">Đang tải dữ liệu...</StatusIndicator>
-      )}
-
-      {/* Hiển thị lỗi */}
-      {props.isError && (
-        <StatusIndicator type="error">
-          {(props.error as Error)?.message || "Không thể tải dữ liệu"}
-        </StatusIndicator>
-      )}
-
-      {canDisplayResult && (
-        <Table<TJob>
-          selectedItems={selectedItems}
-          ariaLabels={{
-            selectionGroupLabel: "Items selection",
-            itemSelectionLabel: ({ selectedItems }, item) => item.name,
-          }}
-          columnDefinitions={[
-            {
-              id: "id",
-              header: "ID",
-              cell: (item) => item.id,
-              sortingField: "id",
-            },
-            {
-              id: "name",
-              header: "Name",
-              cell: (item) => item.name,
-              sortingField: "name",
-            },
-            {
-              id: "createdOn",
-              header: "Created Date",
-              cell: (item) => new Date(item.createdOn).toLocaleString(),
-              sortingField: "createdOn",
-            },
-          ]}
-          items={props.jbs}
-          onSelectionChange={({ detail }) => {
-            if (detail.selectedItems.length > 0) {
-              setSelectedItems(detail.selectedItems as any);
-              props.setCurrentJobName(detail.selectedItems[0].name);
-            }
-          }}
-          selectionType="single"
-          trackBy="id"
-          empty={
-            <Box textAlign="center" color="inherit">
-              <b>Không có dữ liệu</b>
-              <Box padding={{ bottom: "s" }} variant="p" color="inherit">
-                Không tìm thấy job nào với trạng thái đã chọn.
-              </Box>
-            </Box>
+    <Container
+      header={
+        <Header variant="h3">
+          <div className="flex items-center">
+            <p className="me-3">Ruleset List</p>
+            {props.isFetching && (
+              <StatusIndicator type="loading">
+                Đang tải dữ liệu...
+              </StatusIndicator>
+            )}
+            {/* Hiển thị lỗi */}
+            {props.isError && (
+              <StatusIndicator type="error">
+                {(props.error as Error)?.message || "Không thể tải dữ liệu"}
+              </StatusIndicator>
+            )}
+          </div>
+        </Header>
+      }
+    >
+      <Table<TJob>
+        selectedItems={selectedItems}
+        ariaLabels={{
+          selectionGroupLabel: "Items selection",
+          itemSelectionLabel: ({ selectedItems }, item) => item.name,
+        }}
+        columnDefinitions={[
+          {
+            id: "id",
+            header: "ID",
+            cell: (item) => item.id,
+            sortingField: "id",
+          },
+          {
+            id: "name",
+            header: "Name",
+            cell: (item) => item.name,
+            sortingField: "name",
+          },
+          {
+            id: "createdOn",
+            header: "Created Date",
+            cell: (item) => new Date(item.createdOn).toLocaleString(),
+            sortingField: "createdOn",
+          },
+        ]}
+        items={props.jbs}
+        onSelectionChange={({ detail }) => {
+          if (detail.selectedItems.length > 0) {
+            setSelectedItems(detail.selectedItems as any);
+            props.setCurrentJobName(detail.selectedItems[0].name);
           }
-        />
-      )}
+        }}
+        selectionType="single"
+        trackBy="id"
+        empty={
+          <Box textAlign="center" color="inherit">
+            <b>Không có dữ liệu</b>
+            <Box padding={{ bottom: "s" }} variant="p" color="inherit">
+              Không tìm thấy job nào với trạng thái đã chọn.
+            </Box>
+          </Box>
+        }
+      />
     </Container>
   );
 }

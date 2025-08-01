@@ -59,78 +59,81 @@ function RulesetList(props: TRulesetListProps) {
   const [selectedItems, setSelectedItems] = useState();
 
   return (
-    <Container header={<Header variant="h3">Ruleset List</Header>}>
-      {/* Hiển thị loading state */}
-      {props.isFetching && (
-        <StatusIndicator type="loading">Đang tải dữ liệu...</StatusIndicator>
-      )}
-
-      {/* Hiển thị lỗi */}
-      {props.isError && (
-        <StatusIndicator type="error">
-          {(props.error as Error)?.message || "Không thể tải dữ liệu"}
-        </StatusIndicator>
-      )}
-
-      {canDisplayResult && (
-        <Table<TRuleset>
-          selectedItems={selectedItems}
-          ariaLabels={{
-            selectionGroupLabel: "Items selection",
-            itemSelectionLabel: ({ selectedItems }, item) => item.name,
-          }}
-          columnDefinitions={[
-            {
-              id: "id",
-              header: "ID",
-              cell: (item) => item.id,
-              sortingField: "id",
-            },
-            {
-              id: "name",
-              header: "Tên",
-              cell: (item) => item.name,
-              sortingField: "name",
-            },
-            {
-              id: "version",
-              header: "Version",
-              cell: (item) => item.version || "1.0.0",
-              sortingField: "version",
-            },
-            {
-              id: "state",
-              header: "Trạng thái",
-              cell: (item) => (
-                <StatusIndicator
-                  type={
-                    RulesetHelpers.getStatusIndicatorType(item.state) as any
-                  }
-                >
-                  {item.state}
-                </StatusIndicator>
-              ),
-            },
-          ]}
-          items={props.rls}
-          onSelectionChange={({ detail }) => {
-            if (detail.selectedItems.length > 0) {
-              setSelectedItems(detail.selectedItems as any);
-              props.setCurrentRulesetName(detail.selectedItems[0].name);
-            }
-          }}
-          selectionType="single"
-          trackBy="id"
-          empty={
-            <Box textAlign="center" color="inherit">
-              <b>Không có dữ liệu</b>
-              <Box padding={{ bottom: "s" }} variant="p" color="inherit">
-                Không tìm thấy ruleset nào với trạng thái đã chọn.
-              </Box>
-            </Box>
+    <Container
+      header={
+        <Header variant="h3">
+          <div className="flex items-center">
+            <p className="me-3">Ruleset List</p>
+            {props.isFetching && (
+              <StatusIndicator type="loading">
+                Đang tải dữ liệu...
+              </StatusIndicator>
+            )}
+            {/* Hiển thị lỗi */}
+            {props.isError && (
+              <StatusIndicator type="error">
+                {(props.error as Error)?.message || "Không thể tải dữ liệu"}
+              </StatusIndicator>
+            )}
+          </div>
+        </Header>
+      }
+    >
+      <Table<TRuleset>
+        selectedItems={selectedItems}
+        ariaLabels={{
+          selectionGroupLabel: "Items selection",
+          itemSelectionLabel: ({ selectedItems }, item) => item.name,
+        }}
+        columnDefinitions={[
+          {
+            id: "id",
+            header: "ID",
+            cell: (item) => item.id,
+            sortingField: "id",
+          },
+          {
+            id: "name",
+            header: "Tên",
+            cell: (item) => item.name,
+            sortingField: "name",
+          },
+          {
+            id: "version",
+            header: "Version",
+            cell: (item) => item.version || "1.0.0",
+            sortingField: "version",
+          },
+          {
+            id: "state",
+            header: "Trạng thái",
+            cell: (item) => (
+              <StatusIndicator
+                type={RulesetHelpers.getStatusIndicatorType(item.state) as any}
+              >
+                {item.state}
+              </StatusIndicator>
+            ),
+          },
+        ]}
+        items={props.rls}
+        onSelectionChange={({ detail }) => {
+          if (detail.selectedItems.length > 0) {
+            setSelectedItems(detail.selectedItems as any);
+            props.setCurrentRulesetName(detail.selectedItems[0].name);
           }
-        />
-      )}
+        }}
+        selectionType="single"
+        trackBy="id"
+        empty={
+          <Box textAlign="center" color="inherit">
+            <b>Không có dữ liệu</b>
+            <Box padding={{ bottom: "s" }} variant="p" color="inherit">
+              Không tìm thấy ruleset nào với trạng thái đã chọn.
+            </Box>
+          </Box>
+        }
+      />
     </Container>
   );
 }
@@ -251,7 +254,7 @@ export default function Ruleset(props: TRulesetsProps) {
   };
 
   const handleGetRuleset = async () => {
-    if (!state.currentRulesetName) return;
+    if (!state.currentRulesetName && state.currentRulesetName !== "") return;
 
     try {
       // Tìm ruleset theo ID hoặc tên từ API
@@ -272,7 +275,7 @@ export default function Ruleset(props: TRulesetsProps) {
   };
 
   const handleGetRulesetsByState = async () => {
-    if (!state.currentRulesetState) return;
+    if (!state.currentRulesetState && state.currentRulesetState !== "") return;
 
     try {
       // Tìm ruleset theo ID hoặc tên từ API
