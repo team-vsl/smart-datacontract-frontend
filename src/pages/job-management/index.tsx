@@ -21,6 +21,7 @@ export default function JobManagementPage() {
       <SpaceBetween size="m">
         <Job />
         <JobRun />
+        <RunJob />
       </SpaceBetween>
     </ContentLayout>
   );

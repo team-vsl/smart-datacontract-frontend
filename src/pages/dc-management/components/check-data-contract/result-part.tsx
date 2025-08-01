@@ -11,6 +11,9 @@ import {
 // Import constants
 import { STATE_DICT } from "@/utils/constants/dc";
 
+// Import objects
+import * as DataContractHelpers from "@/objects/data-contract/helpers";
+
 type CheckDataResultPartProps = {
   isApprovePending: boolean;
   isRejectPending: boolean;
@@ -45,11 +48,9 @@ export default function ResultPart(props: CheckDataResultPartProps) {
     <SpaceBetween size="m">
       <StatusIndicator
         type={
-          props.result.data.state === STATE_DICT.APPROVED
-            ? "success"
-            : props.result.data.state === STATE_DICT.REJECTED
-            ? "error"
-            : "warning"
+          DataContractHelpers.getStatusIndicatorType(
+            props.result.data.state
+          ) as any
         }
       >
         {props.result.message}

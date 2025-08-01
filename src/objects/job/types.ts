@@ -1,3 +1,6 @@
+// Import types
+import type { TResPayload } from "@/objects/api/types";
+
 export type TJobRun = {
   id: string;
   attempt: number;
@@ -5,7 +8,7 @@ export type TJobRun = {
   jobMode: string;
   startedOn: string;
   lastModifiedOn: string;
-  completedOn: string;
+  completedOn?: string;
   jobRunState: string;
 };
 
@@ -15,3 +18,9 @@ export type TJob = Record<string, any> & {
   createdOn: string;
   lastModifiedOn: string;
 };
+
+export type TRunJobReqPayload = TJobRun;
+
+export type TRunJobReqResult = TResPayload<
+  TRunJobReqPayload | undefined
+> | null;

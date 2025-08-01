@@ -44,18 +44,21 @@ export function CheckRuleset(props: TCheckRulesetProps) {
 
   // Sử dụng useMutation để approve ruleset
   const approveMutation = useMutation({
-    mutationFn: async function (id: string) {
+    mutationFn: async function (name: string) {
       let isMock = true;
 
       // Kiểm tra ruleset có tồn tại không
-      const ruleset = await RulesetAPI.reqGetRuleset({ id, isMock });
+      const ruleset = await RulesetAPI.reqGetRuleset({ name, isMock });
 
       if (!ruleset) {
-        throw new Error(`Không tìm thấy Ruleset với ID: ${id}`);
+        throw new Error(`Không tìm thấy Ruleset với tên ${name}`);
       }
 
       // Approve ruleset và cập nhật state
-      const updatedRuleset = await RulesetAPI.reqApproveRuleset({ id, isMock });
+      const updatedRuleset = await RulesetAPI.reqApproveRuleset({
+        name,
+        isMock,
+      });
 
       rulesetStActions.updateRuleset(updatedRuleset as TRuleset);
 
@@ -80,16 +83,16 @@ export function CheckRuleset(props: TCheckRulesetProps) {
 
   // Sử dụng useMutation để reject ruleset
   const rejectMutation = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (name: string) => {
       // Kiểm tra ruleset có tồn tại không
-      const ruleset = await RulesetAPI.reqGetRuleset({ id });
+      const ruleset = await RulesetAPI.reqGetRuleset({ name });
 
       if (!ruleset) {
-        throw new Error(`Không tìm thấy Ruleset với ID: ${id}`);
+        throw new Error(`Không tìm thấy Ruleset với tên: ${name}`);
       }
 
       // Reject ruleset và cập nhật state
-      const updatedRuleset = await RulesetAPI.reqRejectRuleset({ id });
+      const updatedRuleset = await RulesetAPI.reqRejectRuleset({ name });
       rulesetStActions.updateRuleset(updatedRuleset as TRuleset);
 
       // Lấy ruleset đã cập nhật
