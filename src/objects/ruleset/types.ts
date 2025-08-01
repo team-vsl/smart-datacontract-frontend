@@ -1,24 +1,25 @@
+import { STATE_DICT } from "@/utils/constants/dc";
+
+export type URulesetState = (typeof STATE_DICT)[keyof typeof STATE_DICT];
+
 // Ruleset Types
 export type TRuleset = {
   id: string;
   name: string;
   version?: string;
-  state: "active" | "pending" | "rejected";
-  createdAt: string;
+  state: URulesetState;
   description?: string;
   reason?: string;
-  content: {
-    rules?: Array<{
-      id: string;
-      name: string;
-      condition: string;
-    }>;
-    raw?: string;
-  };
   validationStatus?: string;
   owner?: string;
-  approvedAt?: string;
   approvedBy?: string;
-  rejectedAt?: string;
   rejectedBy?: string;
+  updatedAt?: string;
+  createdAt: string;
 };
+
+export type TApproveRLReqPayload = TRuleset;
+
+export type TRejectRLReqPayload = TRuleset;
+
+export type TUploadRLReqPayload = TRuleset;

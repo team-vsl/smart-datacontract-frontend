@@ -14,11 +14,14 @@ import LoadingBar from "@cloudscape-design/chat-components/loading-bar";
 // Import apis
 import { reqGenerateDataContract } from "@/objects/data-contract/api";
 
+// Import constants
+import { CONV_ROLES, CONV_MSG_PLACEHOLDERS } from "@/objects/message/constants";
+
 // Import components
+import AppCodeEditor from "@/components/app-code-editor";
 import Messages from "./components/messages";
 import ScrollableContainer from "@/components/scrollable-container";
 import UserInput from "./components/user-input";
-import Editor from "./components/editor";
 
 // Import helpers
 import { createMessage, createAIPlaceHolderMessage } from "@/objects/message";
@@ -61,17 +64,18 @@ export default function DataContractGeneratorPage() {
               >
                 Generator
               </Header>
-              {dcGenerationMutation.isPending && (
+              {/* {dcGenerationMutation.isPending && (
                 <LoadingBar variant="gen-ai" />
-              )}
+              )} */}
             </>
           }
           footer={
             <UserInput
+              isDisable={dcGenerationMutation.isPending}
               onAction={(value) => {
                 const userMessage = createMessage(value);
                 const aiPlaceHolderMessage = createAIPlaceHolderMessage(
-                  "THIS IS PLACEHOLDER MESSAGE OF AI"
+                  CONV_MSG_PLACEHOLDERS.LOADING
                 );
 
                 userMessage.id = `msg#${state.messages.length}`;
@@ -81,10 +85,18 @@ export default function DataContractGeneratorPage() {
                 dcGeneratorStActions.addMessage(aiPlaceHolderMessage);
 
                 // Make api request
-                dcGenerationMutation.mutate({
-                  userInput: value,
-                  isMock: true,
-                });
+                dcGenerationMutation
+                  .mutateAsync({
+                    userInput: value,
+                    isMock: true,
+                  })
+                  .then((value: any) => {
+                    let content = value.message;
+                    dcGeneratorStActions.addMessage(
+                      createMessage(content, CONV_ROLES.AI),
+                      { canRemoveAIPlaceHolderMessage: true }
+                    );
+                  });
               }}
             />
           }
@@ -117,7 +129,7 @@ export default function DataContractGeneratorPage() {
             </div>
           }
         >
-          <Editor
+          <AppCodeEditor
             isEditable={state.isEditable}
             code={state.code}
             onCodeChange={(value) => dcGeneratorStActions.setContent(value)}

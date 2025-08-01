@@ -1,5 +1,8 @@
 import { API } from "../api";
 
+// Import constants
+import { STATE_DICT } from "@/utils/constants/dc";
+
 // Import helpers
 import { createMockPayload } from "../api/helpers";
 
@@ -55,20 +58,12 @@ export async function reqGenerateDataContract(
     // Sau này sẽ xử lý sau.
     return new Promise((resolve) => {
       setTimeout(() => {
-        resolve(
-          createMockPayload({
-            output: {
-              message: {
-                content: [
-                  {
-                    text: "Đây là data contract mà bạn mới tạo xong ...",
-                    role: "assistant",
-                  },
-                ],
-              },
-            },
-          })
-        );
+        resolve({
+          message:
+            "Đây là data contract mà mình đã tạo, bằng cách là tổng hợp các yêu cầu " +
+            "của bạn và những dữ liệu mà mình đang có. Bên dưới là kết quả",
+          data: {},
+        });
       }, 2000);
     });
   }
@@ -178,15 +173,21 @@ export async function reqApproveDataContract(
     const target = dcs.find((dc) => dc.id === id);
 
     return new Promise<TDataContract>((resolve) => {
+      if (target) target.state = STATE_DICT.APPROVED;
+
       setTimeout(() => {
         resolve(target as TDataContract);
       }, 500);
     });
   }
 
-  const response = await api.get<TDataContract>(`/data-contracts/${id}`, {
-    headers: tokenHeader,
-  });
+  const response = await api.post<TDataContract>(
+    `/data-contracts/${id}`,
+    undefined,
+    {
+      headers: tokenHeader,
+    }
+  );
 
   return response.data.data;
 }
@@ -203,15 +204,21 @@ export async function reqRejectDataContract(params: TRejectDataContractParams) {
     const target = dcs.find((dc) => dc.id === id);
 
     return new Promise<TDataContract>((resolve) => {
+      if (target) target.state = STATE_DICT.REJECTED;
+
       setTimeout(() => {
         resolve(target as TDataContract);
       }, 500);
     });
   }
 
-  const response = await api.get<TDataContract>(`/data-contracts/${id}`, {
-    headers: tokenHeader,
-  });
+  const response = await api.post<TDataContract>(
+    `/data-contracts/${id}`,
+    undefined,
+    {
+      headers: tokenHeader,
+    }
+  );
 
   return response.data.data;
 }

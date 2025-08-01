@@ -8,6 +8,7 @@ type TDCGeneratorState = {
   canSubmit: boolean;
   code: string;
   messages: Array<any>;
+  result: any;
 };
 
 type TDCGeneratorActions = {
@@ -15,6 +16,7 @@ type TDCGeneratorActions = {
   setContent(code: string): void;
   setEditable(status: boolean): void;
   addMessage(message: any, options?: any): void;
+  setResult(result: any): void;
   reset(): void;
 };
 
@@ -23,6 +25,7 @@ const _initialState: TDCGeneratorState = {
   canSubmit: false,
   code: "string",
   messages: [],
+  result: null,
 };
 
 const useDCGeneratorState = create<TDCGeneratorState>(() => {
@@ -66,6 +69,11 @@ const dcGeneratorStActions: TDCGeneratorActions = {
         ...state,
         messages,
       };
+    });
+  },
+  setResult(result: any) {
+    useDCGeneratorState.setState((state) => {
+      return { ...state, result };
     });
   },
   reset() {

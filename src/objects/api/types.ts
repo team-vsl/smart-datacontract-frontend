@@ -29,8 +29,9 @@ type TErrorData = {
 };
 
 type TResPayload<Data> = {
-  error: TErrorData | null;
+  error?: TErrorData;
   data: Data;
+  message?: string;
 };
 
 type TResponse<T> = AxiosResponse<TResPayload<T>>;

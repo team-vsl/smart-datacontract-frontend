@@ -23,7 +23,7 @@ type RunJobProps = {
   onJobRunComplete?: (jobRunId: string) => void;
 };
 
-export function RunJob({ onJobRunComplete }: RunJobProps) {
+export default function RunJob({ onJobRunComplete }: RunJobProps) {
   // State cho accordion
   const [isOpen, setIsOpen] = useState<boolean>(false);
 

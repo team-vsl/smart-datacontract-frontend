@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Button,
@@ -16,29 +16,211 @@ import {
 } from "@cloudscape-design/components";
 
 // Import constants
-import { DC_STATUS_DICT } from "@/utils/constants/dc";
+import { STATE_DICT } from "@/utils/constants/dc";
 
 // Import hooks
 import { useStateManager } from "@/hooks/use-state-manager";
 
 // Import objects
 import * as DataContractAPI from "@/objects/data-contract/api";
+import * as DataContractHelpers from "@/objects/data-contract/helpers";
 
 // Import states
-import { useDataContractState } from "@/states/data-contract";
+import {
+  useDataContractState,
+  dataContractStActions,
+} from "@/states/data-contract";
 import { DCStateManager } from "./state";
 
 // Import types
 import type { TDataContract } from "@/objects/data-contract/types";
 
+type TDataContractListProps = {
+  dcs: Array<TDataContract>;
+  isFetching: boolean;
+  isError: boolean;
+  isIdle: boolean;
+  error: Error | null;
+  setCurrentDataContractId(id: string): void;
+};
+
+type TDataContractDetailProps = {
+  currentDataContract: TDataContract | null;
+  isFetching: boolean;
+  isError: boolean;
+  isIdle: boolean;
+  error: Error | null;
+};
+
 type DataContractProps = {};
 
 const _stateOptions = [
   { label: "Chọn trạng thái", value: "" },
-  { label: "Đang hoạt động", value: DC_STATUS_DICT.ACTIVE },
-  { label: "Đang chờ xử lý", value: DC_STATUS_DICT.PENDING },
-  { label: "Đã từ chối", value: DC_STATUS_DICT.REJECTED },
+  { label: "Đang hoạt động", value: STATE_DICT.APPROVED },
+  { label: "Đang chờ xử lý", value: STATE_DICT.PENDING },
+  { label: "Đã từ chối", value: STATE_DICT.REJECTED },
 ];
+
+function DataContractList(props: TDataContractListProps) {
+  const canDisplayResult =
+    props.dcs.length > 0 && !props.isFetching && !props.isError;
+
+  const [selectedItems, setSelectedItems] = useState();
+
+  return (
+    <Container
+      header={
+        <Header variant="h3">
+          <div className="flex items-center">
+            <p className="me-3">Data Contract List</p>
+            {props.isFetching && (
+              <StatusIndicator type="loading">
+                Đang tải dữ liệu...
+              </StatusIndicator>
+            )}
+            {/* Hiển thị lỗi */}
+            {props.isError && (
+              <StatusIndicator type="error">
+                {(props.error as Error)?.message || "Không thể tải dữ liệu"}
+              </StatusIndicator>
+            )}
+          </div>
+        </Header>
+      }
+    >
+      <Table<TDataContract>
+        selectedItems={selectedItems}
+        ariaLabels={{
+          selectionGroupLabel: "Items selection",
+          itemSelectionLabel: ({ selectedItems }, item) => item.name,
+        }}
+        columnDefinitions={[
+          {
+            id: "id",
+            header: "ID",
+            cell: (item) => item.id,
+            sortingField: "id",
+          },
+          {
+            id: "name",
+            header: "Tên",
+            cell: (item) => item.name,
+            sortingField: "name",
+          },
+          {
+            id: "version",
+            header: "Version",
+            cell: (item) => item.version,
+            sortingField: "version",
+          },
+          {
+            id: "state",
+            header: "Trạng thái",
+            cell: (item) => (
+              <StatusIndicator
+                type={
+                  DataContractHelpers.getStatusIndicatorType(item.state) as any
+                }
+              >
+                {item.state}
+              </StatusIndicator>
+            ),
+          },
+        ]}
+        items={props.dcs || []}
+        onSelectionChange={({ detail }) => {
+          if (detail.selectedItems.length > 0) {
+            setSelectedItems(detail.selectedItems as any);
+            props.setCurrentDataContractId(detail.selectedItems[0].id);
+          }
+        }}
+        selectionType="single"
+        trackBy="id"
+        empty={
+          <Box textAlign="center" color="inherit">
+            <b>Không có dữ liệu</b>
+            <Box padding={{ bottom: "s" }} variant="p" color="inherit">
+              Không tìm thấy data contract nào với trạng thái đã chọn.
+            </Box>
+          </Box>
+        }
+      />
+    </Container>
+  );
+}
+
+function DataContractDetail(props: TDataContractDetailProps) {
+  const canDisplayResult = !props.isFetching && !props.isError && !props.isIdle;
+
+  return (
+    <Container header={<Header variant="h3">Data Contract Detail</Header>}>
+      {props.isIdle && (
+        <Box variant="p" textAlign="center">
+          Chọn một Job trên list để xem chi tiết
+        </Box>
+      )}
+
+      {/* Hiển thị loading state */}
+      {props.isFetching && (
+        <StatusIndicator type="loading">Đang tải dữ liệu...</StatusIndicator>
+      )}
+
+      {/* Hiển thị lỗi */}
+      {props.isError && (
+        <StatusIndicator type="error">
+          {(props.error as Error)?.message || "Không thể tải dữ liệu"}
+        </StatusIndicator>
+      )}
+
+      {canDisplayResult && props.currentDataContract && (
+        <>
+          <ColumnLayout columns={2} variant="text-grid">
+            <FormField label="ID">{props.currentDataContract.id}</FormField>
+            <FormField label="Tên">{props.currentDataContract.name}</FormField>
+            <FormField label="Version">
+              {props.currentDataContract.version}
+            </FormField>
+            <FormField label="Trạng thái">
+              <StatusIndicator
+                type={
+                  DataContractHelpers.getStatusIndicatorType(
+                    props.currentDataContract?.state
+                  ) as any
+                }
+              >
+                {props.currentDataContract.state}
+              </StatusIndicator>
+            </FormField>
+            <FormField label="Owner">
+              {props.currentDataContract.owner}
+            </FormField>
+            <FormField label="Ngày tạo">
+              {props.currentDataContract.createdAt}
+            </FormField>
+          </ColumnLayout>
+
+          {props.currentDataContract.description && (
+            <Box margin={{ top: "l" }}>
+              <FormField label="Mô tả">
+                {props.currentDataContract.description}
+              </FormField>
+            </Box>
+          )}
+
+          {props.currentDataContract.schema && (
+            <Box margin={{ top: "l" }}>
+              <FormField label="Schema">
+                <Box variant="code">
+                  {JSON.stringify(props.currentDataContract.schema, null, 2)}
+                </Box>
+              </FormField>
+            </Box>
+          )}
+        </>
+      )}
+    </Container>
+  );
+}
 
 export function DataContract(props: DataContractProps) {
   const { dcs } = useDataContractState();
@@ -50,33 +232,19 @@ export function DataContract(props: DataContractProps) {
   );
 
   // Sử dụng useQuery để lấy danh sách data contracts theo trạng thái
-  const {
-    data: filteredContracts = [],
-    isPending,
-    isError,
-    error,
-  } = useQuery({
+  const dcsQuerier = useQuery({
     queryKey: ["dataContracts", state.currentContractState, dcs],
-    queryFn: async () =>
-      await DataContractAPI.reqGetDataContractsByState({
+    queryFn: async function () {
+      return await DataContractAPI.reqGetDataContractsByState({
         state: state.currentContractState || "",
         isMock: true,
-      }),
-    enabled: !!state.currentContractState, // Chỉ gọi khi có state.currentContractState
+      });
+    },
+    enabled: false,
   });
 
-  // Hàm xử lý khi chọn trạng thái
-  const handleStateChange = function (value: string) {
-    stateFns.setCurrentContractState(value);
-  };
-
   // Sử dụng useQuery để lấy chi tiết data contract
-  const {
-    refetch: fetchContract,
-    data: contractDetail,
-    isPending: isPendingDetail,
-    isError: isErrorDetail,
-  } = useQuery({
+  const dcQuerier = useQuery({
     queryKey: ["dataContract", state.currentContractId],
     queryFn: async () =>
       await DataContractAPI.reqGetDataContract({
@@ -86,11 +254,16 @@ export function DataContract(props: DataContractProps) {
     enabled: false,
   });
 
+  // Hàm xử lý khi chọn trạng thái
+  const handleStateChange = function (value: string) {
+    stateFns.setCurrentContractState(value);
+  };
+
   // Hàm xử lý khi submit ID/tên data contract
   const handleGetContract = async function () {
-    if (!state.currentContractId) return;
+    if (!state.currentContractId && state.currentContractId !== "") return;
     try {
-      const result = await fetchContract();
+      const result = await dcQuerier.refetch();
       if (result.data) {
         stateFns.setCurrentContract(result.data as TDataContract);
       } else {
@@ -102,6 +275,34 @@ export function DataContract(props: DataContractProps) {
       alert(`Lỗi khi tìm Data Contract: ${error}`);
     }
   };
+
+  const handleGetContractByState = async function () {
+    if (!state.currentContractState && state.currentContractState !== "")
+      return;
+    try {
+      const result = await dcsQuerier.refetch();
+      if (result.data) {
+        dataContractStActions.setDCS(result.data as TDataContract[]);
+      } else {
+        alert(
+          `Không tìm thấy các Data Contract với state: ${state.currentContractState}`
+        );
+      }
+    } catch (error) {
+      alert(`Lỗi khi tìm các Data Contract: ${error}`);
+    }
+  };
+
+  // Lấy chi tiết data contract mới khi id thay đổi
+  useEffect(() => {
+    if (state.currentContractId && state.currentContractId !== "")
+      handleGetContract();
+  }, [state.currentContractId]);
+
+  // Lấy data contract theo state
+  useEffect(() => {
+    handleGetContractByState();
+  }, [state.currentContractState]);
 
   return (
     <ExpandableSection
@@ -149,192 +350,22 @@ export function DataContract(props: DataContractProps) {
           </Container>
         </ColumnLayout>
 
-        {/* Phần kết quả (view) */}
-        <Container>
-          {/* Hiển thị loading state */}
-          {isPending && state.currentContractState && (
-            <StatusIndicator type="loading">
-              Đang tải dữ liệu...
-            </StatusIndicator>
-          )}
+        <DataContractList
+          dcs={dcs}
+          isFetching={dcsQuerier.isFetching}
+          isError={dcsQuerier.isError}
+          isIdle={!dcsQuerier.isEnabled && !dcsQuerier.isSuccess}
+          error={dcsQuerier.error}
+          setCurrentDataContractId={stateFns.setCurrentContractId}
+        />
 
-          {/* Hiển thị lỗi */}
-          {isError && (
-            <StatusIndicator type="error">
-              {(error as Error)?.message || "Không thể tải dữ liệu"}
-            </StatusIndicator>
-          )}
-
-          {/* Hiển thị danh sách data contract */}
-          {!isPending &&
-            !isError &&
-            state.currentContractState &&
-            !state.currentContract && (
-              <Container
-                header={
-                  <Header variant="h3">
-                    Danh sách Data Contract - Trạng thái:{" "}
-                    {state.currentContractState}
-                  </Header>
-                }
-              >
-                {filteredContracts.length > 0 ? (
-                  <Table<TDataContract>
-                    columnDefinitions={[
-                      {
-                        id: "id",
-                        header: "ID",
-                        cell: (item) => item.id,
-                        sortingField: "id",
-                      },
-                      {
-                        id: "name",
-                        header: "Tên",
-                        cell: (item) => item.name,
-                        sortingField: "name",
-                      },
-                      {
-                        id: "version",
-                        header: "Version",
-                        cell: (item) => item.version,
-                        sortingField: "version",
-                      },
-                      {
-                        id: "state",
-                        header: "Trạng thái",
-                        cell: (item) => (
-                          <StatusIndicator
-                            type={
-                              item.state === DC_STATUS_DICT.ACTIVE
-                                ? "success"
-                                : item.state === DC_STATUS_DICT.PENDING
-                                ? "in-progress"
-                                : item.state === DC_STATUS_DICT.REJECTED
-                                ? "stopped"
-                                : "stopped"
-                            }
-                          >
-                            {item.state}
-                          </StatusIndicator>
-                        ),
-                      },
-                    ]}
-                    items={filteredContracts}
-                    onSelectionChange={({ detail }) => {
-                      if (detail.selectedItems.length > 0) {
-                        stateFns.setCurrentContract(detail.selectedItems[0]);
-                      }
-                    }}
-                    selectionType="single"
-                    trackBy="id"
-                    empty={
-                      <Box textAlign="center" color="inherit">
-                        <b>Không có dữ liệu</b>
-                        <Box
-                          padding={{ bottom: "s" }}
-                          variant="p"
-                          color="inherit"
-                        >
-                          Không tìm thấy data contract nào với trạng thái đã
-                          chọn.
-                        </Box>
-                      </Box>
-                    }
-                  />
-                ) : (
-                  <Box textAlign="center" color="text-body-secondary">
-                    {state.currentContractState === DC_STATUS_DICT.ACTIVE && (
-                      <p>
-                        Không có data contract nào ở trạng thái{" "}
-                        {DC_STATUS_DICT.ACTIVE}.
-                      </p>
-                    )}
-                    {state.currentContractState === DC_STATUS_DICT.REJECTED && (
-                      <p>
-                        Không có data contract nào ở trạng thái{" "}
-                        {DC_STATUS_DICT.REJECTED}.
-                      </p>
-                    )}
-                    {state.currentContractState === DC_STATUS_DICT.PENDING && (
-                      <p>
-                        Không có data contract nào ở trạng thái{" "}
-                        {DC_STATUS_DICT.PENDING}.
-                      </p>
-                    )}
-                  </Box>
-                )}
-              </Container>
-            )}
-
-          {/* Hiển thị chi tiết data contract */}
-          {state.currentContract && (
-            <Container
-              header={
-                <Header
-                  variant="h3"
-                  actions={
-                    <Button
-                      onClick={() => stateFns.setCurrentContract(null)}
-                      variant="primary"
-                    >
-                      Quay lại danh sách
-                    </Button>
-                  }
-                >
-                  Chi tiết Data Contract
-                </Header>
-              }
-            >
-              <ColumnLayout columns={2} variant="text-grid">
-                <FormField label="ID">{state.currentContract.id}</FormField>
-                <FormField label="Tên">{state.currentContract.name}</FormField>
-                <FormField label="Version">
-                  {state.currentContract.version}
-                </FormField>
-                <FormField label="Trạng thái">
-                  <StatusIndicator
-                    type={
-                      state.currentContract.state === DC_STATUS_DICT.ACTIVE
-                        ? "success"
-                        : state.currentContract.state === DC_STATUS_DICT.PENDING
-                        ? "in-progress"
-                        : state.currentContract.state ===
-                          DC_STATUS_DICT.REJECTED
-                        ? "stopped"
-                        : "stopped"
-                    }
-                  >
-                    {state.currentContract.state}
-                  </StatusIndicator>
-                </FormField>
-                <FormField label="Owner">
-                  {state.currentContract.owner}
-                </FormField>
-                <FormField label="Ngày tạo">
-                  {state.currentContract.createdAt}
-                </FormField>
-              </ColumnLayout>
-
-              {state.currentContract.description && (
-                <Box margin={{ top: "l" }}>
-                  <FormField label="Mô tả">
-                    {state.currentContract.description}
-                  </FormField>
-                </Box>
-              )}
-
-              {state.currentContract.schema && (
-                <Box margin={{ top: "l" }}>
-                  <FormField label="Schema">
-                    <Box variant="code">
-                      {JSON.stringify(state.currentContract.schema, null, 2)}
-                    </Box>
-                  </FormField>
-                </Box>
-              )}
-            </Container>
-          )}
-        </Container>
+        <DataContractDetail
+          currentDataContract={state.currentContract}
+          isFetching={dcQuerier.isFetching}
+          isError={dcQuerier.isError}
+          isIdle={!dcQuerier.isEnabled && !dcQuerier.isSuccess}
+          error={dcQuerier.error}
+        />
       </SpaceBetween>
     </ExpandableSection>
   );

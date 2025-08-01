@@ -1,1 +1,7 @@
 @import "tailwindcss";
+
+.inline-code {
+  padding: 0.25rem 0.5rem;
+  background-color: rgb(235, 235, 235);
+  border-radius: 0.25rem;
+}

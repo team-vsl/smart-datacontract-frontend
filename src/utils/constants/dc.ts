@@ -1,5 +1,5 @@
-export const DC_STATUS_DICT = {
-  ACTIVE: "active",
+export const STATE_DICT = {
+  APPROVED: "approved",
   PENDING: "pending",
-  REJECTED: "archived",
-};
+  REJECTED: "rejected",
+} as const;

@@ -2,17 +2,17 @@
 import type { ChangeStateFn, TSetStateFn } from "src/hooks/use-state-manager";
 import type { TResPayload } from "@/objects/api/types";
 import type {
-  TApproveDCReqPayload,
-  TRejectDCReqPayload,
-} from "@/objects/data-contract/types";
+  TApproveRLReqPayload,
+  TRejectRLReqPayload,
+} from "@/objects/ruleset/types";
 
 // Define a function to get initial state
 function getInitialState() {
   return {
     isOpen: true,
-    currentContractId: null as string | null,
+    currentRulesetId: null as string | null,
     result: null as TResPayload<
-      TApproveDCReqPayload | TRejectDCReqPayload | undefined
+      TApproveRLReqPayload | TRejectRLReqPayload | undefined
     > | null,
   };
 }
@@ -23,14 +23,14 @@ function buildStateModifiers(
   setState: TSetStateFn<ReturnType<typeof getInitialState>>
 ) {
   return {
-    setCurrentContractId(contractId: string | null) {
-      changeState("currentContractId", () => {
+    setCurrentRulesetId(contractId: string | null) {
+      changeState("currentRulesetId", () => {
         return contractId;
       });
     },
     setResult(
       result: TResPayload<
-        TApproveDCReqPayload | TRejectDCReqPayload | undefined
+        TApproveRLReqPayload | TRejectRLReqPayload | undefined
       > | null
     ) {
       changeState("result", () => {
@@ -48,4 +48,4 @@ function buildStateModifiers(
   };
 }
 
-export const CheckDCStateManager = { getInitialState, buildStateModifiers };
+export const CheckRLStateManager = { getInitialState, buildStateModifiers };
