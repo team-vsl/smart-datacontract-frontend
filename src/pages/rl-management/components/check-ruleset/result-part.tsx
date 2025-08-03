@@ -11,6 +11,9 @@ import {
 // Import constants
 import { STATE_DICT } from "@/utils/constants/dc";
 
+// Import objects
+import * as RulesetHelpers from "@/objects/ruleset/helpers";
+
 type CheckRLResultPartProps = {
   isApprovePending: boolean;
   isRejectPending: boolean;
@@ -45,11 +48,7 @@ export default function ResultPart(props: CheckRLResultPartProps) {
     <SpaceBetween size="m">
       <StatusIndicator
         type={
-          props.result.status === STATE_DICT.APPROVED
-            ? "success"
-            : props.result.status === STATE_DICT.REJECTED
-            ? "error"
-            : "warning"
+          RulesetHelpers.getStatusIndicatorType(props.result.data.state) as any
         }
       >
         {props.result.message}
@@ -64,12 +63,12 @@ export default function ResultPart(props: CheckRLResultPartProps) {
             <FormField label="Trạng thái">
               <StatusIndicator
                 type={
-                  props.result.data.status === STATE_DICT.APPROVED
-                    ? "success"
-                    : "error"
+                  RulesetHelpers.getStatusIndicatorType(
+                    props.result.data.state
+                  ) as any
                 }
               >
-                {props.result.data.status}
+                {props.result.data.state}
               </StatusIndicator>
             </FormField>
 

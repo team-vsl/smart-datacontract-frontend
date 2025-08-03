@@ -30,11 +30,11 @@ export type TGetRulesetParams = _Base & {
 };
 
 export type TApproveRulesetParams = _Base & {
-  id: string;
+  name: string;
 };
 
 export type TRejectRulesetParams = _Base & {
-  id: string;
+  name: string;
 };
 
 export type TUploadRulesetParams = _Base & {
@@ -121,12 +121,12 @@ export async function reqGetRuleset(params: TGetRulesetParams) {
 }
 
 export async function reqApproveRuleset(params: TApproveRulesetParams) {
-  const { id, isMock = false } = params || {};
+  const { name, isMock = false } = params || {};
 
   const tokenHeader = API.generateBearerToken(API.getToken(), true) as object;
 
   if (isMock) {
-    const target = rls.find((rl) => rl.id === id);
+    const target = rls.find((rl) => rl.name === name);
     if (target) target.state = STATE_DICT.APPROVED;
 
     return new Promise<TRuleset>((resolve) => {
@@ -136,24 +136,20 @@ export async function reqApproveRuleset(params: TApproveRulesetParams) {
     });
   }
 
-  const response = await api.post<TRuleset>(
-    `/rulesets/${params.id}`,
-    undefined,
-    {
-      headers: tokenHeader,
-    }
-  );
+  const response = await api.post<TRuleset>(`/rulesets/${name}`, undefined, {
+    headers: tokenHeader,
+  });
 
   return response.data.data;
 }
 
 export async function reqRejectRuleset(params: TRejectRulesetParams) {
-  const { id, isMock = false } = params || {};
+  const { name, isMock = false } = params || {};
 
   const tokenHeader = API.generateBearerToken(API.getToken(), true) as object;
 
   if (isMock) {
-    const target = rls.find((rl) => rl.id === id);
+    const target = rls.find((rl) => rl.name === name);
     if (target) target.state = STATE_DICT.APPROVED;
 
     return new Promise<TRuleset>((resolve) => {
@@ -163,13 +159,9 @@ export async function reqRejectRuleset(params: TRejectRulesetParams) {
     });
   }
 
-  const response = await api.post<TRuleset>(
-    `/rulesets/${params.id}`,
-    undefined,
-    {
-      headers: tokenHeader,
-    }
-  );
+  const response = await api.post<TRuleset>(`/rulesets/${name}`, undefined, {
+    headers: tokenHeader,
+  });
 
   return response.data.data;
 }

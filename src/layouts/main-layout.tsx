@@ -5,8 +5,11 @@ import { useNavigate } from "react-router-dom";
 
 import {
   AppLayout,
+  FormField,
   HelpPanel,
   SideNavigation,
+  SpaceBetween,
+  ColumnLayout,
 } from "@cloudscape-design/components";
 import { I18nProvider } from "@cloudscape-design/components/i18n";
 import messages from "@cloudscape-design/components/i18n/messages/all.en";
@@ -14,16 +17,52 @@ import messages from "@cloudscape-design/components/i18n/messages/all.en";
 // Import configs
 import { RouteConfigs } from "@/routes/route-configs";
 
+// Import hooks
+import { useAuth } from "@/hooks/use-auth";
+
 // Import states
 import { useMainLayoutState, mainLayoutStActions } from "@/states/main-layout";
 
 // Import types
 import type { PropsWithChildren } from "react";
+import type { TUser } from "@/objects/identity/types";
 
 const LOCALE = import.meta.env.VITE_I8N_LOCALE;
 
+type TUserInformationProps = {
+  user: TUser;
+};
+
+export function UserInformation(props: TUserInformationProps) {
+  return (
+    <div>
+      <p>
+        Hello <strong>{props.user.name}</strong> welcome to VPBank Challenge #23
+        Demo
+      </p>
+      <hr />
+      <div>
+        <p className="font-bold">Your information</p>
+        <div className="grid grid-cols-2 mb-3">
+          <FormField label="Role">{props.user.role}</FormField>
+          <FormField label="Team">{props.user.team}</FormField>
+        </div>
+        <div className="grid grid-cols-2 mb-3">
+          <FormField label="Email">{props.user.email}</FormField>
+          <FormField label="Phone">{props.user.phoneNumber}</FormField>
+        </div>
+        <div className="grid grid-cols-2 mb-3">
+          <FormField label="Gender">{props.user.gender}</FormField>
+          <FormField label="Birthdate">{props.user.birthdate}</FormField>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MainLayout(props: PropsWithChildren) {
   const { activeHref, sideNavigation, helpPanel } = useMainLayoutState();
+  const { user } = useAuth();
 
   const navigate = useNavigate();
 
@@ -77,7 +116,11 @@ export default function MainLayout(props: PropsWithChildren) {
         onToolsChange={({ detail }) => {
           mainLayoutStActions.setHelpPanelOpen(detail.open);
         }}
-        tools={<HelpPanel header={<h2>Overview</h2>}>Help content</HelpPanel>}
+        tools={
+          <HelpPanel header={<h2>Overview</h2>}>
+            <UserInformation user={user!} />
+          </HelpPanel>
+        }
         content={<div className="h-full overflow-auto">{props.children}</div>}
       />
     </I18nProvider>

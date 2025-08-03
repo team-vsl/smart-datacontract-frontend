@@ -186,7 +186,9 @@ function JobRunDetail(props: TJobRunDetailProps) {
             {new Date(props.currentJobRun.startedOn).toLocaleString()}
           </FormField>
           <FormField label="Complete Date">
-            {new Date(props.currentJobRun.completedOn).toLocaleString()}
+            {props.currentJobRun.completedOn
+              ? new Date(props.currentJobRun.completedOn).toLocaleString()
+              : "Chưa biết"}
           </FormField>
         </ColumnLayout>
       )}

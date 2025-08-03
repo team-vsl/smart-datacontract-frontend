@@ -26,7 +26,7 @@ export default function InteractionPart(props: CheckRLInteractionPartProps) {
     <Container header={<Header variant="h3">Tương tác</Header>}>
       <SpaceBetween size="xs" direction="horizontal" alignItems="end">
         <Input
-          placeholder="Nhập Ruleset ID hoặc Name"
+          placeholder="Nhập tên ruleset"
           value={props.currentRulesetId}
           onChange={({ detail }) => props.onCurrentIdInputChange(detail)}
           disabled={props.isApprovePending || props.isRejectPending}

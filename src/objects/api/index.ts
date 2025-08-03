@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Import from utils
-import * as CookieUtils from "@/utils/cookies";
+import * as CookieUtils from "@/utils/cookie";
 import * as StringUtils from "@/utils/string";
 
 // Import types

@@ -43,13 +43,21 @@ function writePersistentCookie(name: string, value: string) {
  * @param value
  * @param expireTime
  */
-function writeSessionCookie(name: string, value: string, expireTime: number) {
-  const safeExpireTime = Math.max(1, expireTime);
-  const expireDate = new Date(
-    CookiesCoefficient.SESSION * safeExpireTime + Date.now()
-  );
-  const expires = expireDate.toUTCString();
-  const options = _getCookieOptions({ expires });
+function writeSessionCookie(
+  name: string,
+  value: string,
+  expireTime: string | number
+) {
+  let expireDate;
+
+  if (typeof expireTime === "number") {
+    let safeExpireTime = Math.max(1, expireTime);
+    expireDate = new Date(
+      CookiesCoefficient.SESSION * safeExpireTime + Date.now()
+    );
+    expireTime = expireDate.toUTCString();
+  }
+  const options = _getCookieOptions({ expires: expireTime });
   document.cookie = `${name}=${value}; ${options}`;
 }
 
