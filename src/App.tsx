@@ -37,8 +37,16 @@ function LoadingSection() {
  * @returns
  */
 function RoutesSwitcher() {
-  const { isAuthenticated, signInMutation, reSignInUserOffline } = useAuth();
+  const {
+    isAuthenticated,
+    signInMutation,
+    refreshTokensMutation,
+    reSignInUserOffline,
+  } = useAuth();
   const navigate = useNavigate();
+
+  const loadingShown =
+    signInMutation.isPending || refreshTokensMutation.isPending;
 
   useEffect(() => {
     // If user doesn't authenticate, navigate
@@ -52,13 +60,16 @@ function RoutesSwitcher() {
       // User is signed in
       if (idToken) {
         reSignInUserOffline(idToken);
+      } else {
+        const refreshToken = readCookie("refreshToken");
+        refreshTokensMutation.mutate({ refreshToken });
       }
     } else {
       navigate(RouteConfigs.Home.Path);
     }
   }, [isAuthenticated]);
 
-  if (signInMutation.isPending) return <LoadingSection />;
+  if (loadingShown) return <LoadingSection />;
 
   return isAuthenticated
     ? useRoutes(authenticatedRoutes)

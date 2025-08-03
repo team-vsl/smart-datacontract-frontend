@@ -13,22 +13,13 @@ import * as CookieUtils from "@/utils/cookie";
 import { useIdentityState, identityStActions } from "@/states/identity";
 
 // Import types
-import type { TSignInResPayload } from "@/objects/identity/types";
+import type {
+  TSignInResPayload,
+  TRefreshTokenResPayload,
+} from "@/objects/identity/types";
 
 export function useAuth() {
   const { user, isAuthenticated } = useIdentityState();
-
-  const reSignInUserOffline = function (token: string) {
-    const decodedIdToken = jwtDecode(token);
-
-    // Save user's information
-    identityStActions.setUser(
-      Identity.createUserFromDecodedToken(decodedIdToken)
-    );
-
-    // Update authenticated status
-    identityStActions.setIsAuthenticated(true);
-  };
 
   const signInMutation = useMutation({
     mutationFn: async function (params: any) {
@@ -72,10 +63,59 @@ export function useAuth() {
     },
   });
 
+  const refreshTokensMutation = useMutation({
+    mutationFn: async function (params: any) {
+      return await IdentityAPI.refreshTokens(params);
+    },
+    onSuccess(data: TRefreshTokenResPayload) {
+      // Save tokens
+      const { idToken, accessToken } = data.auth;
+
+      // Decode tokens
+      const decodedIdToken = jwtDecode(idToken);
+      const decodedAccessToken = jwtDecode(accessToken);
+
+      CookieUtils.writeSessionCookie(
+        "idToken",
+        idToken,
+        new Date(decodedIdToken.exp!).toUTCString()
+      );
+      CookieUtils.writeSessionCookie(
+        "accessToken",
+        accessToken,
+        new Date(decodedAccessToken.exp!).toUTCString()
+      );
+
+      // Save user's information
+      identityStActions.setUser(
+        Identity.createUserFromDecodedToken(decodedIdToken)
+      );
+
+      // Update authenticated status
+      identityStActions.setIsAuthenticated(true);
+    },
+    onError(error) {
+      identityStActions.setIsAuthenticated(false);
+    },
+  });
+
+  const reSignInUserOffline = function (token: string) {
+    const decodedIdToken = jwtDecode(token);
+
+    // Save user's information
+    identityStActions.setUser(
+      Identity.createUserFromDecodedToken(decodedIdToken)
+    );
+
+    // Update authenticated status
+    identityStActions.setIsAuthenticated(true);
+  };
+
   return {
     isAuthenticated,
     user,
     signInMutation,
+    refreshTokensMutation,
     reSignInUserOffline,
   };
 }

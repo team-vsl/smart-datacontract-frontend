@@ -23,3 +23,12 @@ export type TSignInResPayload = {
   };
   user: TUser;
 };
+
+export type TRefreshTokenResPayload = {
+  auth: {
+    tokenType: string;
+    expiresIn: string;
+    accessToken: string;
+    idToken: string;
+  };
+};

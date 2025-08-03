@@ -13,6 +13,10 @@ export type TSignInParams = {
   idToken?: string;
 };
 
+export type TRefreshTokensParams = {
+  refreshToken: string;
+};
+
 /**
  * Gửi một request tới server các thông tin của người dùng để
  * xác nhận mà lấy uỷ quyền để thực hiện các chức năng
@@ -29,6 +33,21 @@ export async function signin(params: TSignInParams) {
   };
 
   const response = await api.post<TSignInResPayload>("/auth/sign-in", body);
+
+  return response.data.data;
+}
+
+export async function refreshTokens(params: TRefreshTokensParams) {
+  const { refreshToken } = params;
+
+  let body = {
+    refreshToken,
+  };
+
+  const response = await api.post<TSignInResPayload>(
+    "/auth/refresh-tokens",
+    body
+  );
 
   return response.data.data;
 }
