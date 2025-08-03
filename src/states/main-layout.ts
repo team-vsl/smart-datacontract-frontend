@@ -34,7 +34,7 @@ const _initialState: TMainLayoutState = {
     isOpen: true,
   },
   helpPanel: {
-    isOpen: false,
+    isOpen: true,
   },
 };
 

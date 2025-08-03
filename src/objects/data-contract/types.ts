@@ -18,6 +18,6 @@ export type TDataContract = {
   createdAt: string;
 };
 
-export type TApproveDCReqPayload = TDataContract;
+export type TApproveDCResPayload = TDataContract;
 
-export type TRejectDCReqPayload = TDataContract;
+export type TRejectDCResPayload = TDataContract;

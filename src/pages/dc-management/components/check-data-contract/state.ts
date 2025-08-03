@@ -2,8 +2,8 @@
 import type { ChangeStateFn, TSetStateFn } from "src/hooks/use-state-manager";
 import type { TResPayload } from "@/objects/api/types";
 import type {
-  TApproveDCReqPayload,
-  TRejectDCReqPayload,
+  TApproveDCResPayload,
+  TRejectDCResPayload,
 } from "@/objects/data-contract/types";
 
 // Define a function to get initial state
@@ -12,7 +12,7 @@ function getInitialState() {
     isOpen: true,
     currentContractId: null as string | null,
     result: null as TResPayload<
-      TApproveDCReqPayload | TRejectDCReqPayload | undefined
+      TApproveDCResPayload | TRejectDCResPayload | undefined
     > | null,
   };
 }
@@ -30,7 +30,7 @@ function buildStateModifiers(
     },
     setResult(
       result: TResPayload<
-        TApproveDCReqPayload | TRejectDCReqPayload | undefined
+        TApproveDCResPayload | TRejectDCResPayload | undefined
       > | null
     ) {
       changeState("result", () => {

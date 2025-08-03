@@ -1,0 +1,86 @@
+// Import types
+import type { TToStringOptions, TUpdateObjectOptions } from "./types";
+
+/**
+ * Use this function to set default values for `o` using `ext`.
+ * @param o
+ * @param s
+ */
+export function setDefaultValues<T>(o: T, ext: T) {
+  if (!o) return ext;
+  for (const key in ext) {
+    if (o[key] === undefined) {
+      (o as any)[key] = ext[key];
+    }
+  }
+  return o;
+}
+
+/**
+ * Use this function to convert an object to string.
+ * @param o
+ * @example
+ * ```
+ * let obj = {
+ *   name: "Nguyen Anh Tuan",
+ *   age: 19
+ * };
+ *
+ * let str = ObjectUtils.toString(obj);
+ *
+ * // Output: name=Nguyen Anh Tuan;age=19
+ * console.log(str);
+ * ```
+ */
+export function toString(o: { [key: string]: any }, opt?: TToStringOptions) {
+  let str = "";
+
+  opt = setDefaultValues(opt, { kvSeperator: "=", seperator: "&" });
+
+  for (const key in o) {
+    if (
+      Boolean(o[key]) &&
+      typeof o[key] !== "object" &&
+      typeof o[key] !== "function" &&
+      typeof o[key] !== "symbol"
+    ) {
+      const propStr = key + opt?.kvSeperator + o[key];
+      str += propStr + opt?.seperator;
+    }
+  }
+  return str;
+}
+
+/**
+ * Use this function to update deeply a object.
+ * @param o
+ * @param data
+ * @param opt
+ * @returns
+ */
+export function updateObject(o: any, data: any, opt?: TUpdateObjectOptions) {
+  for (const key in data) {
+    if (typeof data[key] === "object" && typeof o[key] === "object") {
+      updateObject(o[key], data[key], opt);
+      continue;
+    }
+
+    if (opt && opt.canOverrideValues === true) o[key] = data[key];
+    else if (!o[key]) {
+      o[key] = data[key];
+    }
+  }
+
+  return o;
+}
+
+/**
+ * Use this function to lock an object. It uses `freeze` and `seal` to perform this operation
+ * @param o
+ * @returns
+ */
+export function lock(o: any) {
+  if (typeof o !== "object" || Array.isArray(o)) return;
+  Object.seal(o);
+  Object.freeze(o);
+}
