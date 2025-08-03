@@ -19,7 +19,7 @@ export default function HomePage() {
 
         <div className="w-full flex justify-center">
           <img
-            src="/public/TeamVSLHackathon.png"
+            src="/TeamVSLHackathon.png"
             alt="VP Hackathon Logo"
             style={{
               width: "auto",
