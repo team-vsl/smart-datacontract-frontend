@@ -5,8 +5,8 @@ import {
 } from "@cloudscape-design/components";
 
 // Import components
-import { DataContract } from "./components/data-contract";
-import { CheckDataContract } from "./components/check-data-contract";
+import {DataContract} from "./components/data-contract";
+import {CheckDataContract} from "./components/check-data-contract";
 
 export default function DataContractManagementPage() {
   return (

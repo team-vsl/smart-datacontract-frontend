@@ -1,6 +1,9 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { SpaceBetween, ExpandableSection } from "@cloudscape-design/components";
 
+// Import constants
+import { CONFIGS } from "@/utils/constants/configs";
+
 // Import components
 import InteractionPart from "./interaction-part";
 import ResultPart from "./result-part";
@@ -33,7 +36,7 @@ export function CheckDataContract(props: CheckDataContractProps) {
   // Sử dụng useMutation để approve data contract
   const approveMutation = useMutation({
     mutationFn: async (id: string) => {
-      let isMock = true;
+      let isMock = CONFIGS.IS_MOCK_API;
 
       // Kiểm tra data contract có tồn tại không
       const contract = await DataContractAPI.reqGetDataContract({
@@ -76,7 +79,7 @@ export function CheckDataContract(props: CheckDataContractProps) {
   // Sử dụng useMutation để reject data contract
   const rejectMutation = useMutation({
     mutationFn: async (id: string) => {
-      let isMock = true;
+      let isMock = CONFIGS.IS_MOCK_API;
 
       // Kiểm tra data contract có tồn tại không
       const contract = await DataContractAPI.reqGetDataContract({ id, isMock });

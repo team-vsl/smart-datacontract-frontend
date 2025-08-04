@@ -17,6 +17,7 @@ import {
 } from "@cloudscape-design/components";
 
 // Import constants
+import { CONFIGS } from "@/utils/constants/configs";
 import { STATE_DICT } from "@/utils/constants/dc";
 
 // Import objects
@@ -217,7 +218,7 @@ export default function Ruleset(props: TRulesetsProps) {
       try {
         const ruleset = await RulesetAPI.reqGetRuleset({
           name: state.currentRulesetName,
-          isMock: true,
+          isMock: CONFIGS.IS_MOCK_API,
         });
         return ruleset;
       } catch (error) {
@@ -237,7 +238,7 @@ export default function Ruleset(props: TRulesetsProps) {
       try {
         const filtered = await RulesetAPI.reqGetRulesetsByState({
           state: state.currentRulesetState,
-          isMock: true,
+          isMock: CONFIGS.IS_MOCK_API,
         });
         return filtered;
       } catch (error) {

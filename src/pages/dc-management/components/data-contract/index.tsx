@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import {useState, useEffect} from "react";
+import {useQuery} from "@tanstack/react-query";
 import {
   Button,
   Container,
@@ -16,10 +16,11 @@ import {
 } from "@cloudscape-design/components";
 
 // Import constants
-import { STATE_DICT } from "@/utils/constants/dc";
+import {CONFIGS} from "@/utils/constants/configs";
+import {STATE_DICT} from "@/utils/constants/dc";
 
 // Import hooks
-import { useStateManager } from "@/hooks/use-state-manager";
+import {useStateManager} from "@/hooks/use-state-manager";
 
 // Import objects
 import * as DataContractAPI from "@/objects/data-contract/api";
@@ -30,10 +31,10 @@ import {
   useDataContractState,
   dataContractStActions,
 } from "@/states/data-contract";
-import { DCStateManager } from "./state";
+import {DCStateManager} from "./state";
 
 // Import types
-import type { TDataContract } from "@/objects/data-contract/types";
+import type {TDataContract} from "@/objects/data-contract/types";
 
 type TDataContractListProps = {
   dcs: Array<TDataContract>;
@@ -55,10 +56,10 @@ type TDataContractDetailProps = {
 type DataContractProps = {};
 
 const _stateOptions = [
-  { label: "Chọn trạng thái", value: "" },
-  { label: "Đang hoạt động", value: STATE_DICT.APPROVED },
-  { label: "Đang chờ xử lý", value: STATE_DICT.PENDING },
-  { label: "Đã từ chối", value: STATE_DICT.REJECTED },
+  {label: "Chọn trạng thái", value: ""},
+  {label: "Đang hoạt động", value: STATE_DICT.APPROVED},
+  {label: "Đang chờ xử lý", value: STATE_DICT.PENDING},
+  {label: "Đã từ chối", value: STATE_DICT.REJECTED},
 ];
 
 function DataContractList(props: TDataContractListProps) {
@@ -81,7 +82,7 @@ function DataContractList(props: TDataContractListProps) {
             {/* Hiển thị lỗi */}
             {props.isError && (
               <StatusIndicator type="error">
-                {(props.error as Error)?.message || "Không thể tải dữ liệu"}
+                {(props.error as any)?.response.data.error.message || "Không thể tải dữ liệu"}
               </StatusIndicator>
             )}
           </div>
@@ -92,7 +93,7 @@ function DataContractList(props: TDataContractListProps) {
         selectedItems={selectedItems}
         ariaLabels={{
           selectionGroupLabel: "Items selection",
-          itemSelectionLabel: ({ selectedItems }, item) => item.name,
+          itemSelectionLabel: ({selectedItems}, item) => item.name,
         }}
         columnDefinitions={[
           {
@@ -128,7 +129,7 @@ function DataContractList(props: TDataContractListProps) {
           },
         ]}
         items={props.dcs || []}
-        onSelectionChange={({ detail }) => {
+        onSelectionChange={({detail}) => {
           if (detail.selectedItems.length > 0) {
             setSelectedItems(detail.selectedItems as any);
             props.setCurrentDataContractId(detail.selectedItems[0].id);
@@ -139,7 +140,7 @@ function DataContractList(props: TDataContractListProps) {
         empty={
           <Box textAlign="center" color="inherit">
             <b>Không có dữ liệu</b>
-            <Box padding={{ bottom: "s" }} variant="p" color="inherit">
+            <Box padding={{bottom: "s"}} variant="p" color="inherit">
               Không tìm thấy data contract nào với trạng thái đã chọn.
             </Box>
           </Box>
@@ -168,7 +169,7 @@ function DataContractDetail(props: TDataContractDetailProps) {
       {/* Hiển thị lỗi */}
       {props.isError && (
         <StatusIndicator type="error">
-          {(props.error as Error)?.message || "Không thể tải dữ liệu"}
+          {(props.error as any)?.response.data.error.message || "Không thể tải dữ liệu"}
         </StatusIndicator>
       )}
 
@@ -200,7 +201,7 @@ function DataContractDetail(props: TDataContractDetailProps) {
           </ColumnLayout>
 
           {props.currentDataContract.description && (
-            <Box margin={{ top: "l" }}>
+            <Box margin={{top: "l"}}>
               <FormField label="Mô tả">
                 {props.currentDataContract.description}
               </FormField>
@@ -208,7 +209,7 @@ function DataContractDetail(props: TDataContractDetailProps) {
           )}
 
           {props.currentDataContract.schema && (
-            <Box margin={{ top: "l" }}>
+            <Box margin={{top: "l"}}>
               <FormField label="Schema">
                 <Box variant="code">
                   {JSON.stringify(props.currentDataContract.schema, null, 2)}
@@ -223,7 +224,7 @@ function DataContractDetail(props: TDataContractDetailProps) {
 }
 
 export function DataContract(props: DataContractProps) {
-  const { dcs } = useDataContractState();
+  const {dcs} = useDataContractState();
 
   // State cho data contract
   const [state, stateFns] = useStateManager(
@@ -237,7 +238,7 @@ export function DataContract(props: DataContractProps) {
     queryFn: async function () {
       return await DataContractAPI.reqGetDataContractsByState({
         state: state.currentContractState || "",
-        isMock: true,
+        isMock: CONFIGS.IS_MOCK_API,
       });
     },
     enabled: false,
@@ -249,7 +250,7 @@ export function DataContract(props: DataContractProps) {
     queryFn: async () =>
       await DataContractAPI.reqGetDataContract({
         id: state.currentContractId || "",
-        isMock: true,
+        isMock: CONFIGS.IS_MOCK_API,
       }),
     enabled: false,
   });
@@ -266,13 +267,10 @@ export function DataContract(props: DataContractProps) {
       const result = await dcQuerier.refetch();
       if (result.data) {
         stateFns.setCurrentContract(result.data as TDataContract);
-      } else {
-        alert(
-          `Không tìm thấy Data Contract với ID: ${state.currentContractId}`
-        );
       }
+      console.log("Get contract result:", result);
     } catch (error) {
-      alert(`Lỗi khi tìm Data Contract: ${error}`);
+      console.log("Get contract error:", error);
     }
   };
 
@@ -283,13 +281,10 @@ export function DataContract(props: DataContractProps) {
       const result = await dcsQuerier.refetch();
       if (result.data) {
         dataContractStActions.setDCS(result.data as TDataContract[]);
-      } else {
-        alert(
-          `Không tìm thấy các Data Contract với state: ${state.currentContractState}`
-        );
       }
+      console.log("Get data contracts result:", result);
     } catch (error) {
-      alert(`Lỗi khi tìm các Data Contract: ${error}`);
+      console.log("Get data contracts error:", error);
     }
   };
 
@@ -309,7 +304,7 @@ export function DataContract(props: DataContractProps) {
       headerText="Get/List Data Contract"
       variant="container"
       defaultExpanded={state.isOpen}
-      onChange={({ detail }) => stateFns.setIsOpen(detail.expanded)}
+      onChange={({detail}) => stateFns.setIsOpen(detail.expanded)}
     >
       <SpaceBetween size="l">
         {/* Phần tương tác */}
@@ -323,7 +318,7 @@ export function DataContract(props: DataContractProps) {
                     (option) => option.value === state.currentContractState
                   ) || null
                 }
-                onChange={({ detail }) =>
+                onChange={({detail}) =>
                   detail.selectedOption &&
                   handleStateChange(detail.selectedOption.value as string)
                 }
@@ -338,7 +333,7 @@ export function DataContract(props: DataContractProps) {
             <SpaceBetween size="xs" direction="horizontal">
               <Input
                 value={state.currentContractId || ""}
-                onChange={({ detail }) =>
+                onChange={({detail}) =>
                   stateFns.setCurrentContractId(detail.value)
                 }
                 placeholder="Nhập ID hoặc tên Data Contract"

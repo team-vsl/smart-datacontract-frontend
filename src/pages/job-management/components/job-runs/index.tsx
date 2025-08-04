@@ -4,7 +4,6 @@ import {
   Button,
   Container,
   Header,
-  Select,
   Input,
   SpaceBetween,
   StatusIndicator,
@@ -16,7 +15,7 @@ import {
 } from "@cloudscape-design/components";
 
 // Import constants
-import { JOBRUN_STATE_DICT } from "@/utils/constants/job";
+import { CONFIGS } from "@/utils/constants/configs";
 
 // Import hooks
 import { useStateManager } from "@/hooks/use-state-manager";
@@ -26,7 +25,6 @@ import * as JobHelpers from "@/objects/job/helpers";
 import * as JobAPI from "@/objects/job/api";
 
 // Import states
-import { jobStActions, useJobState } from "@/states/job";
 import { JobRunStateManager } from "./state";
 
 // Import types
@@ -215,7 +213,7 @@ export default function JobRun(props: TJobRunProps) {
       await JobAPI.reqGetJobRun({
         id: state.currentJobRunId || "",
         jobName: state.currentJobName || "",
-        isMock: true,
+        isMock: CONFIGS.IS_MOCK_API,
       }),
     enabled: false,
   });
@@ -225,7 +223,7 @@ export default function JobRun(props: TJobRunProps) {
     queryFn: async () =>
       await JobAPI.reqGetJobRuns({
         jobName: state.currentJobName || "",
-        isMock: true,
+        isMock: CONFIGS.IS_MOCK_API,
       }),
     enabled: false,
   });

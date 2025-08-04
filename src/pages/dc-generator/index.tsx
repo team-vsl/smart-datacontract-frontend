@@ -15,6 +15,7 @@ import LoadingBar from "@cloudscape-design/chat-components/loading-bar";
 import { reqGenerateDataContract } from "@/objects/data-contract/api";
 
 // Import constants
+import { CONFIGS } from "@/utils/constants/configs";
 import { CONV_ROLES, CONV_MSG_PLACEHOLDERS } from "@/objects/message/constants";
 
 // Import components
@@ -88,7 +89,7 @@ export default function DataContractGeneratorPage() {
                 dcGenerationMutation
                   .mutateAsync({
                     userInput: value,
-                    isMock: true,
+                    isMock: CONFIGS.IS_MOCK_API,
                   })
                   .then((value: any) => {
                     let content = value.message;

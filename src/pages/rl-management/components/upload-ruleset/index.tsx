@@ -1,8 +1,8 @@
-import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { SpaceBetween, ExpandableSection } from "@cloudscape-design/components";
 
 // Import constants
+import { CONFIGS } from "@/utils/constants/configs";
 import { STATE_DICT } from "@/utils/constants/dc";
 
 // Import components
@@ -71,7 +71,7 @@ export function UploadRuleset(props: UploadRulesetProps) {
       // Sử dụng RulesetAPI để thêm ruleset mới
       const uploadedRuleset = await RulesetAPI.reqUploadRuleset({
         data: newRuleset,
-        isMock: true,
+        isMock: CONFIGS.IS_MOCK_API,
       });
 
       rulesetStActions.addRuleset(uploadedRuleset);

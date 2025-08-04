@@ -1,17 +1,8 @@
-import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  Button,
-  Container,
-  Header,
-  Input,
-  SpaceBetween,
-  StatusIndicator,
-  ExpandableSection,
-  FormField,
-  Box,
-  ColumnLayout,
-} from "@cloudscape-design/components";
+import { SpaceBetween, ExpandableSection } from "@cloudscape-design/components";
+
+// Import constants
+import { CONFIGS } from "@/utils/constants/configs";
 
 // Import components
 import InteractionPart from "./interaction-part";
@@ -45,7 +36,7 @@ export function CheckRuleset(props: TCheckRulesetProps) {
   // Sử dụng useMutation để approve ruleset
   const approveMutation = useMutation({
     mutationFn: async function (name: string) {
-      let isMock = true;
+      let isMock = CONFIGS.IS_MOCK_API;
 
       // Kiểm tra ruleset có tồn tại không
       const ruleset = await RulesetAPI.reqGetRuleset({ name, isMock });

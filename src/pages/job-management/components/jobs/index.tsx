@@ -16,7 +16,7 @@ import {
 } from "@cloudscape-design/components";
 
 // Import constants
-import { STATE_DICT } from "@/utils/constants/dc";
+import { CONFIGS } from "@/utils/constants/configs";
 
 // Import hooks
 import { useStateManager } from "@/hooks/use-state-manager";
@@ -190,7 +190,7 @@ export default function Job(props: TJobProps) {
     queryFn: async () =>
       await JobAPI.reqGetJob({
         jobName: state.currentJobName || "",
-        isMock: true,
+        isMock: CONFIGS.IS_MOCK_API,
       }),
     enabled: false,
   });
@@ -199,7 +199,7 @@ export default function Job(props: TJobProps) {
     queryKey: ["jobs", state.currentJobName],
     queryFn: async () =>
       await JobAPI.reqGetJobs({
-        isMock: true,
+        isMock: CONFIGS.IS_MOCK_API,
       }),
     enabled: false,
   });
