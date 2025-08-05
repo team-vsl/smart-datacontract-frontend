@@ -1,4 +1,4 @@
-const TOKEN_NAME = "_vaaitk";
+const TOKEN_NAME = "_vpchallengeck";
 
 const CookiesCoefficient = {
   SESSION: 1000 * 60 * 60, // 1 giờ
@@ -57,7 +57,7 @@ function writeSessionCookie(
     );
     expireTime = expireDate.toUTCString();
   }
-  const options = _getCookieOptions({ expires: expireTime });
+  const options = _getCookieOptions({expires: expireTime});
   document.cookie = `${name}=${value}; ${options}`;
 }
 

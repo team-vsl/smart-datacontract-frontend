@@ -1,5 +1,5 @@
-import {useState, useEffect} from "react";
-import {useQuery} from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Button,
   Container,
@@ -16,25 +16,22 @@ import {
 } from "@cloudscape-design/components";
 
 // Import constants
-import {CONFIGS} from "@/utils/constants/configs";
-import {STATE_DICT} from "@/utils/constants/dc";
+import { CONFIGS } from "@/utils/constants/configs";
+import { STATE_DICT } from "@/utils/constants/dc";
 
 // Import hooks
-import {useStateManager} from "@/hooks/use-state-manager";
+import { useStateManager } from "@/hooks/use-state-manager";
 
 // Import objects
 import * as DataContractAPI from "@/objects/data-contract/api";
 import * as DataContractHelpers from "@/objects/data-contract/helpers";
 
 // Import states
-import {
-  useDataContractState,
-  dataContractStActions,
-} from "@/states/data-contract";
-import {DCStateManager} from "./state";
+import { useDataContractState, dataContractStActions } from "@/states/data-contract";
+import { DCStateManager } from "./state";
 
 // Import types
-import type {TDataContract} from "@/objects/data-contract/types";
+import type { TDataContract } from "@/objects/data-contract/types";
 
 type TDataContractListProps = {
   dcs: Array<TDataContract>;
@@ -42,29 +39,31 @@ type TDataContractListProps = {
   isError: boolean;
   isIdle: boolean;
   error: Error | null;
-  setCurrentDataContractId(id: string): void;
+  setCurrentDataContractName(id: string): void;
+  handleGetContractsByState(): void;
 };
 
 type TDataContractDetailProps = {
+  currentDataContractContent: string;
   currentDataContract: TDataContract | null;
   isFetching: boolean;
   isError: boolean;
   isIdle: boolean;
   error: Error | null;
+  handleGetContract(): void;
 };
 
 type DataContractProps = {};
 
 const _stateOptions = [
-  {label: "Chọn trạng thái", value: ""},
-  {label: "Đang hoạt động", value: STATE_DICT.APPROVED},
-  {label: "Đang chờ xử lý", value: STATE_DICT.PENDING},
-  {label: "Đã từ chối", value: STATE_DICT.REJECTED},
+  { label: "Chọn trạng thái", value: "" },
+  { label: "Đang hoạt động", value: STATE_DICT.APPROVED },
+  { label: "Đang chờ xử lý", value: STATE_DICT.PENDING },
+  { label: "Đã từ chối", value: STATE_DICT.REJECTED },
 ];
 
 function DataContractList(props: TDataContractListProps) {
-  const canDisplayResult =
-    props.dcs.length > 0 && !props.isFetching && !props.isError;
+  const canDisplayResult = props.dcs.length > 0 && !props.isFetching && !props.isError;
 
   const [selectedItems, setSelectedItems] = useState();
 
@@ -74,17 +73,27 @@ function DataContractList(props: TDataContractListProps) {
         <Header variant="h3">
           <div className="flex items-center">
             <p className="me-3">Data Contract List</p>
-            {props.isFetching && (
-              <StatusIndicator type="loading">
-                Đang tải dữ liệu...
-              </StatusIndicator>
-            )}
-            {/* Hiển thị lỗi */}
-            {props.isError && (
-              <StatusIndicator type="error">
-                {(props.error as any)?.response.data.error.message || "Không thể tải dữ liệu"}
-              </StatusIndicator>
-            )}
+            <Button
+              iconName="refresh"
+              ariaLabel="Refresh"
+              loadingText="Refreshing table content"
+              onClick={() => {
+                props.handleGetContractsByState();
+              }}
+              loading={props.isFetching}
+              disabled={props.isFetching}
+            />
+            <div className="ms-3">
+              {props.isFetching && (
+                <StatusIndicator type="loading">Đang tải dữ liệu...</StatusIndicator>
+              )}
+              {/* Hiển thị lỗi */}
+              {props.isError && (
+                <StatusIndicator type="error">
+                  {(props.error as any)?.response.data.error.message || "Không thể tải dữ liệu"}
+                </StatusIndicator>
+              )}
+            </div>
           </div>
         </Header>
       }
@@ -93,46 +102,35 @@ function DataContractList(props: TDataContractListProps) {
         selectedItems={selectedItems}
         ariaLabels={{
           selectionGroupLabel: "Items selection",
-          itemSelectionLabel: ({selectedItems}, item) => item.name,
+          itemSelectionLabel: ({ selectedItems }, item) => item.name,
         }}
         columnDefinitions={[
           {
-            id: "id",
-            header: "ID",
-            cell: (item) => item.id,
-            sortingField: "id",
-          },
-          {
             id: "name",
-            header: "Tên",
+            header: "Name",
             cell: (item) => item.name,
             sortingField: "name",
           },
           {
-            id: "version",
-            header: "Version",
-            cell: (item) => item.version,
-            sortingField: "version",
-          },
-          {
             id: "state",
-            header: "Trạng thái",
+            header: "State",
             cell: (item) => (
-              <StatusIndicator
-                type={
-                  DataContractHelpers.getStatusIndicatorType(item.state) as any
-                }
-              >
+              <StatusIndicator type={DataContractHelpers.getStatusIndicatorType(item.state) as any}>
                 {item.state}
               </StatusIndicator>
             ),
           },
+          {
+            id: "updatedAt",
+            header: "Updated Date",
+            cell: (item) => new Date(item.updatedAt).toLocaleString(),
+          },
         ]}
         items={props.dcs || []}
-        onSelectionChange={({detail}) => {
+        onSelectionChange={({ detail }) => {
           if (detail.selectedItems.length > 0) {
             setSelectedItems(detail.selectedItems as any);
-            props.setCurrentDataContractId(detail.selectedItems[0].id);
+            props.setCurrentDataContractName(detail.selectedItems[0].name);
           }
         }}
         selectionType="single"
@@ -140,7 +138,7 @@ function DataContractList(props: TDataContractListProps) {
         empty={
           <Box textAlign="center" color="inherit">
             <b>Không có dữ liệu</b>
-            <Box padding={{bottom: "s"}} variant="p" color="inherit">
+            <Box padding={{ bottom: "s" }} variant="p" color="inherit">
               Không tìm thấy data contract nào với trạng thái đã chọn.
             </Box>
           </Box>
@@ -154,67 +152,69 @@ function DataContractDetail(props: TDataContractDetailProps) {
   const canDisplayResult = !props.isFetching && !props.isError && !props.isIdle;
 
   return (
-    <Container header={<Header variant="h3">Data Contract Detail</Header>}>
+    <Container
+      header={
+        <Header variant="h3">
+          <div className="flex items-center">
+            <p className="me-3">Data Contract Detail</p>
+            <Button
+              iconName="refresh"
+              ariaLabel="Refresh"
+              loadingText="Refreshing table content"
+              onClick={() => {
+                props.handleGetContract();
+              }}
+              loading={props.isFetching}
+              disabled={props.isFetching}
+            />
+            <div className="ms-3">
+              {/* Hiển thị loading state */}
+              {props.isFetching && (
+                <StatusIndicator type="loading">Đang tải dữ liệu...</StatusIndicator>
+              )}
+
+              {/* Hiển thị lỗi */}
+              {props.isError && (
+                <StatusIndicator type="error">
+                  {(props.error as any)?.response.data.error.message || "Không thể tải dữ liệu"}
+                </StatusIndicator>
+              )}
+            </div>
+          </div>
+        </Header>
+      }
+    >
       {props.isIdle && (
         <Box variant="p" textAlign="center">
           Chọn một Job trên list để xem chi tiết
         </Box>
       )}
 
-      {/* Hiển thị loading state */}
-      {props.isFetching && (
-        <StatusIndicator type="loading">Đang tải dữ liệu...</StatusIndicator>
-      )}
-
-      {/* Hiển thị lỗi */}
-      {props.isError && (
-        <StatusIndicator type="error">
-          {(props.error as any)?.response.data.error.message || "Không thể tải dữ liệu"}
-        </StatusIndicator>
-      )}
-
       {canDisplayResult && props.currentDataContract && (
         <>
           <ColumnLayout columns={2} variant="text-grid">
-            <FormField label="ID">{props.currentDataContract.id}</FormField>
-            <FormField label="Tên">{props.currentDataContract.name}</FormField>
-            <FormField label="Version">
-              {props.currentDataContract.version}
-            </FormField>
-            <FormField label="Trạng thái">
+            <FormField label="Name">{props.currentDataContract.name}</FormField>
+            <FormField label="Version">{props.currentDataContract.version}</FormField>
+            <FormField label="State">
               <StatusIndicator
                 type={
                   DataContractHelpers.getStatusIndicatorType(
-                    props.currentDataContract?.state
+                    props.currentDataContract?.state,
                   ) as any
                 }
               >
                 {props.currentDataContract.state}
               </StatusIndicator>
             </FormField>
-            <FormField label="Owner">
-              {props.currentDataContract.owner}
-            </FormField>
-            <FormField label="Ngày tạo">
-              {props.currentDataContract.createdAt}
+            <FormField label="Owner">{props.currentDataContract.owner}</FormField>
+            <FormField label="Updated Date">
+              {new Date(props.currentDataContract.updatedAt).toLocaleString()}
             </FormField>
           </ColumnLayout>
 
-          {props.currentDataContract.description && (
-            <Box margin={{top: "l"}}>
-              <FormField label="Mô tả">
-                {props.currentDataContract.description}
-              </FormField>
-            </Box>
-          )}
-
-          {props.currentDataContract.schema && (
-            <Box margin={{top: "l"}}>
-              <FormField label="Schema">
-                <Box variant="code">
-                  {JSON.stringify(props.currentDataContract.schema, null, 2)}
-                </Box>
-              </FormField>
+          {props.currentDataContractContent && (
+            <Box margin={{ top: "l" }}>
+              <FormField label="Content">{props.currentDataContractContent}</FormField>
             </Box>
           )}
         </>
@@ -224,12 +224,12 @@ function DataContractDetail(props: TDataContractDetailProps) {
 }
 
 export function DataContract(props: DataContractProps) {
-  const {dcs} = useDataContractState();
+  const { dcs } = useDataContractState();
 
   // State cho data contract
   const [state, stateFns] = useStateManager(
     DCStateManager.getInitialState(),
-    DCStateManager.buildStateModifiers
+    DCStateManager.buildStateModifiers,
   );
 
   // Sử dụng useQuery để lấy danh sách data contracts theo trạng thái
@@ -246,12 +246,19 @@ export function DataContract(props: DataContractProps) {
 
   // Sử dụng useQuery để lấy chi tiết data contract
   const dcQuerier = useQuery({
-    queryKey: ["dataContract", state.currentContractId],
+    queryKey: ["dataContract", state.currentContractName],
     queryFn: async () =>
-      await DataContractAPI.reqGetDataContract({
-        id: state.currentContractId || "",
-        isMock: CONFIGS.IS_MOCK_API,
-      }),
+      await Promise.all([
+        DataContractAPI.reqGetDataContractInfo({
+          name: state.currentContractName || "",
+          state: state.currentContractState || "",
+          isMock: CONFIGS.IS_MOCK_API,
+        }),
+        // DataContractAPI.reqGetDataContract({
+        // name: state.currentContractName || "",
+        // isMock: CONFIGS.IS_MOCK_API,
+        // }),
+      ]),
     enabled: false,
   });
 
@@ -262,27 +269,25 @@ export function DataContract(props: DataContractProps) {
 
   // Hàm xử lý khi submit ID/tên data contract
   const handleGetContract = async function () {
-    if (!state.currentContractId && state.currentContractId !== "") return;
+    if (!state.currentContractName && state.currentContractName !== "") return;
     try {
-      const result = await dcQuerier.refetch();
-      if (result.data) {
-        stateFns.setCurrentContract(result.data as TDataContract);
+      const results = await dcQuerier.refetch();
+      if (results.data) {
+        const [dc, dcContent] = results.data;
+        stateFns.setCurrentContract(dc as TDataContract);
       }
-      console.log("Get contract result:", result);
     } catch (error) {
       console.log("Get contract error:", error);
     }
   };
 
-  const handleGetContractByState = async function () {
-    if (!state.currentContractState && state.currentContractState !== "")
-      return;
+  const handleGetContractsByState = async function () {
+    if (!state.currentContractState && state.currentContractState !== "") return;
     try {
       const result = await dcsQuerier.refetch();
       if (result.data) {
         dataContractStActions.setDCS(result.data as TDataContract[]);
       }
-      console.log("Get data contracts result:", result);
     } catch (error) {
       console.log("Get data contracts error:", error);
     }
@@ -290,13 +295,12 @@ export function DataContract(props: DataContractProps) {
 
   // Lấy chi tiết data contract mới khi id thay đổi
   useEffect(() => {
-    if (state.currentContractId && state.currentContractId !== "")
-      handleGetContract();
-  }, [state.currentContractId]);
+    if (state.currentContractName && state.currentContractName !== "") handleGetContract();
+  }, [state.currentContractName]);
 
   // Lấy data contract theo state
   useEffect(() => {
-    handleGetContractByState();
+    handleGetContractsByState();
   }, [state.currentContractState]);
 
   return (
@@ -304,44 +308,26 @@ export function DataContract(props: DataContractProps) {
       headerText="Get/List Data Contract"
       variant="container"
       defaultExpanded={state.isOpen}
-      onChange={({detail}) => stateFns.setIsOpen(detail.expanded)}
+      onChange={({ detail }) => stateFns.setIsOpen(detail.expanded)}
     >
       <SpaceBetween size="l">
         {/* Phần tương tác */}
-        <ColumnLayout columns={2}>
+        <ColumnLayout columns={1}>
           {/* List Data Contract - Dropdown chọn state */}
           <Container header={<Header variant="h3">List Data Contracts</Header>}>
             <FormField label="Trạng thái">
               <Select
                 selectedOption={
-                  _stateOptions.find(
-                    (option) => option.value === state.currentContractState
-                  ) || null
+                  _stateOptions.find((option) => option.value === state.currentContractState) ||
+                  null
                 }
-                onChange={({detail}) =>
-                  detail.selectedOption &&
-                  handleStateChange(detail.selectedOption.value as string)
+                onChange={({ detail }) =>
+                  detail.selectedOption && handleStateChange(detail.selectedOption.value as string)
                 }
                 options={_stateOptions}
                 placeholder="Chọn trạng thái"
               />
             </FormField>
-          </Container>
-
-          {/* Get Data Contract - Input ID/Name và nút Submit */}
-          <Container header={<Header variant="h3">Get Data Contract</Header>}>
-            <SpaceBetween size="xs" direction="horizontal">
-              <Input
-                value={state.currentContractId || ""}
-                onChange={({detail}) =>
-                  stateFns.setCurrentContractId(detail.value)
-                }
-                placeholder="Nhập ID hoặc tên Data Contract"
-              />
-              <Button onClick={handleGetContract} variant="primary">
-                Tìm kiếm
-              </Button>
-            </SpaceBetween>
           </Container>
         </ColumnLayout>
 
@@ -351,10 +337,12 @@ export function DataContract(props: DataContractProps) {
           isError={dcsQuerier.isError}
           isIdle={!dcsQuerier.isEnabled && !dcsQuerier.isSuccess}
           error={dcsQuerier.error}
-          setCurrentDataContractId={stateFns.setCurrentContractId}
+          setCurrentDataContractName={stateFns.setCurrentContractName}
+          handleGetContractsByState={handleGetContractsByState}
         />
 
         <DataContractDetail
+          currentDataContractContent={state.currentDataContractContent || ""}
           currentDataContract={state.currentContract}
           isFetching={dcQuerier.isFetching}
           isError={dcQuerier.isError}

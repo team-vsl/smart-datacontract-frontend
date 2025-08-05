@@ -1,6 +1,6 @@
-import { useEffect } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { jwtDecode } from "jwt-decode";
+import {useEffect} from "react";
+import {useMutation} from "@tanstack/react-query";
+import {jwtDecode} from "jwt-decode";
 
 // Import objects
 import * as IdentityAPI from "@/objects/identity/api";
@@ -10,7 +10,7 @@ import * as Identity from "@/objects/identity";
 import * as CookieUtils from "@/utils/cookie";
 
 // Import states
-import { useIdentityState, identityStActions } from "@/states/identity";
+import {useIdentityState, identityStActions} from "@/states/identity";
 
 // Import types
 import type {
@@ -19,7 +19,7 @@ import type {
 } from "@/objects/identity/types";
 
 export function useAuth() {
-  const { user, isAuthenticated } = useIdentityState();
+  const {user, isAuthenticated} = useIdentityState();
 
   const signInMutation = useMutation({
     mutationFn: async function (params: any) {
@@ -27,27 +27,28 @@ export function useAuth() {
     },
     onSuccess(data: TSignInResPayload) {
       // Save tokens
-      const { idToken, accessToken, refreshToken } = data.auth;
-
+      const {idToken, accessToken, refreshToken} = data.auth;
+      console.log("Id Token:", idToken);
+      console.log("Access Token:", accessToken);
+      console.log("Refresh Token:", refreshToken);
       // Decode tokens
       const decodedIdToken = jwtDecode(idToken);
       const decodedAccessToken = jwtDecode(accessToken);
-      const decodedRefreshToken = jwtDecode(refreshToken);
+
+      const idTokenExpDateStr = new Date(decodedIdToken.exp! * 1000).toUTCString();
+      const accessTokenExpDateStr = new Date(decodedAccessToken.exp! * 1000).toUTCString();
 
       CookieUtils.writeSessionCookie(
         "idToken",
-        idToken,
-        new Date(decodedIdToken.exp!).toUTCString()
+        idToken, idTokenExpDateStr
       );
       CookieUtils.writeSessionCookie(
         "accessToken",
-        accessToken,
-        new Date(decodedAccessToken.exp!).toUTCString()
+        accessToken, accessTokenExpDateStr
       );
-      CookieUtils.writeSessionCookie(
+      CookieUtils.writePersistentCookie(
         "refreshToken",
-        refreshToken,
-        new Date(decodedRefreshToken.exp!).toUTCString()
+        refreshToken
       );
 
       // Save user's information
@@ -69,21 +70,22 @@ export function useAuth() {
     },
     onSuccess(data: TRefreshTokenResPayload) {
       // Save tokens
-      const { idToken, accessToken } = data.auth;
+      const {idToken, accessToken} = data.auth;
 
       // Decode tokens
       const decodedIdToken = jwtDecode(idToken);
       const decodedAccessToken = jwtDecode(accessToken);
 
+      const idTokenExpDateStr = new Date(decodedIdToken.exp! * 1000).toUTCString();
+      const accessTokenExpDateStr = new Date(decodedAccessToken.exp! * 1000).toUTCString();
+
       CookieUtils.writeSessionCookie(
         "idToken",
-        idToken,
-        new Date(decodedIdToken.exp!).toUTCString()
+        idToken, idTokenExpDateStr
       );
       CookieUtils.writeSessionCookie(
         "accessToken",
-        accessToken,
-        new Date(decodedAccessToken.exp!).toUTCString()
+        accessToken, accessTokenExpDateStr
       );
 
       // Save user's information

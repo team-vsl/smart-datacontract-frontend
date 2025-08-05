@@ -5,7 +5,7 @@ import * as CookieUtils from "@/utils/cookie";
 import * as StringUtils from "@/utils/string";
 
 // Import types
-import type { Axios, AxiosRequestConfig, AxiosInterceptorOptions } from "axios";
+import type {Axios, AxiosRequestConfig, AxiosInterceptorOptions} from "axios";
 import type {
   TAxiosInterceptor,
   TKindOfOnFulfilled,
@@ -19,13 +19,14 @@ export class API {
     this._http = axios.create(config);
   }
 
-  static getToken(name: string = "tkn") {
-    return CookieUtils.readCookie(CookieUtils.TOKEN_NAME + name);
+  static getToken(name: string = "accessToken") {
+    const value = CookieUtils.readCookie(name);
+    return value;
   }
 
   static generateBearerToken(token: string, isHTTPHeader: boolean = false) {
     const result = `Bearer ${token}`;
-    if (isHTTPHeader) return { Authorization: result };
+    if (isHTTPHeader) return {Authorization: result};
     return result;
   }
 

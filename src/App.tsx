@@ -1,22 +1,22 @@
-import { useEffect } from "react";
-import { useNavigate, useRoutes } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
+import {useEffect} from "react";
+import {useNavigate, useRoutes} from "react-router-dom";
+import {jwtDecode} from "jwt-decode";
 
 // Import configs
-import { RouteConfigs } from "./routes/route-configs";
+import {RouteConfigs} from "./routes/route-configs";
 
 // Import routes
-import { authenticatedRoutes } from "./routes/authenticated-routes";
-import { unauthenticatedRoutes } from "./routes/unauthenticated-routes";
+import {authenticatedRoutes} from "./routes/authenticated-routes";
+import {unauthenticatedRoutes} from "./routes/unauthenticated-routes";
 
 // Import hooks
-import { useAuth } from "./hooks/use-auth";
+import {useAuth} from "./hooks/use-auth";
 
 // Import objects
 import * as Identity from "@/objects/identity";
 
 // Import utils
-import { readCookie } from "./utils/cookie";
+import {readCookie} from "./utils/cookie";
 
 function LoadingSection() {
   return (
@@ -62,7 +62,7 @@ function RoutesSwitcher() {
         reSignInUserOffline(idToken);
       } else {
         const refreshToken = readCookie("refreshToken");
-        refreshTokensMutation.mutate({ refreshToken });
+        refreshTokensMutation.mutate({refreshToken});
       }
     } else {
       navigate(RouteConfigs.Home.Path);
