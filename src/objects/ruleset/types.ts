@@ -6,15 +6,10 @@ export type URulesetState = (typeof STATE_DICT)[keyof typeof STATE_DICT];
 export type TRuleset = {
   id: string;
   name: string;
-  version?: string;
+  version: string;
   state: URulesetState;
-  description?: string;
-  reason?: string;
-  validationStatus?: string;
-  owner?: string;
-  approvedBy?: string;
-  rejectedBy?: string;
-  updatedAt?: string;
+  team: string;
+  owner: string;
   createdAt: string;
 };
 

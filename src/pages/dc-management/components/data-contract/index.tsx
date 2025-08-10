@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   Button,
   Container,
@@ -14,6 +14,8 @@ import {
   ColumnLayout,
   Table,
 } from "@cloudscape-design/components";
+import CodeView from "@cloudscape-design/code-view/code-view";
+import yamlHighlight from "@cloudscape-design/code-view/highlight/yaml";
 
 // Import constants
 import { CONFIGS } from "@/utils/constants/configs";
@@ -30,6 +32,9 @@ import * as DataContractHelpers from "@/objects/data-contract/helpers";
 import { useDataContractState, dataContractStActions } from "@/states/data-contract";
 import { DCStateManager } from "./state";
 
+// Import utils
+import * as ErrorUtils from "@/utils/error";
+
 // Import types
 import type { TDataContract } from "@/objects/data-contract/types";
 
@@ -38,9 +43,9 @@ type TDataContractListProps = {
   isFetching: boolean;
   isError: boolean;
   isIdle: boolean;
-  error: Error | null;
+  error: unknown;
   setCurrentDataContractName(id: string): void;
-  handleGetContractsByState(): void;
+  handleGetContractsByState(state?: string): void;
 };
 
 type TDataContractDetailProps = {
@@ -49,8 +54,8 @@ type TDataContractDetailProps = {
   isFetching: boolean;
   isError: boolean;
   isIdle: boolean;
-  error: Error | null;
-  handleGetContract(): void;
+  error: unknown;
+  handleGetContract(name?: string): void;
 };
 
 type DataContractProps = {};
@@ -90,7 +95,7 @@ function DataContractList(props: TDataContractListProps) {
               {/* Hiển thị lỗi */}
               {props.isError && (
                 <StatusIndicator type="error">
-                  {(props.error as any)?.response.data.error.message || "Không thể tải dữ liệu"}
+                  {ErrorUtils.getErrorMessage(props.error)}
                 </StatusIndicator>
               )}
             </div>
@@ -112,6 +117,18 @@ function DataContractList(props: TDataContractListProps) {
             sortingField: "name",
           },
           {
+            id: "version",
+            header: "Version",
+            cell: (item) => item.version,
+            sortingField: "version",
+          },
+          {
+            id: "team",
+            header: "Team",
+            cell: (item) => item.team,
+            sortingField: "team",
+          },
+          {
             id: "state",
             header: "State",
             cell: (item) => (
@@ -121,9 +138,9 @@ function DataContractList(props: TDataContractListProps) {
             ),
           },
           {
-            id: "updatedAt",
-            header: "Updated Date",
-            cell: (item) => new Date(item.updatedAt).toLocaleString(),
+            id: "createdAt",
+            header: "Created Date",
+            cell: (item) => new Date(item.createdAt).toLocaleString(),
           },
         ]}
         items={props.dcs || []}
@@ -176,7 +193,7 @@ function DataContractDetail(props: TDataContractDetailProps) {
               {/* Hiển thị lỗi */}
               {props.isError && (
                 <StatusIndicator type="error">
-                  {(props.error as any)?.response.data.error.message || "Không thể tải dữ liệu"}
+                  {ErrorUtils.getErrorMessage(props.error)}
                 </StatusIndicator>
               )}
             </div>
@@ -207,14 +224,21 @@ function DataContractDetail(props: TDataContractDetailProps) {
               </StatusIndicator>
             </FormField>
             <FormField label="Owner">{props.currentDataContract.owner}</FormField>
-            <FormField label="Updated Date">
-              {new Date(props.currentDataContract.updatedAt).toLocaleString()}
+            <FormField label="Team">{props.currentDataContract.team}</FormField>
+            <FormField label="Created Date">
+              {new Date(props.currentDataContract.createdAt).toLocaleString()}
             </FormField>
           </ColumnLayout>
 
           {props.currentDataContractContent && (
-            <Box margin={{ top: "l" }}>
-              <FormField label="Content">{props.currentDataContractContent}</FormField>
+            <Box margin={{ top: "l" }} variant="div">
+              <FormField label="Content" stretch={true}>
+                <CodeView
+                  lineNumbers
+                  highlight={yamlHighlight}
+                  content={props.currentDataContractContent}
+                />
+              </FormField>
             </Box>
           )}
         </>
@@ -254,10 +278,11 @@ export function DataContract(props: DataContractProps) {
           state: state.currentContractState || "",
           isMock: CONFIGS.IS_MOCK_API,
         }),
-        // DataContractAPI.reqGetDataContract({
-        // name: state.currentContractName || "",
-        // isMock: CONFIGS.IS_MOCK_API,
-        // }),
+        DataContractAPI.reqGetDataContract({
+          name: state.currentContractName || "",
+          state: state.currentContractState || "",
+          isMock: CONFIGS.IS_MOCK_API,
+        }),
       ]),
     enabled: false,
   });
@@ -275,6 +300,7 @@ export function DataContract(props: DataContractProps) {
       if (results.data) {
         const [dc, dcContent] = results.data;
         stateFns.setCurrentContract(dc as TDataContract);
+        stateFns.setCurrentContractContent(dcContent);
       }
     } catch (error) {
       console.log("Get contract error:", error);
@@ -348,6 +374,7 @@ export function DataContract(props: DataContractProps) {
           isError={dcQuerier.isError}
           isIdle={!dcQuerier.isEnabled && !dcQuerier.isSuccess}
           error={dcQuerier.error}
+          handleGetContract={handleGetContract}
         />
       </SpaceBetween>
     </ExpandableSection>

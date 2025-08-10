@@ -1,15 +1,15 @@
-import {STATE_DICT} from "@/utils/constants/dc";
+import { STATE_DICT } from "@/utils/constants/dc";
 
 export type UDataContractState = (typeof STATE_DICT)[keyof typeof STATE_DICT];
 
 // Data Contract Types
 export type TDataContract = {
   name: string;
-  version?: string;
+  version: string;
   state: UDataContractState;
-  team?: string;
-  owner?: string;
-  updatedAt: string;
+  team: string;
+  owner: string;
+  createdAt: string;
 };
 
 export type TApproveDCResPayload = TDataContract;

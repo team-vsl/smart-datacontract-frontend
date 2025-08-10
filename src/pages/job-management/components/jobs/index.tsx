@@ -28,6 +28,9 @@ import * as JobAPI from "@/objects/job/api";
 import { jobStActions, useJobState } from "@/states/job";
 import { JobStateManager } from "./state";
 
+// Import utils
+import * as ErrorUtils from "@/utils/error";
+
 // Import types
 import type { TJob } from "@/objects/job/types";
 
@@ -38,6 +41,7 @@ type TJobListProps = {
   isIdle: boolean;
   error: Error | null;
   setCurrentJobName(name: string): void;
+  handleGetJobs(): void;
 };
 
 type TJobDetailProps = {
@@ -46,6 +50,7 @@ type TJobDetailProps = {
   isError: boolean;
   isIdle: boolean;
   error: Error | null;
+  handleGetJob(): void;
 };
 
 type TJobProps = {};
@@ -56,8 +61,7 @@ type TJobProps = {};
  * @returns
  */
 function JobList(props: TJobListProps) {
-  const canDisplayResult =
-    props.jbs.length > 0 && !props.isFetching && !props.isError;
+  const canDisplayResult = props.jbs.length > 0 && !props.isFetching && !props.isError;
 
   const [selectedItems, setSelectedItems] = useState();
 
@@ -66,18 +70,28 @@ function JobList(props: TJobListProps) {
       header={
         <Header variant="h3">
           <div className="flex items-center">
-            <p className="me-3">Ruleset List</p>
-            {props.isFetching && (
-              <StatusIndicator type="loading">
-                Đang tải dữ liệu...
-              </StatusIndicator>
-            )}
-            {/* Hiển thị lỗi */}
-            {props.isError && (
-              <StatusIndicator type="error">
-                {(props.error as Error)?.message || "Không thể tải dữ liệu"}
-              </StatusIndicator>
-            )}
+            <p className="me-3">Job List</p>
+            <Button
+              iconName="refresh"
+              ariaLabel="Refresh"
+              loadingText="Refreshing table content"
+              onClick={() => {
+                props.handleGetJobs();
+              }}
+              loading={props.isFetching}
+              disabled={props.isFetching}
+            />
+            <div className="ms-3">
+              {props.isFetching && (
+                <StatusIndicator type="loading">Đang tải dữ liệu...</StatusIndicator>
+              )}
+              {/* Hiển thị lỗi */}
+              {props.isError && (
+                <StatusIndicator type="error">
+                  {ErrorUtils.getErrorMessage(props.error)}
+                </StatusIndicator>
+              )}
+            </div>
           </div>
         </Header>
       }
@@ -90,16 +104,16 @@ function JobList(props: TJobListProps) {
         }}
         columnDefinitions={[
           {
-            id: "id",
-            header: "ID",
-            cell: (item) => item.id,
-            sortingField: "id",
-          },
-          {
             id: "name",
             header: "Name",
             cell: (item) => item.name,
             sortingField: "name",
+          },
+          {
+            id: "jobMode",
+            header: "Job Mode",
+            cell: (item) => item.jobMode,
+            sortingField: "jobMode",
           },
           {
             id: "createdOn",
@@ -139,24 +153,42 @@ function JobDetail(props: TJobDetailProps) {
   const canDisplayResult = !props.isFetching && !props.isError && !props.isIdle;
 
   return (
-    <Container header={<Header variant="h3">Job Detail</Header>}>
+    <Container
+      header={
+        <Header variant="h3">
+          <div className="flex items-center">
+            <p className="me-3">Job Detail</p>
+            <Button
+              iconName="refresh"
+              ariaLabel="Refresh"
+              loadingText="Refreshing table content"
+              onClick={() => {
+                props.handleGetJob();
+              }}
+              loading={props.isFetching}
+              disabled={props.isFetching}
+            />
+            <div className="ms-3">
+              {props.isFetching && (
+                <StatusIndicator type="loading">Đang tải dữ liệu...</StatusIndicator>
+              )}
+              {/* Hiển thị lỗi */}
+              {props.isError && (
+                <StatusIndicator type="error">
+                  {ErrorUtils.getErrorMessage(props.error)}
+                </StatusIndicator>
+              )}
+            </div>
+          </div>
+        </Header>
+      }
+    >
       {props.isIdle && (
         <Box variant="p" textAlign="center">
           Chọn một Job trên list để xem chi tiết
         </Box>
       )}
 
-      {/* Hiển thị loading state */}
-      {props.isFetching && (
-        <StatusIndicator type="loading">Đang tải dữ liệu...</StatusIndicator>
-      )}
-
-      {/* Hiển thị lỗi */}
-      {props.isError && (
-        <StatusIndicator type="error">
-          {(props.error as Error)?.message || "Không thể tải dữ liệu"}
-        </StatusIndicator>
-      )}
       {canDisplayResult && props.currentJob && (
         <ColumnLayout columns={2} variant="text-grid">
           <FormField label="Name">{props.currentJob.name}</FormField>
@@ -181,7 +213,7 @@ export default function Job(props: TJobProps) {
   // State cho job
   const [state, stateFns] = useStateManager(
     JobStateManager.getInitialState(),
-    JobStateManager.buildStateModifiers
+    JobStateManager.buildStateModifiers,
   );
 
   // Sử dụng useQuery để lấy chi tiết job
@@ -196,7 +228,7 @@ export default function Job(props: TJobProps) {
   });
 
   const jobsQuerier = useQuery({
-    queryKey: ["jobs", state.currentJobName],
+    queryKey: ["jobs"],
     queryFn: async () =>
       await JobAPI.reqGetJobs({
         isMock: CONFIGS.IS_MOCK_API,
@@ -205,13 +237,12 @@ export default function Job(props: TJobProps) {
   });
 
   const handleGetJob = async function () {
-    if (!state.currentJobName) return;
+    if (!state.currentJobName && state.currentJobName !== "") return;
     try {
       const result = await jobQuerier.refetch();
       if (result.data) {
         stateFns.setCurrentJob(result.data as TJob);
       } else {
-        alert(`Không tìm thấy Job với tên: ${state.currentJobName}`);
       }
     } catch (error) {
       alert(`Lỗi khi tìm Job: ${error}`);
@@ -224,7 +255,6 @@ export default function Job(props: TJobProps) {
       if (result.data) {
         jobStActions.setJBS(result.data as TJob[]);
       } else {
-        alert(`Không tìm thấy Jobs`);
       }
     } catch (error) {
       alert(`Lỗi khi tìm Jobs: ${error}`);
@@ -256,9 +286,7 @@ export default function Job(props: TJobProps) {
             <SpaceBetween size="xs" direction="horizontal">
               <Input
                 value={state.currentJobName || ""}
-                onChange={({ detail }) =>
-                  stateFns.setCurrentJobName(detail.value)
-                }
+                onChange={({ detail }) => stateFns.setCurrentJobName(detail.value)}
                 placeholder="Nhập tên Job"
               />
               <Button onClick={handleGetJob} variant="primary">
@@ -277,6 +305,7 @@ export default function Job(props: TJobProps) {
           isIdle={!jobsQuerier.isEnabled && !jobsQuerier.isSuccess}
           error={jobsQuerier.error}
           setCurrentJobName={stateFns.setCurrentJobName}
+          handleGetJobs={handleGetJobs}
         />
 
         {/* Hiển thị chi tiết job */}
@@ -286,6 +315,7 @@ export default function Job(props: TJobProps) {
           isError={jobQuerier.isError}
           isIdle={!jobQuerier.isEnabled && !jobQuerier.isSuccess}
           error={jobQuerier.error}
+          handleGetJob={handleGetJob}
         />
       </SpaceBetween>
     </ExpandableSection>

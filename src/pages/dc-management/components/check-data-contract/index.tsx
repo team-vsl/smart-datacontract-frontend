@@ -30,7 +30,7 @@ export function CheckDataContract(props: CheckDataContractProps) {
   // State cho check data contract
   const [state, stateFns] = useStateManager(
     CheckDCStateManager.getInitialState(),
-    CheckDCStateManager.buildStateModifiers
+    CheckDCStateManager.buildStateModifiers,
   );
 
   // Sử dụng useMutation để approve data contract
@@ -64,7 +64,7 @@ export function CheckDataContract(props: CheckDataContractProps) {
       queryClient.invalidateQueries({ queryKey: ["dataContracts"] });
 
       stateFns.setResult({
-        message: `Data Contract ${state.currentContractId} đã được chấp thuận`,
+        message: `Data Contract ${state.currentContractName} đã được chấp thuận`,
         data: updatedContract,
       });
     },
@@ -78,19 +78,19 @@ export function CheckDataContract(props: CheckDataContractProps) {
 
   // Sử dụng useMutation để reject data contract
   const rejectMutation = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (name: string) => {
       let isMock = CONFIGS.IS_MOCK_API;
 
       // Kiểm tra data contract có tồn tại không
-      const contract = await DataContractAPI.reqGetDataContract({ id, isMock });
+      const contract = await DataContractAPI.reqGetDataContractInfo({ name, isMock });
 
       if (!contract) {
-        throw new Error(`Không tìm thấy Data Contract với ID: ${id}`);
+        throw new Error(`Không tìm thấy Data Contract: ${name}`);
       }
 
       // Reject data contract và cập nhật state
       const updatedContract = await DataContractAPI.reqRejectDataContract({
-        id,
+        name,
         isMock,
       });
 
@@ -104,7 +104,7 @@ export function CheckDataContract(props: CheckDataContractProps) {
       queryClient.invalidateQueries({ queryKey: ["dataContracts"] });
 
       stateFns.setResult({
-        message: `Data Contract ${state.currentContractId} đã bị từ chối`,
+        message: `Data Contract ${state.currentContractName} đã bị từ chối`,
         data: updatedContract,
       });
     },
@@ -118,14 +118,14 @@ export function CheckDataContract(props: CheckDataContractProps) {
 
   // Hàm xử lý khi approve data contract
   const handleApprove = function () {
-    if (!state.currentContractId) return;
-    approveMutation.mutate(state.currentContractId);
+    if (!state.currentContractName) return;
+    approveMutation.mutate(state.currentContractName);
   };
 
   // Hàm xử lý khi reject data contract
   const handleReject = function () {
-    if (!state.currentContractId) return;
-    rejectMutation.mutate(state.currentContractId);
+    if (!state.currentContractName) return;
+    rejectMutation.mutate(state.currentContractName);
   };
 
   return (
@@ -140,9 +140,9 @@ export function CheckDataContract(props: CheckDataContractProps) {
         <InteractionPart
           isApprovePending={approveMutation.isPending}
           isRejectPending={rejectMutation.isPending}
-          currentContractId={state.currentContractId || ""}
+          currentContractName={state.currentContractName || ""}
           onCurrentIdInputChange={(detail) => {
-            stateFns.setCurrentContractId(detail.value);
+            stateFns.setCurrentContractName(detail.value);
           }}
           onApproveBtnClick={() => {
             handleApprove();

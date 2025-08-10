@@ -7,9 +7,9 @@ import ace from "ace-builds/src-noconflict/ace";
 ace.config.set("basePath", "/node_modules/ace-builds/src-noconflict");
 
 // Import components
-import typescriptHighlight from "@cloudscape-design/code-view/highlight/typescript";
 import CodeView from "@cloudscape-design/code-view/code-view";
 import CodeEditor from "@cloudscape-design/components/code-editor";
+import yamlHighlight from "@cloudscape-design/code-view/highlight/yaml";
 
 // Import types
 import type { CodeEditorProps } from "@cloudscape-design/components/code-editor";
@@ -26,15 +26,15 @@ export type TEditorProps = {
  * @returns
  */
 export default function AppCodeEditor(props: TEditorProps) {
-  const [preferences, setPreferences] = useState<
-    CodeEditorProps.Preferences | undefined
-  >(undefined);
+  const [preferences, setPreferences] = useState<CodeEditorProps.Preferences | undefined>(
+    undefined,
+  );
 
   if (props.isEditable)
     return (
       <CodeEditor
         ace={ace}
-        language="json"
+        language="yaml"
         value={props.code}
         preferences={preferences}
         loading={false}
@@ -52,5 +52,5 @@ export default function AppCodeEditor(props: TEditorProps) {
       />
     );
 
-  return <CodeView lineNumbers content={props.code} />;
+  return <CodeView lineNumbers highlight={yamlHighlight} content={props.code} />;
 }

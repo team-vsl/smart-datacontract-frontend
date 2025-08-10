@@ -44,10 +44,7 @@ export async function refreshTokens(params: TRefreshTokensParams) {
     refreshToken,
   };
 
-  const response = await api.post<TSignInResPayload>(
-    "/auth/refresh-tokens",
-    body
-  );
+  const response = await api.post<TSignInResPayload>("/auth/refresh-tokens", body);
 
   return response.data.data;
 }

@@ -33,7 +33,7 @@ export type TGetDataContractByStateParams = _TBase & {
 
 export type TGetDataContractParams = _TBase & {
   name: string;
-  state: string;
+  state?: string;
 };
 
 export type TApproveDataContractParams = _TBase & {
@@ -123,8 +123,6 @@ export async function reqGetDataContractsByState(params: TGetDataContractByState
     headers: tokenHeader,
   });
 
-  console.log("Data contracts:", response.data.data);
-
   return response.data.data;
 }
 
@@ -137,20 +135,18 @@ export async function reqGetDataContract(params: TGetDataContractParams) {
   const tokenHeader = API.generateBearerToken(API.getToken(), true) as object;
 
   if (isMock) {
-    const target = dcs.find((dc) => dc.name === name);
-
-    return new Promise<TDataContract>((resolve) => {
+    return new Promise<string>((resolve) => {
       setTimeout(() => {
-        resolve(target as unknown as TDataContract);
+        resolve("version: 1.0.0");
       }, 500);
     });
   }
 
-  const response = await api.get<TDataContract>(`/data-contracts/${name}?state=${state}`, {
+  const response = await api.get<string>(`/data-contracts/${name}?state=${state}`, {
     headers: tokenHeader,
   });
 
-  return response.data.data;
+  return response.data;
 }
 
 /**
@@ -158,7 +154,7 @@ export async function reqGetDataContract(params: TGetDataContractParams) {
  * @param params
  */
 export async function reqGetDataContractInfo(params: TGetDataContractParams) {
-  const { name, state, isMock = false } = params || {};
+  const { name, isMock = false } = params || {};
   const tokenHeader = API.generateBearerToken(API.getToken(), true) as object;
 
   if (isMock) {
@@ -171,7 +167,7 @@ export async function reqGetDataContractInfo(params: TGetDataContractParams) {
     });
   }
 
-  const response = await api.get<TDataContract>(`/data-contracts/${name}/info?state=${state}`, {
+  const response = await api.get<TDataContract>(`/data-contracts/${name}/info`, {
     headers: tokenHeader,
   });
 

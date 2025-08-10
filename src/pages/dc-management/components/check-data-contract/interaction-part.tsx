@@ -1,15 +1,9 @@
-import {
-  Button,
-  Container,
-  Header,
-  Input,
-  SpaceBetween,
-} from "@cloudscape-design/components";
+import { Button, Container, Header, Input, SpaceBetween } from "@cloudscape-design/components";
 
 export type CheckDataInteractionPartProps = {
   isApprovePending: boolean;
   isRejectPending: boolean;
-  currentContractId: string;
+  currentContractName: string;
   onCurrentIdInputChange(detail: any): void;
   onApproveBtnClick(detail: any): void;
   onRejectBtnClick(detail: any): void;
@@ -26,19 +20,15 @@ export default function InteractionPart(props: CheckDataInteractionPartProps) {
     <Container header={<Header variant="h3">Tương tác</Header>}>
       <SpaceBetween size="xs" direction="horizontal" alignItems="end">
         <Input
-          placeholder="Nhập Data Contract ID hoặc Name"
-          value={props.currentContractId}
+          placeholder="Nhập Data Contract Name"
+          value={props.currentContractName}
           onChange={({ detail }) => props.onCurrentIdInputChange(detail)}
           disabled={props.isApprovePending || props.isRejectPending}
         />
         <Button
           variant="primary"
           onClick={({ detail }) => props.onApproveBtnClick(detail)}
-          disabled={
-            !props.currentContractId ||
-            props.isApprovePending ||
-            props.isRejectPending
-          }
+          disabled={!props.currentContractName || props.isApprovePending || props.isRejectPending}
           loading={props.isApprovePending}
         >
           Approve
@@ -46,11 +36,7 @@ export default function InteractionPart(props: CheckDataInteractionPartProps) {
         <Button
           variant="normal"
           onClick={({ detail }) => props.onRejectBtnClick(detail)}
-          disabled={
-            !props.currentContractId ||
-            props.isApprovePending ||
-            props.isRejectPending
-          }
+          disabled={!props.currentContractName || props.isApprovePending || props.isRejectPending}
           loading={props.isRejectPending}
         >
           Reject
