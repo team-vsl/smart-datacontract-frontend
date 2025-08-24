@@ -18,7 +18,7 @@ import {
 
 // Import constants
 import { CONFIGS } from "@/utils/constants/configs";
-import { STATE_DICT } from "@/utils/constants/dc";
+import { STATE_DICT } from "@/utils/constants/rl";
 
 // Import objects
 import * as RulesetAPI from "@/objects/ruleset/api";
@@ -173,7 +173,7 @@ function RulesetDetail(props: TRulesetDetailProps) {
             <StatusIndicator
               type={
                 RulesetHelpers.getStatusIndicatorType(
-                  props.currentRuleset.state
+                  props.currentRuleset.state,
                 ) as any
               }
             >
@@ -208,7 +208,7 @@ export default function Ruleset(props: TRulesetsProps) {
   // State cho ruleset
   const [state, stateFns] = useStateManager(
     RLStateManager.getInitialState(),
-    RLStateManager.buildStateModifiers
+    RLStateManager.buildStateModifiers,
   );
 
   const rulesetQuerier = useQuery({
@@ -266,7 +266,7 @@ export default function Ruleset(props: TRulesetsProps) {
         stateFns.setCurrentRuleset(result.data as TRuleset);
       } else {
         alert(
-          `Không tìm thấy ruleset với ID hoặc tên: ${state.currentRulesetId}`
+          `Không tìm thấy ruleset với ID hoặc tên: ${state.currentRulesetId}`,
         );
       }
     } catch (error) {
@@ -296,9 +296,8 @@ export default function Ruleset(props: TRulesetsProps) {
   // Chuyển đổi danh sách trạng thái cho Select component
   const stateOptions = [
     { label: "Chọn trạng thái", value: "" },
-    { label: "Đang hoạt động", value: STATE_DICT.APPROVED },
-    { label: "Đang chờ xử lý", value: STATE_DICT.PENDING },
-    { label: "Đã từ chối", value: STATE_DICT.REJECTED },
+    { label: "Đang kích hoạt", value: STATE_DICT.ACTIVE },
+    { label: "Chưa kích hoạt", value: STATE_DICT.INACTIVE },
   ];
 
   // Lấy chi tiết ruleset mới khi id thay đổi
@@ -321,14 +320,14 @@ export default function Ruleset(props: TRulesetsProps) {
     >
       <SpaceBetween size="l">
         {/* Phần tương tác */}
-        <ColumnLayout columns={2}>
+        <ColumnLayout columns={1}>
           {/* List Rulesets - Dropdown chọn state */}
           <Container header={<Header variant="h3">List Rulesets</Header>}>
             <FormField label="Trạng thái">
               <Select
                 selectedOption={
                   stateOptions.find(
-                    (option) => option.value === state.currentRulesetState
+                    (option) => option.value === state.currentRulesetState,
                   ) || null
                 }
                 onChange={({ detail }) =>
@@ -339,22 +338,6 @@ export default function Ruleset(props: TRulesetsProps) {
                 placeholder="Chọn trạng thái"
               />
             </FormField>
-          </Container>
-
-          {/* Get Ruleset - Input ID/Name và nút Submit */}
-          <Container header={<Header variant="h3">Get Ruleset</Header>}>
-            <SpaceBetween size="xs" direction="horizontal">
-              <Input
-                value={state.currentRulesetId || ""}
-                onChange={({ detail }) =>
-                  stateFns.setCurrentRulesetId(detail.value)
-                }
-                placeholder="Nhập ID hoặc tên Ruleset"
-              />
-              <Button onClick={handleGetRuleset} variant="primary">
-                Tìm kiếm
-              </Button>
-            </SpaceBetween>
           </Container>
         </ColumnLayout>
 

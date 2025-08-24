@@ -52,6 +52,14 @@ const authenticatedRoutes: Array<RouteObject> = [
         path: RouteConfigs.Root.Path,
         element: <Navigate to={RouteConfigs.Home.Path} replace />,
       },
+      {
+        path: "",
+        element: <Navigate to={RouteConfigs.Home.Path} replace />,
+      },
+      {
+        path: "*",
+        element: <Navigate to={RouteConfigs.Home.Path} replace />,
+      },
     ],
   },
 ];

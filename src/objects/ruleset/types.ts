@@ -1,4 +1,4 @@
-import { STATE_DICT } from "@/utils/constants/dc";
+import { STATE_DICT } from "@/utils/constants/rl";
 
 export type URulesetState = (typeof STATE_DICT)[keyof typeof STATE_DICT];
 

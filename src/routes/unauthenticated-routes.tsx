@@ -32,6 +32,14 @@ const unauthenticatedRoutes: Array<RouteObject> = [
         path: RouteConfigs.Root.Path,
         element: <Navigate to={RouteConfigs.SignIn.Path} replace />,
       },
+      {
+        path: "",
+        element: <Navigate to={RouteConfigs.SignIn.Path} replace />,
+      },
+      {
+        path: "*",
+        element: <Navigate to={RouteConfigs.SignIn.Path} replace />,
+      },
     ],
   },
 ];

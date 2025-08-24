@@ -12,7 +12,10 @@ import {
 import LoadingBar from "@cloudscape-design/chat-components/loading-bar";
 
 // Import apis
-import { reqGenerateDataContract } from "@/objects/data-contract/api";
+import {
+  reqGenerateDataContract,
+  reqUploadDataContract,
+} from "@/objects/data-contract/api";
 
 // Import constants
 import { CONFIGS } from "@/utils/constants/configs";
@@ -42,6 +45,10 @@ export default function DataContractGeneratorPage() {
 
   const dcGenerationMutation = useMutation({
     mutationFn: reqGenerateDataContract,
+  });
+
+  const uploadDcMutation = useMutation({
+    mutationFn: reqUploadDataContract,
   });
 
   return (
@@ -76,7 +83,7 @@ export default function DataContractGeneratorPage() {
               onAction={(value) => {
                 const userMessage = createMessage(value);
                 const aiPlaceHolderMessage = createAIPlaceHolderMessage(
-                  CONV_MSG_PLACEHOLDERS.LOADING
+                  CONV_MSG_PLACEHOLDERS.LOADING,
                 );
 
                 userMessage.id = `msg#${state.messages.length}`;
@@ -95,7 +102,14 @@ export default function DataContractGeneratorPage() {
                     let content = value.message;
                     dcGeneratorStActions.addMessage(
                       createMessage(content, CONV_ROLES.AI),
-                      { canRemoveAIPlaceHolderMessage: true }
+                      { canRemoveAIPlaceHolderMessage: true },
+                    );
+                  })
+                  .catch((error: any) => {
+                    let content = error.message;
+                    dcGeneratorStActions.addMessage(
+                      createMessage(content, CONV_ROLES.AI),
+                      { canRemoveAIPlaceHolderMessage: true },
                     );
                   });
               }}
@@ -120,21 +134,36 @@ export default function DataContractGeneratorPage() {
           footer={
             <div className="flex gap-2">
               <Button
+                disabled={uploadDcMutation.isPending}
                 onClick={() => {
                   dcGeneratorStActions.setEditable(!state.isEditable);
                 }}
               >
                 {state.isEditable ? "Done" : "Edit"}
               </Button>
-              <Button variant="primary">Submit</Button>
+              <Button
+                disabled={uploadDcMutation.isPending}
+                onClick={() => {
+                  uploadDcMutation
+                    .mutateAsync({ content: state.code })
+                    .then((value: any) =>
+                      console.log("Upload data contract:", value),
+                    );
+                }}
+                variant="primary"
+              >
+                Upload
+              </Button>
             </div>
           }
         >
-          <AppCodeEditor
-            isEditable={state.isEditable}
-            code={state.code}
-            onCodeChange={(value) => dcGeneratorStActions.setContent(value)}
-          />
+          <ScrollableContainer>
+            <AppCodeEditor
+              isEditable={state.isEditable}
+              code={state.code}
+              onCodeChange={(value) => dcGeneratorStActions.setContent(value)}
+            />
+          </ScrollableContainer>
         </Container>
       </div>
     </ContentLayout>

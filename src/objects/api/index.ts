@@ -1,11 +1,14 @@
 import axios from "axios";
 
+// Import constants
+import { CONFIGS } from "@/utils/constants/configs";
+
 // Import from utils
 import * as CookieUtils from "@/utils/cookie";
 import * as StringUtils from "@/utils/string";
 
 // Import types
-import type {Axios, AxiosRequestConfig, AxiosInterceptorOptions} from "axios";
+import type { Axios, AxiosRequestConfig, AxiosInterceptorOptions } from "axios";
 import type {
   TAxiosInterceptor,
   TKindOfOnFulfilled,
@@ -19,14 +22,14 @@ export class API {
     this._http = axios.create(config);
   }
 
-  static getToken(name: string = "accessToken") {
+  static getToken(name: string = CONFIGS.ACCESS_TOKEN_COOKIE_NAME) {
     const value = CookieUtils.readCookie(name);
     return value;
   }
 
   static generateBearerToken(token: string, isHTTPHeader: boolean = false) {
     const result = `Bearer ${token}`;
-    if (isHTTPHeader) return {Authorization: result};
+    if (isHTTPHeader) return { Authorization: result };
     return result;
   }
 
@@ -51,20 +54,20 @@ export class API {
     type: Type,
     onFulfilled?: TKindOfOnFulfilled[Type] | null | undefined,
     onRejected?: ((error: any) => any) | null,
-    options?: AxiosInterceptorOptions
+    options?: AxiosInterceptorOptions,
   ) {
     if (type === "request") {
       onFulfilled;
       return this._http.interceptors.request.use(
         onFulfilled as TKindOfOnFulfilled["request"],
         onRejected,
-        options
+        options,
       );
     }
 
     return this._http.interceptors.response.use(
       onFulfilled as TKindOfOnFulfilled["response"],
-      onRejected
+      onRejected,
     );
   }
 
@@ -78,7 +81,7 @@ export class API {
     try {
       const response = await this._http.get<TResPayload<TData>>(
         StringUtils.formatURL(path),
-        config
+        config,
       );
       return response;
     } catch (e: any) {
@@ -95,13 +98,13 @@ export class API {
   async post<TData, T = any>(
     path: string,
     data: T,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ) {
     try {
       const response = await this._http.post<TResPayload<TData>>(
         StringUtils.formatURL(path),
         data,
-        config
+        config,
       );
       return response;
     } catch (e: any) {
@@ -119,13 +122,13 @@ export class API {
   async put<TData, T = any>(
     path: string,
     data: T,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ) {
     try {
       const response = await this._http.put<TResPayload<TData>>(
         StringUtils.formatURL(path),
         data,
-        config
+        config,
       );
       return response;
     } catch (e: any) {
@@ -143,13 +146,13 @@ export class API {
   async patch<TData, T = any>(
     path: string,
     data: T,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ) {
     try {
       const response = await this._http.patch<TResPayload<TData>>(
         StringUtils.formatURL(path),
         data,
-        config
+        config,
       );
       return response;
     } catch (e: any) {
@@ -168,7 +171,7 @@ export class API {
     try {
       const response = await this._http.delete<TResPayload<TData>>(
         StringUtils.formatURL(path),
-        config
+        config,
       );
       return response;
     } catch (e: any) {
