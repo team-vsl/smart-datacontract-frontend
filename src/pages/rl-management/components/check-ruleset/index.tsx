@@ -3,10 +3,12 @@ import { SpaceBetween, ExpandableSection } from "@cloudscape-design/components";
 
 // Import constants
 import { CONFIGS } from "@/utils/constants/configs";
+import { TEAMS } from "@/utils/constants/teams";
 
 // Import components
 import InteractionPart from "./interaction-part";
 import ResultPart from "./result-part";
+import Protector from "@/components/protector";
 
 // Import objects
 import * as RulesetAPI from "@/objects/ruleset/api";
@@ -30,11 +32,11 @@ export function CheckRuleset(props: TCheckRulesetProps) {
   // State
   const [state, stateFns] = useStateManager(
     CheckRLStateManager.getInitialState(),
-    CheckRLStateManager.buildStateModifiers
+    CheckRLStateManager.buildStateModifiers,
   );
 
   // Sử dụng useMutation để approve ruleset
-  const approveMutation = useMutation({
+  const activateMutation = useMutation({
     mutationFn: async function (name: string) {
       let isMock = CONFIGS.IS_MOCK_API;
 
@@ -42,7 +44,7 @@ export function CheckRuleset(props: TCheckRulesetProps) {
       const ruleset = await RulesetAPI.reqGetRuleset({ name, isMock });
 
       if (!ruleset) {
-        throw new Error(`Không tìm thấy Ruleset với tên ${name}`);
+        throw new Error(`Cannot find Ruleset with name: ${name}`);
       }
 
       // Approve ruleset và cập nhật state
@@ -60,7 +62,7 @@ export function CheckRuleset(props: TCheckRulesetProps) {
       queryClient.invalidateQueries({ queryKey: ["rulesets"] });
 
       stateFns.setResult({
-        message: `Ruleset ${state.currentRulesetId} đã được chấp thuận`,
+        message: `Ruleset ${state.currentRulesetName} is activated`,
         data: updatedRuleset,
       });
     },
@@ -73,13 +75,13 @@ export function CheckRuleset(props: TCheckRulesetProps) {
   });
 
   // Sử dụng useMutation để reject ruleset
-  const rejectMutation = useMutation({
+  const inactivateMutation = useMutation({
     mutationFn: async (name: string) => {
       // Kiểm tra ruleset có tồn tại không
       const ruleset = await RulesetAPI.reqGetRuleset({ name });
 
       if (!ruleset) {
-        throw new Error(`Không tìm thấy Ruleset với tên: ${name}`);
+        throw new Error(`Cannot find Ruleset with name: ${name}`);
       }
 
       // Reject ruleset và cập nhật state
@@ -94,7 +96,7 @@ export function CheckRuleset(props: TCheckRulesetProps) {
       queryClient.invalidateQueries({ queryKey: ["rulesets"] });
 
       stateFns.setResult({
-        message: `Ruleset ${state.currentRulesetId} không được chấp thuận`,
+        message: `Ruleset ${state.currentRulesetName} is inactivated`,
         data: updatedRuleset,
       });
     },
@@ -107,15 +109,15 @@ export function CheckRuleset(props: TCheckRulesetProps) {
   });
 
   // Hàm xử lý khi approve ruleset
-  const handleApprove = () => {
-    if (!state.currentRulesetId) return;
-    approveMutation.mutate(state.currentRulesetId);
+  const handleActivate = () => {
+    if (!state.currentRulesetName) return;
+    activateMutation.mutate(state.currentRulesetName);
   };
 
   // Hàm xử lý khi reject ruleset
-  const handleReject = () => {
-    if (!state.currentRulesetId) return;
-    rejectMutation.mutate(state.currentRulesetId);
+  const handleInactivate = () => {
+    if (!state.currentRulesetName) return;
+    inactivateMutation.mutate(state.currentRulesetName);
   };
 
   return (
@@ -125,30 +127,36 @@ export function CheckRuleset(props: TCheckRulesetProps) {
       defaultExpanded={state.isOpen}
       onChange={({ detail }) => stateFns.setIsOpen(detail.expanded)}
     >
-      <SpaceBetween size="l">
-        {/* Phần tương tác */}
-        <InteractionPart
-          isApprovePending={approveMutation.isPending}
-          isRejectPending={rejectMutation.isPending}
-          currentRulesetId={state.currentRulesetId || ""}
-          onCurrentIdInputChange={(detail) => {
-            stateFns.setCurrentRulesetId(detail.value);
-          }}
-          onApproveBtnClick={() => {
-            handleApprove();
-          }}
-          onRejectBtnClick={() => {
-            handleReject();
-          }}
-        />
+      <Protector allowedTeams={[TEAMS.DATA_ENGINEER.NAME]}>
+        <SpaceBetween size="l">
+          {/* Phần tương tác */}
+          <InteractionPart
+            isActivatePending={activateMutation.isPending}
+            isInactivatePending={inactivateMutation.isPending}
+            currentRulesetName={state.currentRulesetName || ""}
+            currentRulesetVersion={state.currentRulesetVersion || ""}
+            onCurrentNameInputChange={(detail) => {
+              stateFns.setCurrentRulesetName(detail.value);
+            }}
+            onCurrentVersionInputChange={(detail) => {
+              stateFns.setCurrentRulesetVersion(detail.value);
+            }}
+            onActivateBtnClick={() => {
+              handleActivate();
+            }}
+            onInactivateBtnClick={() => {
+              handleInactivate();
+            }}
+          />
 
-        {/* Phần kết quả */}
-        <ResultPart
-          isApprovePending={approveMutation.isPending}
-          isRejectPending={rejectMutation.isPending}
-          result={state.result}
-        />
-      </SpaceBetween>
+          {/* Phần kết quả */}
+          <ResultPart
+            isActivatePending={activateMutation.isPending}
+            isInactivatePending={inactivateMutation.isPending}
+            result={state.result}
+          />
+        </SpaceBetween>
+      </Protector>
     </ExpandableSection>
   );
 }

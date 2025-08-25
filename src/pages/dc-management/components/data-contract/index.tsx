@@ -29,7 +29,10 @@ import * as DataContractAPI from "@/objects/data-contract/api";
 import * as DataContractHelpers from "@/objects/data-contract/helpers";
 
 // Import states
-import { useDataContractState, dataContractStActions } from "@/states/data-contract";
+import {
+  useDataContractState,
+  dataContractStActions,
+} from "@/states/data-contract";
 import { DCStateManager } from "./state";
 
 // Import utils
@@ -61,14 +64,15 @@ type TDataContractDetailProps = {
 type DataContractProps = {};
 
 const _stateOptions = [
-  { label: "Chọn trạng thái", value: "" },
-  { label: "Đang hoạt động", value: STATE_DICT.APPROVED },
-  { label: "Đang chờ xử lý", value: STATE_DICT.PENDING },
-  { label: "Đã từ chối", value: STATE_DICT.REJECTED },
+  { label: "Choose state", value: "" },
+  { label: "Active", value: STATE_DICT.APPROVED },
+  { label: "Pending", value: STATE_DICT.PENDING },
+  { label: "Rejected", value: STATE_DICT.REJECTED },
 ];
 
 function DataContractList(props: TDataContractListProps) {
-  const canDisplayResult = props.dcs.length > 0 && !props.isFetching && !props.isError;
+  const canDisplayResult =
+    props.dcs.length > 0 && !props.isFetching && !props.isError;
 
   const [selectedItems, setSelectedItems] = useState();
 
@@ -90,7 +94,9 @@ function DataContractList(props: TDataContractListProps) {
             />
             <div className="ms-3">
               {props.isFetching && (
-                <StatusIndicator type="loading">Đang tải dữ liệu...</StatusIndicator>
+                <StatusIndicator type="loading">
+                  Loading Data Contracts...
+                </StatusIndicator>
               )}
               {/* Hiển thị lỗi */}
               {props.isError && (
@@ -132,7 +138,11 @@ function DataContractList(props: TDataContractListProps) {
             id: "state",
             header: "State",
             cell: (item) => (
-              <StatusIndicator type={DataContractHelpers.getStatusIndicatorType(item.state) as any}>
+              <StatusIndicator
+                type={
+                  DataContractHelpers.getStatusIndicatorType(item.state) as any
+                }
+              >
                 {item.state}
               </StatusIndicator>
             ),
@@ -156,7 +166,7 @@ function DataContractList(props: TDataContractListProps) {
           <Box textAlign="center" color="inherit">
             <b>Không có dữ liệu</b>
             <Box padding={{ bottom: "s" }} variant="p" color="inherit">
-              Không tìm thấy data contract nào với trạng thái đã chọn.
+              Cannot find any Data Contract with selected state.
             </Box>
           </Box>
         }
@@ -187,7 +197,9 @@ function DataContractDetail(props: TDataContractDetailProps) {
             <div className="ms-3">
               {/* Hiển thị loading state */}
               {props.isFetching && (
-                <StatusIndicator type="loading">Đang tải dữ liệu...</StatusIndicator>
+                <StatusIndicator type="loading">
+                  Loading detail of Data Contract...
+                </StatusIndicator>
               )}
 
               {/* Hiển thị lỗi */}
@@ -203,7 +215,7 @@ function DataContractDetail(props: TDataContractDetailProps) {
     >
       {props.isIdle && (
         <Box variant="p" textAlign="center">
-          Chọn một Job trên list để xem chi tiết
+          Select one Data Contract to view detail.
         </Box>
       )}
 
@@ -211,7 +223,9 @@ function DataContractDetail(props: TDataContractDetailProps) {
         <>
           <ColumnLayout columns={2} variant="text-grid">
             <FormField label="Name">{props.currentDataContract.name}</FormField>
-            <FormField label="Version">{props.currentDataContract.version}</FormField>
+            <FormField label="Version">
+              {props.currentDataContract.version}
+            </FormField>
             <FormField label="State">
               <StatusIndicator
                 type={
@@ -223,7 +237,9 @@ function DataContractDetail(props: TDataContractDetailProps) {
                 {props.currentDataContract.state}
               </StatusIndicator>
             </FormField>
-            <FormField label="Owner">{props.currentDataContract.owner}</FormField>
+            <FormField label="Owner">
+              {props.currentDataContract.owner}
+            </FormField>
             <FormField label="Team">{props.currentDataContract.team}</FormField>
             <FormField label="Created Date">
               {new Date(props.currentDataContract.createdAt).toLocaleString()}
@@ -275,7 +291,6 @@ export function DataContract(props: DataContractProps) {
       await Promise.all([
         DataContractAPI.reqGetDataContractInfo({
           name: state.currentContractName || "",
-          state: state.currentContractState || "",
           isMock: CONFIGS.IS_MOCK_API,
         }),
         DataContractAPI.reqGetDataContract({
@@ -308,7 +323,8 @@ export function DataContract(props: DataContractProps) {
   };
 
   const handleGetContractsByState = async function () {
-    if (!state.currentContractState && state.currentContractState !== "") return;
+    if (!state.currentContractState && state.currentContractState !== "")
+      return;
     try {
       const result = await dcsQuerier.refetch();
       if (result.data) {
@@ -321,7 +337,8 @@ export function DataContract(props: DataContractProps) {
 
   // Lấy chi tiết data contract mới khi id thay đổi
   useEffect(() => {
-    if (state.currentContractName && state.currentContractName !== "") handleGetContract();
+    if (state.currentContractName && state.currentContractName !== "")
+      handleGetContract();
   }, [state.currentContractName]);
 
   // Lấy data contract theo state
@@ -341,17 +358,19 @@ export function DataContract(props: DataContractProps) {
         <ColumnLayout columns={1}>
           {/* List Data Contract - Dropdown chọn state */}
           <Container header={<Header variant="h3">List Data Contracts</Header>}>
-            <FormField label="Trạng thái">
+            <FormField label="State">
               <Select
                 selectedOption={
-                  _stateOptions.find((option) => option.value === state.currentContractState) ||
-                  null
+                  _stateOptions.find(
+                    (option) => option.value === state.currentContractState,
+                  ) || null
                 }
                 onChange={({ detail }) =>
-                  detail.selectedOption && handleStateChange(detail.selectedOption.value as string)
+                  detail.selectedOption &&
+                  handleStateChange(detail.selectedOption.value as string)
                 }
                 options={_stateOptions}
-                placeholder="Chọn trạng thái"
+                placeholder="Select state"
               />
             </FormField>
           </Container>

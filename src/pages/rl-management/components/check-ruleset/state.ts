@@ -10,7 +10,9 @@ import type {
 function getInitialState() {
   return {
     isOpen: true,
-    currentRulesetId: null as string | null,
+    currentRulesetName: null as string | null,
+    currentRulesetVersion: null as string | null,
+    currentJobName: null as string | null,
     result: null as TResPayload<
       TApproveRLReqPayload | TRejectRLReqPayload | undefined
     > | null,
@@ -20,18 +22,28 @@ function getInitialState() {
 // Define a build function to get state modifiers
 function buildStateModifiers(
   changeState: ChangeStateFn<ReturnType<typeof getInitialState>>,
-  setState: TSetStateFn<ReturnType<typeof getInitialState>>
+  setState: TSetStateFn<ReturnType<typeof getInitialState>>,
 ) {
   return {
-    setCurrentRulesetId(contractId: string | null) {
-      changeState("currentRulesetId", () => {
-        return contractId;
+    setCurrentRulesetName(contractName: string | null) {
+      changeState("currentRulesetName", () => {
+        return contractName;
+      });
+    },
+    setCurrentRulesetVersion(contractVersion: string | null) {
+      changeState("currentRulesetVersion", () => {
+        return contractVersion;
+      });
+    },
+    setCurrentJobName(jobName: string | null) {
+      changeState("currentJobName", () => {
+        return jobName;
       });
     },
     setResult(
       result: TResPayload<
         TApproveRLReqPayload | TRejectRLReqPayload | undefined
-      > | null
+      > | null,
     ) {
       changeState("result", () => {
         return result;

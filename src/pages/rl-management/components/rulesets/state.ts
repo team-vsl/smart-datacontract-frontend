@@ -10,13 +10,14 @@ function getInitialState() {
     currentRulesetId: null as string | null,
     currentRulesetName: null as string | null,
     currentRuleset: null as TRuleset | null,
+    currentRulesetContent: null as string | null,
   };
 }
 
 // Define a build function to get state modifiers
 function buildStateModifiers(
   changeState: ChangeStateFn<ReturnType<typeof getInitialState>>,
-  setState: TSetStateFn<ReturnType<typeof getInitialState>>
+  setState: TSetStateFn<ReturnType<typeof getInitialState>>,
 ) {
   return {
     setCurrentRuleset(newRuleset: TRuleset | null) {
@@ -37,6 +38,11 @@ function buildStateModifiers(
     setCurrentRulesetState(contractState: string | null) {
       changeState("currentRulesetState", () => {
         return contractState;
+      });
+    },
+    setCurrentRulesetContent(content: string | null) {
+      changeState("currentRulesetContent", () => {
+        return content;
       });
     },
     setIsOpen(status?: boolean) {

@@ -1,4 +1,10 @@
-import { Button, Container, Header, Input, SpaceBetween } from "@cloudscape-design/components";
+import {
+  Button,
+  Container,
+  Header,
+  Input,
+  SpaceBetween,
+} from "@cloudscape-design/components";
 
 export type CheckDataInteractionPartProps = {
   isApprovePending: boolean;
@@ -17,10 +23,10 @@ export type CheckDataInteractionPartProps = {
  */
 export default function InteractionPart(props: CheckDataInteractionPartProps) {
   return (
-    <Container header={<Header variant="h3">Tương tác</Header>}>
+    <Container header={<Header variant="h3">Interact</Header>}>
       <SpaceBetween size="xs" direction="horizontal" alignItems="end">
         <Input
-          placeholder="Nhập Data Contract Name"
+          placeholder="Enter Data Contract name"
           value={props.currentContractName}
           onChange={({ detail }) => props.onCurrentIdInputChange(detail)}
           disabled={props.isApprovePending || props.isRejectPending}
@@ -28,7 +34,11 @@ export default function InteractionPart(props: CheckDataInteractionPartProps) {
         <Button
           variant="primary"
           onClick={({ detail }) => props.onApproveBtnClick(detail)}
-          disabled={!props.currentContractName || props.isApprovePending || props.isRejectPending}
+          disabled={
+            !props.currentContractName ||
+            props.isApprovePending ||
+            props.isRejectPending
+          }
           loading={props.isApprovePending}
         >
           Approve
@@ -36,7 +46,11 @@ export default function InteractionPart(props: CheckDataInteractionPartProps) {
         <Button
           variant="normal"
           onClick={({ detail }) => props.onRejectBtnClick(detail)}
-          disabled={!props.currentContractName || props.isApprovePending || props.isRejectPending}
+          disabled={
+            !props.currentContractName ||
+            props.isApprovePending ||
+            props.isRejectPending
+          }
           loading={props.isRejectPending}
         >
           Reject

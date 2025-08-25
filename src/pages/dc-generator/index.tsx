@@ -68,7 +68,7 @@ export default function DataContractGeneratorPage() {
               <Header
                 variant="h2"
                 className="mb-3"
-                description="Tạo data contract với GenAI"
+                description="Create a data contract with GenAI"
               >
                 Generator
               </Header>
@@ -126,7 +126,7 @@ export default function DataContractGeneratorPage() {
           header={
             <Header
               variant="h2"
-              description="Bạn có thể xem chi tiết kết quả, điều chỉnh kết quả và tải kết quả lên ở đây"
+              description="You can modify the result, check it and upload it to system."
             >
               Result / Editor
             </Header>

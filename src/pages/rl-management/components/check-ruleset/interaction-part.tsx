@@ -2,17 +2,20 @@ import {
   Button,
   Container,
   Header,
+  FormField,
   Input,
   SpaceBetween,
 } from "@cloudscape-design/components";
 
 export type CheckRLInteractionPartProps = {
-  isApprovePending: boolean;
-  isRejectPending: boolean;
-  currentRulesetId: string;
-  onCurrentIdInputChange(detail: any): void;
-  onApproveBtnClick(detail: any): void;
-  onRejectBtnClick(detail: any): void;
+  isActivatePending: boolean;
+  isInactivatePending: boolean;
+  currentRulesetName: string;
+  currentRulesetVersion: string;
+  onCurrentNameInputChange(detail: any): void;
+  onCurrentVersionInputChange(detail: any): void;
+  onActivateBtnClick(detail: any): void;
+  onInactivateBtnClick(detail: any): void;
 };
 
 /**
@@ -23,37 +26,56 @@ export type CheckRLInteractionPartProps = {
  */
 export default function InteractionPart(props: CheckRLInteractionPartProps) {
   return (
-    <Container header={<Header variant="h3">Tương tác</Header>}>
+    <Container header={<Header variant="h3">Interact</Header>}>
       <SpaceBetween size="xs" direction="horizontal" alignItems="end">
-        <Input
-          placeholder="Nhập tên ruleset"
-          value={props.currentRulesetId}
-          onChange={({ detail }) => props.onCurrentIdInputChange(detail)}
-          disabled={props.isApprovePending || props.isRejectPending}
-        />
+        <FormField label="Name">
+          <Input
+            placeholder="Enter Ruleset name"
+            value={props.currentRulesetName}
+            onChange={({ detail }) => props.onCurrentNameInputChange(detail)}
+            disabled={props.isActivatePending || props.isInactivatePending}
+          />
+        </FormField>
+        <FormField label="Version">
+          <Input
+            placeholder="Enter Ruleset version"
+            value={props.currentRulesetVersion}
+            onChange={({ detail }) => props.onCurrentVersionInputChange(detail)}
+            disabled={props.isActivatePending || props.isInactivatePending}
+          />
+        </FormField>
+        <FormField label="Apply to job">
+          <Input
+            placeholder="Enter Job name"
+            value={props.currentRulesetVersion}
+            onChange={({ detail }) => props.onCurrentVersionInputChange(detail)}
+            disabled={props.isActivatePending || props.isInactivatePending}
+          />
+        </FormField>
+
         <Button
           variant="primary"
-          onClick={({ detail }) => props.onApproveBtnClick(detail)}
+          onClick={({ detail }) => props.onActivateBtnClick(detail)}
           disabled={
-            !props.currentRulesetId ||
-            props.isApprovePending ||
-            props.isRejectPending
+            !props.currentRulesetName ||
+            props.isActivatePending ||
+            props.isInactivatePending
           }
-          loading={props.isApprovePending}
+          loading={props.isActivatePending}
         >
-          Approve
+          Activate
         </Button>
         <Button
           variant="normal"
-          onClick={({ detail }) => props.onRejectBtnClick(detail)}
+          onClick={({ detail }) => props.onInactivateBtnClick(detail)}
           disabled={
-            !props.currentRulesetId ||
-            props.isApprovePending ||
-            props.isRejectPending
+            !props.currentRulesetName ||
+            props.isActivatePending ||
+            props.isInactivatePending
           }
-          loading={props.isRejectPending}
+          loading={props.isInactivatePending}
         >
-          Reject
+          Inactivate
         </Button>
       </SpaceBetween>
     </Container>

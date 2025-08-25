@@ -33,6 +33,7 @@ export type TGetDataContractByStateParams = _TBase & {
 
 export type TGetDataContractParams = _TBase & {
   name: string;
+  version?: string;
   state?: string;
 };
 
@@ -76,7 +77,7 @@ export async function reqGenerateDataContract(
   const response = await api.post(
     `/data-contract`,
     {
-      content: userInput,
+      userInput,
     },
     { headers: tokenHeader },
   );

@@ -10,6 +10,7 @@ export type TRuleset = {
   state: URulesetState;
   team: string;
   owner: string;
+  jobName?: string;
   createdAt: string;
 };
 

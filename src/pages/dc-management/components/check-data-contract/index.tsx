@@ -3,10 +3,12 @@ import { SpaceBetween, ExpandableSection } from "@cloudscape-design/components";
 
 // Import constants
 import { CONFIGS } from "@/utils/constants/configs";
+import { TEAMS } from "@/utils/constants/teams";
 
 // Import components
 import InteractionPart from "./interaction-part";
 import ResultPart from "./result-part";
+import Protector from "@/components/protector";
 
 // Import hooks
 import { useStateManager } from "@/hooks/use-state-manager";
@@ -35,22 +37,22 @@ export function CheckDataContract(props: CheckDataContractProps) {
 
   // Sử dụng useMutation để approve data contract
   const approveMutation = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (name: string) => {
       let isMock = CONFIGS.IS_MOCK_API;
 
       // Kiểm tra data contract có tồn tại không
       const contract = await DataContractAPI.reqGetDataContract({
-        id,
+        name,
         isMock,
       });
 
       if (!contract) {
-        throw new Error(`Không tìm thấy Data Contract với ID: ${id}`);
+        throw new Error(`Cannot find Data Contract: ${name}`);
       }
 
       // Approve data contract và cập nhật state
       const updatedContract = await DataContractAPI.reqApproveDataContract({
-        id,
+        name,
         isMock,
       });
 
@@ -64,7 +66,7 @@ export function CheckDataContract(props: CheckDataContractProps) {
       queryClient.invalidateQueries({ queryKey: ["dataContracts"] });
 
       stateFns.setResult({
-        message: `Data Contract ${state.currentContractName} đã được chấp thuận`,
+        message: `Data Contract ${state.currentContractName} is approved`,
         data: updatedContract,
       });
     },
@@ -82,10 +84,13 @@ export function CheckDataContract(props: CheckDataContractProps) {
       let isMock = CONFIGS.IS_MOCK_API;
 
       // Kiểm tra data contract có tồn tại không
-      const contract = await DataContractAPI.reqGetDataContractInfo({ name, isMock });
+      const contract = await DataContractAPI.reqGetDataContractInfo({
+        name,
+        isMock,
+      });
 
       if (!contract) {
-        throw new Error(`Không tìm thấy Data Contract: ${name}`);
+        throw new Error(`Cannot find Data Contract: ${name}`);
       }
 
       // Reject data contract và cập nhật state
@@ -135,30 +140,32 @@ export function CheckDataContract(props: CheckDataContractProps) {
       defaultExpanded={state.isOpen}
       onChange={({ detail }) => stateFns.setIsOpen(detail.expanded)}
     >
-      <SpaceBetween size="l">
-        {/* Phần tương tác */}
-        <InteractionPart
-          isApprovePending={approveMutation.isPending}
-          isRejectPending={rejectMutation.isPending}
-          currentContractName={state.currentContractName || ""}
-          onCurrentIdInputChange={(detail) => {
-            stateFns.setCurrentContractName(detail.value);
-          }}
-          onApproveBtnClick={() => {
-            handleApprove();
-          }}
-          onRejectBtnClick={() => {
-            handleReject();
-          }}
-        />
+      <Protector allowedTeams={[TEAMS.DATA_ENGINEER.NAME]}>
+        <SpaceBetween size="l">
+          {/* Phần tương tác */}
+          <InteractionPart
+            isApprovePending={approveMutation.isPending}
+            isRejectPending={rejectMutation.isPending}
+            currentContractName={state.currentContractName || ""}
+            onCurrentIdInputChange={(detail) => {
+              stateFns.setCurrentContractName(detail.value);
+            }}
+            onApproveBtnClick={() => {
+              handleApprove();
+            }}
+            onRejectBtnClick={() => {
+              handleReject();
+            }}
+          />
 
-        {/* Phần kết quả */}
-        <ResultPart
-          isApprovePending={approveMutation.isPending}
-          isRejectPending={rejectMutation.isPending}
-          result={state.result}
-        />
-      </SpaceBetween>
+          {/* Phần kết quả */}
+          <ResultPart
+            isApprovePending={approveMutation.isPending}
+            isRejectPending={rejectMutation.isPending}
+            result={state.result}
+          />
+        </SpaceBetween>
+      </Protector>
     </ExpandableSection>
   );
 }

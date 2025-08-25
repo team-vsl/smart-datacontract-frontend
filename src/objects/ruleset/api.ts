@@ -2,13 +2,14 @@
 import { API } from "../api/index";
 
 // Import constants
-import { STATE_DICT } from "@/utils/constants/dc";
+import { STATE_DICT } from "@/utils/constants/rl";
 
 // Import mock data
 import rls from "@/assets/mock-data/rulesets/data.json";
 
 // Import types
 import type { TRuleset } from "./types";
+import type { TDataContract } from "../data-contract/types";
 
 // Initialize API instance
 const api = new API({
@@ -27,18 +28,27 @@ export type TGetRulesetsByStateParams = _Base & {
 
 export type TGetRulesetParams = _Base & {
   name: string;
+  version?: string;
+  state?: string;
 };
 
-export type TApproveRulesetParams = _Base & {
+export type TActiveRulesetParams = _Base & {
   name: string;
+  jobName: string;
+  version: string;
+  currentActiveRulesetName?: string;
+  currentActiveRulesetVersion?: string;
 };
 
-export type TRejectRulesetParams = _Base & {
+export type TInactiveRulesetParams = _Base & {
   name: string;
+  version: string;
 };
 
 export type TUploadRulesetParams = _Base & {
-  data: TRuleset;
+  content: string;
+  name: string;
+  version: string;
 };
 
 /**
@@ -99,8 +109,27 @@ export async function reqGetRulesetsByState(params: TGetRulesetsByStateParams) {
  * @returns
  */
 export async function reqGetRuleset(params: TGetRulesetParams) {
-  const { name, isMock = false } = params || {};
+  const { name, state, isMock = false } = params || {};
 
+  const tokenHeader = API.generateBearerToken(API.getToken(), true) as object;
+
+  if (isMock) {
+    return new Promise<string>((resolve) => {
+      setTimeout(() => {
+        resolve('Rules = [ColumnExists "id"]');
+      }, 500);
+    });
+  }
+
+  const response = await api.get<string>(`/rulesets/${name}?state=${state}`, {
+    headers: tokenHeader,
+  });
+
+  return response.data;
+}
+
+export async function reqGetRulesetInfo(params: TGetRulesetParams) {
+  const { name, isMock = false } = params || {};
   const tokenHeader = API.generateBearerToken(API.getToken(), true) as object;
 
   if (isMock) {
@@ -113,80 +142,97 @@ export async function reqGetRuleset(params: TGetRulesetParams) {
     });
   }
 
-  const response = await api.get<TRuleset>(`/rulesets/${name}`, {
+  const response = await api.get<TRuleset>(`/rulesets/${name}/info`, {
     headers: tokenHeader,
   });
 
   return response.data.data;
 }
 
-export async function reqApproveRuleset(params: TApproveRulesetParams) {
-  const { name, isMock = false } = params || {};
+export async function reqActiveRuleset(params: TActiveRulesetParams) {
+  const {
+    name,
+    version,
+    jobName,
+    currentActiveRulesetName,
+    currentActiveRulesetVersion,
+    isMock = false,
+  } = params || {};
 
   const tokenHeader = API.generateBearerToken(API.getToken(), true) as object;
 
   if (isMock) {
     const target = rls.find((rl) => rl.name === name);
-    if (target) target.state = STATE_DICT.APPROVED;
+    if (target) target.state = STATE_DICT.ACTIVE;
 
     return new Promise<TRuleset>((resolve) => {
       setTimeout(() => {
         resolve(target as TRuleset);
-      }, 500);
-    });
-  }
-
-  const response = await api.post<TRuleset>(`/rulesets/${name}`, undefined, {
-    headers: tokenHeader,
-  });
-
-  return response.data.data;
-}
-
-export async function reqRejectRuleset(params: TRejectRulesetParams) {
-  const { name, isMock = false } = params || {};
-
-  const tokenHeader = API.generateBearerToken(API.getToken(), true) as object;
-
-  if (isMock) {
-    const target = rls.find((rl) => rl.name === name);
-    if (target) target.state = STATE_DICT.APPROVED;
-
-    return new Promise<TRuleset>((resolve) => {
-      setTimeout(() => {
-        resolve(target as TRuleset);
-      }, 500);
-    });
-  }
-
-  const response = await api.post<TRuleset>(`/rulesets/${name}`, undefined, {
-    headers: tokenHeader,
-  });
-
-  return response.data.data;
-}
-
-export async function reqUploadRuleset(params: TUploadRulesetParams) {
-  const { data, isMock = false } = params || {};
-
-  const tokenHeader = API.generateBearerToken(API.getToken(), true) as object;
-
-  if (isMock) {
-    return new Promise<TRuleset>((resolve) => {
-      setTimeout(() => {
-        resolve(data as TRuleset);
       }, 500);
     });
   }
 
   const response = await api.post<TRuleset>(
-    `/rulesets`,
+    `/rulesets/${name}/activation`,
+    { jobName, version, currentActiveRulesetName, currentActiveRulesetVersion },
     {
-      ruleset: data,
+      headers: tokenHeader,
+    },
+  );
+
+  return response.data.data;
+}
+
+export async function reqInactiveRuleset(params: TInactiveRulesetParams) {
+  const { name, version, isMock = false } = params || {};
+
+  const tokenHeader = API.generateBearerToken(API.getToken(), true) as object;
+
+  if (isMock) {
+    const target = rls.find((rl) => rl.name === name);
+    if (target) target.state = STATE_DICT.INACTIVE;
+
+    return new Promise<TRuleset>((resolve) => {
+      setTimeout(() => {
+        resolve(target as TRuleset);
+      }, 500);
+    });
+  }
+
+  const response = await api.post<TRuleset>(
+    `/rulesets/${name}/inactivation`,
+    { version },
+    {
+      headers: tokenHeader,
+    },
+  );
+
+  return response.data.data;
+}
+
+export async function reqUploadRuleset(params: TUploadRulesetParams) {
+  const { content, version, name, isMock = false } = params || {};
+
+  const tokenHeader = API.generateBearerToken(API.getToken(), true) as object;
+
+  if (isMock) {
+    return new Promise<TRuleset>((resolve) => {
+      setTimeout(() => {
+        resolve({} as TRuleset);
+      }, 500);
+    });
+  }
+
+  const response = await api.post<TRuleset>(
+    `/ruleset/upload`,
+    {
+      content,
+      version,
+      name,
     },
     {
       headers: tokenHeader,
-    }
+    },
   );
 
   return response.data.data;
