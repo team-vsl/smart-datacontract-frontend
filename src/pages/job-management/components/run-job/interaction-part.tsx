@@ -34,14 +34,14 @@ export default function InteractionPart(props: RunJobInteractionPartProps) {
 
   return (
     <Container>
-      <Header variant="h3">Chạy Job</Header>
+      <Header variant="h3">Run Job</Header>
       <SpaceBetween size="m" direction="vertical">
         {/* Job Selection */}
-        <FormField label="Tên Job">
+        <FormField label="Job name">
           <Select
             selectedOption={
               selectOptions.find(
-                (option) => option.value === props.currentJobName
+                (option) => option.value === props.currentJobName,
               ) || null
             }
             onChange={({ detail }) =>
@@ -50,7 +50,7 @@ export default function InteractionPart(props: RunJobInteractionPartProps) {
             }
             options={selectOptions}
             disabled={props.isRunning}
-            placeholder="Chọn job"
+            placeholder="Select Job"
           />
         </FormField>
 
@@ -61,7 +61,7 @@ export default function InteractionPart(props: RunJobInteractionPartProps) {
           variant="primary"
           loading={props.isRunning}
         >
-          {props.isRunning ? "Đang chạy..." : "Chạy Job"}
+          {props.isRunning ? "Running..." : "Run"}
         </Button>
       </SpaceBetween>
     </Container>

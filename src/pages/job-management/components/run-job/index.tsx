@@ -40,7 +40,7 @@ export default function RunJob(props: RunJobProps) {
   // State cho accordion
   const [state, stateFns] = useStateManager(
     RunJobStateManager.getInitialState(),
-    RunJobStateManager.buildStateModifiers
+    RunJobStateManager.buildStateModifiers,
   );
 
   // Sử dụng useMutation để reject data contract
@@ -52,7 +52,7 @@ export default function RunJob(props: RunJobProps) {
       const contract = await JobAPI.reqGetJob({ jobName, isMock });
 
       if (!contract) {
-        throw new Error(`Không tìm thấy Job với tên: ${jobName}`);
+        throw new Error(`Cannot find Job with name: ${jobName}`);
       }
 
       // Reject data contract và cập nhật state
@@ -71,7 +71,7 @@ export default function RunJob(props: RunJobProps) {
       queryClient.invalidateQueries({ queryKey: ["dataContracts"] });
 
       stateFns.setResult({
-        message: `Đang chạy job ${state.currentJobName}`,
+        message: `Running job: ${state.currentJobName}`,
         data: newJobRun,
       });
     },

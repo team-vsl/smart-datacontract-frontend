@@ -3,7 +3,7 @@ import { SpaceBetween, ExpandableSection } from "@cloudscape-design/components";
 
 // Import constants
 import { CONFIGS } from "@/utils/constants/configs";
-import { STATE_DICT } from "@/utils/constants/dc";
+import { STATE_DICT } from "@/utils/constants/rl";
 
 // Import components
 import ResultPart from "./result-part";
@@ -34,21 +34,18 @@ type FormErrors = {
 function findExistingRulesetId(
   rulesets: TRuleset[],
   name: string,
-  defaultId: string
+  defaultId: string,
 ): string {
   if (!name || !name.trim()) return defaultId;
 
   const existingRuleset = rulesets.find(
     (r) =>
       r.name.toLowerCase().trim() === name.toLowerCase().trim() &&
-      r.state === STATE_DICT.PENDING
+      r.state === STATE_DICT.INACTIVE,
   );
 
   if (existingRuleset)
-    console.log(
-      "Tìm thấy ruleset có cùng tên trong trạng thái pending:",
-      existingRuleset
-    );
+    console.log("Cannot find Ruleset with state: inactive", existingRuleset);
 
   return existingRuleset ? existingRuleset.id : defaultId;
 }
@@ -62,15 +59,20 @@ export function UploadRuleset(props: UploadRulesetProps) {
   // State
   const [state, stateFns] = useStateManager(
     UploadRLStateManager.getInitialState(),
-    UploadRLStateManager.buildStateModifiers
+    UploadRLStateManager.buildStateModifiers,
   );
 
   // Sử dụng useMutation để upload ruleset
   const uploadMutation = useMutation({
-    mutationFn: async function (newRuleset: TRuleset) {
+    mutationFn: async function () {
+      if (!state.uploadRulesetForm.content) return;
+      if (!state.uploadRulesetForm.name) return;
+
       // Sử dụng RulesetAPI để thêm ruleset mới
       const uploadedRuleset = await RulesetAPI.reqUploadRuleset({
-        data: newRuleset,
+        name: state.uploadRulesetForm.name,
+        version: "",
+        content: state.uploadRulesetForm.content,
         isMock: CONFIGS.IS_MOCK_API,
       });
 
@@ -78,29 +80,27 @@ export function UploadRuleset(props: UploadRulesetProps) {
 
       return uploadedRuleset;
     },
-    onSuccess: function (data) {
+    onSuccess(data) {
       // Invalidate queries để cập nhật danh sách
       queryClient.invalidateQueries({ queryKey: ["rulesets"] });
       queryClient.invalidateQueries({ queryKey: ["allRulesets"] });
 
       // Hiển thị kết quả
       stateFns.setResult({
-        message: "Ruleset đã được upload thành công!",
+        message: "Upload Ruleset successffully",
         data,
       });
 
       // Clear form sau khi upload thành công
-      if (data.state === STATE_DICT.PENDING) {
-        stateFns.setForm({
-          name: "",
-          content: "",
-        });
-      }
+      stateFns.setForm({
+        name: "",
+        content: "",
+      });
     },
-    onError: function (error: any) {
+    onError(error: any) {
       stateFns.setResult({
         error,
-        message: "Upload ruleset thất bại.",
+        message: "Upload Ruleset failed",
         data: undefined,
       });
     },
@@ -113,97 +113,94 @@ export function UploadRuleset(props: UploadRulesetProps) {
     const newErrors: FormErrors = {};
 
     if (!state.uploadRulesetForm.name!.trim()) {
-      newErrors.name = "Tên ruleset không được để trống";
+      newErrors.name = "Ruleset name is empty";
     }
 
     if (!state.uploadRulesetForm.content!.trim()) {
-      newErrors.content = "Nội dung ruleset không được để trống";
-    } else {
-      // Kiểm tra định dạng JSON
-      let isValidFormat = false;
-      let isValidStructure = false;
-
-      // Thử kiểm tra JSON
-      try {
-        const parsedContent = JSON.parse(state.uploadRulesetForm.content!);
-        isValidFormat = true; // Nếu parse thành công, đây là JSON hợp lệ
-
-        // Kiểm tra cấu trúc của ruleset
-        if (parsedContent.rules && Array.isArray(parsedContent.rules)) {
-          // Kiểm tra xem mỗi rule có đủ các trường cần thiết không
-          const allRulesValid = parsedContent.rules.every(
-            (rule: any) => rule.id && rule.name && rule.condition
-          );
-
-          if (allRulesValid) {
-            isValidStructure = true;
-          } else {
-            newErrors.content =
-              "Mỗi rule phải có các trường: id, name, condition";
-          }
-        } else {
-          newErrors.content = "Ruleset phải có trường 'rules' là một mảng";
-        }
-      } catch (jsonError) {
-        // Không phải JSON, kiểm tra YAML đơn giản
-        // Đây chỉ là kiểm tra cơ bản, không chính xác 100%
-
-        // Một số đặc điểm cơ bản của YAML:
-        // - Có dòng với định dạng key: value
-        // - Hoặc có dòng bắt đầu bằng dấu gạch ngang (-)
-        const hasKeyValuePair = /^\s*[\w\-]+\s*:\s*.+/m.test(
-          state.uploadRulesetForm.content!
-        );
-        const hasListItem = /^\s*-\s+.+/m.test(
-          state.uploadRulesetForm.content!
-        );
-        const hasRulesSection = /^\s*rules\s*:/m.test(
-          state.uploadRulesetForm.content!
-        );
-
-        if ((hasKeyValuePair || hasListItem) && hasRulesSection) {
-          isValidFormat = true;
-          isValidStructure = true; // Giả định YAML có cấu trúc đúng
-        } else {
-          newErrors.content =
-            "Nội dung phải là định dạng JSON hoặc YAML hợp lệ và có trường 'rules'";
-        }
-      }
-
-      if (!isValidFormat) {
-        newErrors.content = "Nội dung phải là định dạng JSON hoặc YAML hợp lệ";
-      } else if (!isValidStructure) {
-        // Nếu đã có lỗi cụ thể về cấu trúc, giữ nguyên lỗi đó
-        if (!newErrors.content) {
-          newErrors.content = "Cấu trúc ruleset không hợp lệ";
-        }
-      }
+      newErrors.content = "Ruleset content is empty";
     }
+    // // Kiểm tra định dạng JSON
+    // let isValidFormat = false;
+    // let isValidStructure = false;
+    //
+    // // Thử kiểm tra JSON
+    // try {
+    //   const parsedContent = state.uploadRulesetForm.content!;
+    //   isValidFormat = true; // Nếu parse thành công, đây là JSON hợp lệ
+    //
+    //   // Kiểm tra cấu trúc của ruleset
+    //   if (parsedContent.rules && Array.isArray(parsedContent.rules)) {
+    //     // Kiểm tra xem mỗi rule có đủ các trường cần thiết không
+    //     const allRulesValid = parsedContent.rules.every(
+    //       (rule: any) => rule.id && rule.name && rule.condition,
+    //     );
+    //
+    //     if (allRulesValid) {
+    //       isValidStructure = true;
+    //     } else {
+    //       newErrors.content =
+    //         "Mỗi rule phải có các trường: id, name, condition";
+    //     }
+    //   } else {
+    //     newErrors.content = "Ruleset phải có trường 'rules' là một mảng";
+    //   }
+    // } catch (jsonError) {
+    //   // Không phải JSON, kiểm tra YAML đơn giản
+    //   // Đây chỉ là kiểm tra cơ bản, không chính xác 100%
+    //
+    //   // Một số đặc điểm cơ bản của YAML:
+    //   // - Có dòng với định dạng key: value
+    //   // - Hoặc có dòng bắt đầu bằng dấu gạch ngang (-)
+    //   const hasKeyValuePair = /^\s*[\w\-]+\s*:\s*.+/m.test(
+    //     state.uploadRulesetForm.content!,
+    //   );
+    //   const hasListItem = /^\s*-\s+.+/m.test(state.uploadRulesetForm.content!);
+    //   const hasRulesSection = /^\s*rules\s*:/m.test(
+    //     state.uploadRulesetForm.content!,
+    //   );
+    //
+    //   if ((hasKeyValuePair || hasListItem) && hasRulesSection) {
+    //     isValidFormat = true;
+    //     isValidStructure = true; // Giả định YAML có cấu trúc đúng
+    //   } else {
+    //     newErrors.content =
+    //       "Nội dung phải là định dạng JSON hoặc YAML hợp lệ và có trường 'rules'";
+    //   }
+    // }
+    //
+    // if (!isValidFormat) {
+    //   newErrors.content = "Nội dung phải là định dạng JSON hoặc YAML hợp lệ";
+    // } else if (!isValidStructure) {
+    //   // Nếu đã có lỗi cụ thể về cấu trúc, giữ nguyên lỗi đó
+    //   if (!newErrors.content) {
+    //     newErrors.content = "Cấu trúc ruleset không hợp lệ";
+    //   }
+    // }
 
     if (newErrors && Object.keys(newErrors).length > 0) {
       stateFns.setForm({ errors: newErrors });
       return;
     }
 
-    const randomId = `rs-${Math.floor(Math.random() * 1000)}`;
+    // const randomId = `rs-${Math.floor(Math.random() * 1000)}`;
 
     // Tìm ID của ruleset có cùng tên trong trạng thái pending
-    const rulesetId = findExistingRulesetId(
-      rls,
-      state.uploadRulesetForm.name!,
-      randomId
-    );
+    // const rulesetId = findExistingRulesetId(
+    //   rls,
+    //   state.uploadRulesetForm.name!,
+    //   randomId,
+    // );
 
     // Nếu ruleset hợp lệ, trạng thái là STATE_DICT.PENDING
-    const newRuleset: TRuleset = {
-      id: rulesetId,
-      name: state.uploadRulesetForm.name!,
-      state: STATE_DICT.PENDING,
-      createdAt: new Date().toISOString().split("T")[0],
-    };
+    // const newRuleset: TRuleset = {
+    //   id: rulesetId,
+    //   name: state.uploadRulesetForm.name!,
+    //   state: STATE_DICT.PENDING,
+    //   createdAt: new Date().toISOString().split("T")[0],
+    // };
 
     // Sử dụng mutation để upload ruleset
-    uploadMutation.mutate(newRuleset);
+    uploadMutation.mutate();
   };
 
   return (
@@ -218,8 +215,9 @@ export function UploadRuleset(props: UploadRulesetProps) {
         <InteractionPart
           errors={state.uploadRulesetForm.errors}
           rulesetName={state.uploadRulesetForm.name!}
+          rulesetVersion={state.uploadRulesetForm.version!}
           rulesetContent={state.uploadRulesetForm.content!}
-          uploadMutation={uploadMutation}
+          uploadMutation={uploadMutation as any}
           handleSubmit={handleSubmit}
           setUploadRulesetFormState={stateFns.setForm}
         />

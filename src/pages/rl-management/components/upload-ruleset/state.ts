@@ -14,6 +14,7 @@ export type TRulesetUploadFormErrors = {
 export type TRulesetUploadForm = {
   name?: string;
   content?: string;
+  version?: string;
   errors?: TRulesetUploadFormErrors;
 };
 
@@ -21,9 +22,9 @@ export type TRulesetUploadForm = {
 function getInitialState() {
   return {
     isOpen: true,
-    currentRulesetId: null as string | null,
     uploadRulesetForm: {
       name: "",
+      version: "1.0.0",
       content: "",
       errors: {},
     } as TRulesetUploadForm,
@@ -36,18 +37,13 @@ function getInitialState() {
 // Define a build function to get state modifiers
 function buildStateModifiers(
   changeState: ChangeStateFn<ReturnType<typeof getInitialState>>,
-  setState: TSetStateFn<ReturnType<typeof getInitialState>>
+  setState: TSetStateFn<ReturnType<typeof getInitialState>>,
 ) {
   return {
-    setCurrentRulesetId(contractId: string | null) {
-      changeState("currentRulesetId", () => {
-        return contractId;
-      });
-    },
     setResult(
       result: TResPayload<
         TApproveRLReqPayload | TRejectRLReqPayload | undefined
-      > | null
+      > | null,
     ) {
       changeState("result", () => {
         return result;

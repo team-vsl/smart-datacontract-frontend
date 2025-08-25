@@ -17,7 +17,7 @@ export default function RulesetManagementPage() {
         <Header
           variant="h1"
           info={<Link variant="info">Info</Link>}
-          description="Quản lý Ruleset"
+          description="You can manage all available rulesets here"
         >
           Ruleset Management
         </Header>

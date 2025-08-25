@@ -1,4 +1,8 @@
-import { ContentLayout, Header, SpaceBetween } from "@cloudscape-design/components";
+import {
+  ContentLayout,
+  Header,
+  SpaceBetween,
+} from "@cloudscape-design/components";
 
 // Import components
 import { DataContract } from "./components/data-contract";
@@ -8,7 +12,10 @@ export default function DataContractManagementPage() {
   return (
     <ContentLayout
       header={
-        <Header variant="h1" description="Quản lý Data Contract">
+        <Header
+          variant="h1"
+          description="You can manage all available data contracts here"
+        >
           Data Contract Management
         </Header>
       }
