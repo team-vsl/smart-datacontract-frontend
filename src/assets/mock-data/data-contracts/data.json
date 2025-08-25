@@ -1,16 +1,18 @@
 [
   {
-    "id": "dc-001",
-    "name": "User Data Contract",
+    "name": "my-user-data-contract",
     "version": "1.0.0",
     "state": "pending",
-    "createdAt": "2024-01-15"
+    "owner": "anhtuan1912",
+    "team": "marketing",
+    "createdAt": "2025-08-04T11:34:22.438Z"
   },
   {
-    "id": "dc-002",
-    "name": "User Data Contract #2",
+    "name": "user-data-contract-2",
     "version": "1.0.1",
     "state": "pending",
-    "createdAt": "2024-01-16"
+    "owner": "anhtuan1912",
+    "team": "marketing",
+    "createdAt": "2025-08-05T03:22:25.438Z" 
   }
 ]

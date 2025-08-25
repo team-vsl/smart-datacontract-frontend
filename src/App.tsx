@@ -1,6 +1,8 @@
 import { useEffect } from "react";
-import { useNavigate, useRoutes } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
+import { useRoutes } from "react-router-dom";
+
+// Import constants
+import { CONFIGS } from "./utils/constants/configs";
 
 // Import configs
 import { RouteConfigs } from "./routes/route-configs";
@@ -43,8 +45,6 @@ function RoutesSwitcher() {
     refreshTokensMutation,
     reSignInUserOffline,
   } = useAuth();
-  const navigate = useNavigate();
-
   const loadingShown =
     signInMutation.isPending || refreshTokensMutation.isPending;
 
@@ -52,20 +52,16 @@ function RoutesSwitcher() {
     // If user doesn't authenticate, navigate
     // he/she to Root Path
     if (!isAuthenticated) {
-      navigate(RouteConfigs.SignIn.Path);
-
       // Sign in with ID token
-      const idToken = readCookie("idToken");
+      const idToken = readCookie(CONFIGS.ID_TOKEN_COOKIE_NAME);
 
       // User is signed in
       if (idToken) {
         reSignInUserOffline(idToken);
       } else {
-        const refreshToken = readCookie("refreshToken");
+        const refreshToken = readCookie(CONFIGS.REFRESH_TOKEN_COOKIE_NAME);
         refreshTokensMutation.mutate({ refreshToken });
       }
-    } else {
-      navigate(RouteConfigs.Home.Path);
     }
   }, [isAuthenticated]);
 

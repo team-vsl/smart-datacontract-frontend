@@ -1,13 +1,14 @@
 // Import types
-import type { ChangeStateFn, TSetStateFn } from "src/hooks/use-state-manager";
-import type { TDataContract } from "@/objects/data-contract/types";
+import type {ChangeStateFn, TSetStateFn} from "src/hooks/use-state-manager";
+import type {TDataContract} from "@/objects/data-contract/types";
 
 // Define a function to get initial state
 function getInitialState() {
   return {
     isOpen: true,
+    currentDataContractContent: null as string | null,
     currentContractState: null as string | null,
-    currentContractId: null as string | null,
+    currentContractName: null as string | null,
     currentContract: null as TDataContract | null,
   };
 }
@@ -23,9 +24,14 @@ function buildStateModifiers(
         return newContract;
       });
     },
-    setCurrentContractId(contractId: string | null) {
-      changeState("currentContractId", () => {
-        return contractId;
+    setCurrentContractContent(content: string | null) {
+      changeState("currentDataContractContent", () => {
+        return content;
+      });
+    },
+    setCurrentContractName(contractName: string | null) {
+      changeState("currentContractName", () => {
+        return contractName;
       });
     },
     setCurrentContractState(contractState: string | null) {
@@ -44,4 +50,4 @@ function buildStateModifiers(
   };
 }
 
-export const DCStateManager = { getInitialState, buildStateModifiers };
+export const DCStateManager = {getInitialState, buildStateModifiers};

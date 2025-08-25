@@ -12,14 +12,14 @@ import {
 } from "@cloudscape-design/components";
 
 // Import hooks
-import { useAuth } from "@/hooks/use-auth";
-import { useStateManager } from "@/hooks/use-state-manager";
+import {useAuth} from "@/hooks/use-auth";
+import {useStateManager} from "@/hooks/use-state-manager";
 
 // Import states
-import { SignInFormStateManager } from "./state";
+import {SignInFormStateManager} from "./state";
 
 // Import types
-import type { FormEvent } from "react";
+import type {FormEvent} from "react";
 
 export default function SignIn() {
   const [state, stateFns] = useStateManager(
@@ -27,7 +27,7 @@ export default function SignIn() {
     SignInFormStateManager.buildStateModifiers
   );
 
-  const { signInMutation } = useAuth();
+  const {signInMutation} = useAuth();
 
   const handleSubmitForm = function (e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -62,7 +62,7 @@ export default function SignIn() {
               </SpaceBetween>
             }
             errorText={
-              (signInMutation.error as any)?.response.data.error.message
+              signInMutation.error && (signInMutation.error as any)?.response.data.error.message
             }
           >
             <Container
@@ -92,7 +92,7 @@ export default function SignIn() {
                     type={state.canSeePassword ? "text" : "password"}
                   />
                   <Checkbox
-                    onChange={({ detail }) =>
+                    onChange={({detail}) =>
                       stateFns.setCanSeePassword(detail.checked)
                     }
                     checked={state.canSeePassword}

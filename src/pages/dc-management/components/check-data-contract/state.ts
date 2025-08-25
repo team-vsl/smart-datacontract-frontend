@@ -1,38 +1,29 @@
 // Import types
 import type { ChangeStateFn, TSetStateFn } from "src/hooks/use-state-manager";
 import type { TResPayload } from "@/objects/api/types";
-import type {
-  TApproveDCResPayload,
-  TRejectDCResPayload,
-} from "@/objects/data-contract/types";
+import type { TApproveDCResPayload, TRejectDCResPayload } from "@/objects/data-contract/types";
 
 // Define a function to get initial state
 function getInitialState() {
   return {
     isOpen: true,
-    currentContractId: null as string | null,
-    result: null as TResPayload<
-      TApproveDCResPayload | TRejectDCResPayload | undefined
-    > | null,
+    currentContractName: null as string | null,
+    result: null as TResPayload<TApproveDCResPayload | TRejectDCResPayload | undefined> | null,
   };
 }
 
 // Define a build function to get state modifiers
 function buildStateModifiers(
   changeState: ChangeStateFn<ReturnType<typeof getInitialState>>,
-  setState: TSetStateFn<ReturnType<typeof getInitialState>>
+  setState: TSetStateFn<ReturnType<typeof getInitialState>>,
 ) {
   return {
-    setCurrentContractId(contractId: string | null) {
-      changeState("currentContractId", () => {
+    setCurrentContractName(contractId: string | null) {
+      changeState("currentContractName", () => {
         return contractId;
       });
     },
-    setResult(
-      result: TResPayload<
-        TApproveDCResPayload | TRejectDCResPayload | undefined
-      > | null
-    ) {
+    setResult(result: TResPayload<TApproveDCResPayload | TRejectDCResPayload | undefined> | null) {
       changeState("result", () => {
         return result;
       });

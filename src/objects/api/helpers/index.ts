@@ -5,10 +5,7 @@ import type { THandleHTTPRequestErrorOptions, TResPayload } from "../types";
  * Handle error from HTTP Request, compatible with Axios
  * @param error
  */
-function handleHTTPRequestError(
-  error: any,
-  options?: THandleHTTPRequestErrorOptions
-) {
+function handleHTTPRequestError(error: any, options?: THandleHTTPRequestErrorOptions) {
   // Handle network errors
   if (error.response) {
     // The request was made and a response with status code outside the range of 2xx was received
@@ -43,7 +40,7 @@ function handleHTTPRequestError(
  */
 function createMockPayload<T>(data: T) {
   const payload: TResPayload<T> = {
-    error: null,
+    error: undefined,
     data,
   };
 

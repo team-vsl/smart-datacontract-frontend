@@ -12,6 +12,9 @@ import {
   Box,
 } from "@cloudscape-design/components";
 
+// Import constants
+import { CONFIGS } from "@/utils/constants/configs";
+
 // Import components
 import InteractionPart from "./interaction-part";
 import ResultPart from "./result-part";
@@ -43,7 +46,7 @@ export default function RunJob(props: RunJobProps) {
   // Sử dụng useMutation để reject data contract
   const runJobMutation = useMutation({
     mutationFn: async (jobName: string) => {
-      let isMock = true;
+      let isMock = CONFIGS.IS_MOCK_API;
 
       // Kiểm tra data contract có tồn tại không
       const contract = await JobAPI.reqGetJob({ jobName, isMock });

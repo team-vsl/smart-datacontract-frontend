@@ -32,15 +32,20 @@ export type TGetDataContractByStateParams = _TBase & {
 };
 
 export type TGetDataContractParams = _TBase & {
-  id: string;
+  name: string;
+  state?: string;
 };
 
 export type TApproveDataContractParams = _TBase & {
-  id: string;
+  name: string;
 };
 
 export type TRejectDataContractParams = _TBase & {
-  id: string;
+  name: string;
+};
+
+export type TUploadDataContractParams = _TBase & {
+  content: string;
 };
 
 /**
@@ -48,7 +53,7 @@ export type TRejectDataContractParams = _TBase & {
  * @param params
  */
 export async function reqGenerateDataContract(
-  params: TDCGenerateRequestParams
+  params: TDCGenerateRequestParams,
 ) {
   const { userInput, isMock = false } = params || {};
   const tokenHeader = API.generateBearerToken(API.getToken(), true) as object;
@@ -71,10 +76,12 @@ export async function reqGenerateDataContract(
   const response = await api.post(
     `/data-contract`,
     {
-      userInput,
+      content: userInput,
     },
-    { headers: tokenHeader }
+    { headers: tokenHeader },
   );
+
+  console.log("Data Contract Generation Response:", response);
 
   return response.data.data;
 }
@@ -84,7 +91,7 @@ export async function reqGenerateDataContract(
  * @param params
  */
 export async function reqGetAllDataContracts(
-  params: TGetAllDataContractsParams
+  params: TGetAllDataContractsParams,
 ) {
   const { isMock = false } = params || {};
   const tokenHeader = API.generateBearerToken(API.getToken(), true) as object;
@@ -109,7 +116,7 @@ export async function reqGetAllDataContracts(
  * @param params
  */
 export async function reqGetDataContractsByState(
-  params: TGetDataContractByStateParams
+  params: TGetDataContractByStateParams,
 ) {
   const { state, isMock = false } = params || {};
   const tokenHeader = API.generateBearerToken(API.getToken(), true) as object;
@@ -119,7 +126,7 @@ export async function reqGetDataContractsByState(
 
     return new Promise<TDataContract[]>((resolve) => {
       setTimeout(() => {
-        resolve(target as TDataContract[]);
+        resolve(target as unknown as TDataContract[]);
       }, 500);
     });
   }
@@ -128,7 +135,7 @@ export async function reqGetDataContractsByState(
     `/data-contracts?state=${state}`,
     {
       headers: tokenHeader,
-    }
+    },
   );
 
   return response.data.data;
@@ -139,22 +146,51 @@ export async function reqGetDataContractsByState(
  * @param params
  */
 export async function reqGetDataContract(params: TGetDataContractParams) {
-  const { id, isMock = false } = params || {};
+  const { name, state, isMock = false } = params || {};
   const tokenHeader = API.generateBearerToken(API.getToken(), true) as object;
 
   if (isMock) {
-    const target = dcs.find((dc) => dc.id === id);
-
-    return new Promise<TDataContract>((resolve) => {
+    return new Promise<string>((resolve) => {
       setTimeout(() => {
-        resolve(target as TDataContract);
+        resolve("version: 1.0.0");
       }, 500);
     });
   }
 
-  const response = await api.get<TDataContract>(`/data-contracts/${id}`, {
-    headers: tokenHeader,
-  });
+  const response = await api.get<string>(
+    `/data-contracts/${name}?state=${state}`,
+    {
+      headers: tokenHeader,
+    },
+  );
+
+  return response.data;
+}
+
+/**
+ * Gửi một yêu cầu để lấy chi tiết một data contract theo id
+ * @param params
+ */
+export async function reqGetDataContractInfo(params: TGetDataContractParams) {
+  const { name, isMock = false } = params || {};
+  const tokenHeader = API.generateBearerToken(API.getToken(), true) as object;
+
+  if (isMock) {
+    const target = dcs.find((dc) => dc.name === name);
+
+    return new Promise<TDataContract>((resolve) => {
+      setTimeout(() => {
+        resolve(target as unknown as TDataContract);
+      }, 500);
+    });
+  }
+
+  const response = await api.get<TDataContract>(
+    `/data-contracts/${name}/info`,
+    {
+      headers: tokenHeader,
+    },
+  );
 
   return response.data.data;
 }
@@ -164,29 +200,29 @@ export async function reqGetDataContract(params: TGetDataContractParams) {
  * @param params
  */
 export async function reqApproveDataContract(
-  params: TApproveDataContractParams
+  params: TApproveDataContractParams,
 ) {
-  const { id, isMock = false } = params || {};
+  const { name, isMock = false } = params || {};
   const tokenHeader = API.generateBearerToken(API.getToken(), true) as object;
 
   if (isMock) {
-    const target = dcs.find((dc) => dc.id === id);
+    const target = dcs.find((dc) => dc.name === name);
 
     return new Promise<TDataContract>((resolve) => {
       if (target) target.state = STATE_DICT.APPROVED;
 
       setTimeout(() => {
-        resolve(target as TDataContract);
+        resolve(target as unknown as TDataContract);
       }, 500);
     });
   }
 
   const response = await api.post<TDataContract>(
-    `/data-contracts/${id}`,
+    `/data-contracts/${name}`,
     undefined,
     {
       headers: tokenHeader,
-    }
+    },
   );
 
   return response.data.data;
@@ -197,27 +233,54 @@ export async function reqApproveDataContract(
  * @param params
  */
 export async function reqRejectDataContract(params: TRejectDataContractParams) {
-  const { id, isMock = false } = params || {};
+  const { name, isMock = false } = params || {};
   const tokenHeader = API.generateBearerToken(API.getToken(), true) as object;
 
   if (isMock) {
-    const target = dcs.find((dc) => dc.id === id);
+    const target = dcs.find((dc) => dc.name === name);
 
     return new Promise<TDataContract>((resolve) => {
       if (target) target.state = STATE_DICT.REJECTED;
 
       setTimeout(() => {
-        resolve(target as TDataContract);
+        resolve(target as unknown as TDataContract);
       }, 500);
     });
   }
 
   const response = await api.post<TDataContract>(
-    `/data-contracts/${id}`,
+    `/data-contracts/${name}`,
     undefined,
     {
       headers: tokenHeader,
-    }
+    },
+  );
+
+  return response.data.data;
+}
+
+/**
+ * Gửi một yêu cầu để tải lên data contract
+ * @param params
+ */
+export async function reqUploadDataContract(params: TUploadDataContractParams) {
+  const { content, isMock = false } = params || {};
+  const tokenHeader = API.generateBearerToken(API.getToken(), true) as object;
+
+  if (isMock) {
+    return new Promise<TDataContract>((resolve) => {
+      setTimeout(() => {
+        resolve("");
+      }, 500);
+    });
+  }
+
+  const response = await api.post<TDataContract>(
+    "/data-contract",
+    { content },
+    {
+      headers: tokenHeader,
+    },
   );
 
   return response.data.data;

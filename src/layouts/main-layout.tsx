@@ -34,11 +34,17 @@ type TUserInformationProps = {
 };
 
 export function UserInformation(props: TUserInformationProps) {
+  if (!props.user)
+    return (
+      <div>
+        <p>Sign in to see information</p>
+      </div>
+    );
+
   return (
     <div>
       <p>
-        Hello <strong>{props.user.name}</strong> welcome to VPBank Challenge #23
-        Demo
+        Hello <strong>{props.user.name}</strong> welcome to VPBank Challenge #23 Demo
       </p>
       <hr />
       <div>
@@ -71,9 +77,7 @@ export default function MainLayout(props: PropsWithChildren) {
       <AppLayout
         maxContentWidth={1440}
         navigationOpen={sideNavigation.isOpen}
-        onNavigationChange={({ detail }) =>
-          mainLayoutStActions.setNavigationOpen(detail.open)
-        }
+        onNavigationChange={({ detail }) => mainLayoutStActions.setNavigationOpen(detail.open)}
         navigation={
           <SideNavigation
             activeHref={activeHref}

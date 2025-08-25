@@ -1,6 +1,8 @@
-import { useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { jwtDecode } from "jwt-decode";
+
+// Import constants
+import { CONFIGS } from "@/utils/constants/configs";
 
 // Import objects
 import * as IdentityAPI from "@/objects/identity/api";
@@ -32,27 +34,32 @@ export function useAuth() {
       // Decode tokens
       const decodedIdToken = jwtDecode(idToken);
       const decodedAccessToken = jwtDecode(accessToken);
-      const decodedRefreshToken = jwtDecode(refreshToken);
+
+      const idTokenExpDateStr = new Date(
+        decodedIdToken.exp! * 1000,
+      ).toUTCString();
+      const accessTokenExpDateStr = new Date(
+        decodedAccessToken.exp! * 1000,
+      ).toUTCString();
 
       CookieUtils.writeSessionCookie(
-        "idToken",
+        CONFIGS.ID_TOKEN_COOKIE_NAME,
         idToken,
-        new Date(decodedIdToken.exp!).toUTCString()
+        idTokenExpDateStr,
       );
       CookieUtils.writeSessionCookie(
-        "accessToken",
+        CONFIGS.ACCESS_TOKEN_COOKIE_NAME,
         accessToken,
-        new Date(decodedAccessToken.exp!).toUTCString()
+        accessTokenExpDateStr,
       );
-      CookieUtils.writeSessionCookie(
-        "refreshToken",
+      CookieUtils.writePersistentCookie(
+        CONFIGS.REFRESH_TOKEN_COOKIE_NAME,
         refreshToken,
-        new Date(decodedRefreshToken.exp!).toUTCString()
       );
 
       // Save user's information
       identityStActions.setUser(
-        Identity.createUserFromDecodedToken(decodedIdToken)
+        Identity.createUserFromDecodedToken(decodedIdToken),
       );
 
       // Update authenticated status
@@ -75,20 +82,27 @@ export function useAuth() {
       const decodedIdToken = jwtDecode(idToken);
       const decodedAccessToken = jwtDecode(accessToken);
 
+      const idTokenExpDateStr = new Date(
+        decodedIdToken.exp! * 1000,
+      ).toUTCString();
+      const accessTokenExpDateStr = new Date(
+        decodedAccessToken.exp! * 1000,
+      ).toUTCString();
+
       CookieUtils.writeSessionCookie(
-        "idToken",
+        CONFIGS.ID_TOKEN_COOKIE_NAME,
         idToken,
-        new Date(decodedIdToken.exp!).toUTCString()
+        idTokenExpDateStr,
       );
       CookieUtils.writeSessionCookie(
-        "accessToken",
+        CONFIGS.ACCESS_TOKEN_COOKIE_NAME,
         accessToken,
-        new Date(decodedAccessToken.exp!).toUTCString()
+        accessTokenExpDateStr,
       );
 
       // Save user's information
       identityStActions.setUser(
-        Identity.createUserFromDecodedToken(decodedIdToken)
+        Identity.createUserFromDecodedToken(decodedIdToken),
       );
 
       // Update authenticated status
@@ -104,7 +118,7 @@ export function useAuth() {
 
     // Save user's information
     identityStActions.setUser(
-      Identity.createUserFromDecodedToken(decodedIdToken)
+      Identity.createUserFromDecodedToken(decodedIdToken),
     );
 
     // Update authenticated status

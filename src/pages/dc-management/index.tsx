@@ -1,8 +1,4 @@
-import {
-  ContentLayout,
-  Header,
-  SpaceBetween,
-} from "@cloudscape-design/components";
+import { ContentLayout, Header, SpaceBetween } from "@cloudscape-design/components";
 
 // Import components
 import { DataContract } from "./components/data-contract";

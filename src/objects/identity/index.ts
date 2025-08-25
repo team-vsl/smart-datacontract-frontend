@@ -6,7 +6,9 @@ import type { TUser } from "./types";
  * @param decodedToken
  * @returns
  */
-export function createUserFromDecodedToken(decodedToken: any): TUser {
+export function createUserFromDecodedToken(decodedToken: any): TUser | null {
+  if (!decodedToken) return null;
+
   return {
     email: decodedToken.email,
     emailVerified: decodedToken.email_verified,
@@ -18,7 +20,9 @@ export function createUserFromDecodedToken(decodedToken: any): TUser {
     gender: decodedToken.gender,
     birthdate: decodedToken.birthdate,
     role: decodedToken["custom:role"],
-    team: decodedToken["cognito:groups"][0],
+    team: decodedToken["cognito:groups"]
+      ? decodedToken["cognito:groups"][0]
+      : "general",
     sub: decodedToken.sub,
   };
 }
