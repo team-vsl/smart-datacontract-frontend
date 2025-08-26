@@ -26,7 +26,7 @@ export default function RulesetManagementPage() {
       <SpaceBetween size="l">
         <Ruleset />
         <CheckRuleset />
-        <UploadRuleset />
+        {/*<UploadRuleset />*/}
       </SpaceBetween>
     </ContentLayout>
   );

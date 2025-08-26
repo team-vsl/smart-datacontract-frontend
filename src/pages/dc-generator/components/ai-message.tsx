@@ -1,3 +1,4 @@
+import Markdown from "react-markdown";
 import {
   ButtonGroup,
   StatusIndicator,
@@ -93,7 +94,7 @@ export function AIMessage(props: TAIMessageProps) {
         />
       }
     >
-      {props.message.content}
+      <Markdown>{props.message.content}</Markdown>
     </ChatBubble>
   );
 }

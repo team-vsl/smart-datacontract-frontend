@@ -41,7 +41,7 @@ export function CheckDataContract(props: CheckDataContractProps) {
       let isMock = CONFIGS.IS_MOCK_API;
 
       // Kiểm tra data contract có tồn tại không
-      const contract = await DataContractAPI.reqGetDataContract({
+      const contract = await DataContractAPI.reqGetDataContractInfo({
         name,
         isMock,
       });
@@ -51,26 +51,27 @@ export function CheckDataContract(props: CheckDataContractProps) {
       }
 
       // Approve data contract và cập nhật state
-      const updatedContract = await DataContractAPI.reqApproveDataContract({
+      const result = await DataContractAPI.reqApproveDataContract({
         name,
+        version: contract.version,
         isMock,
       });
 
-      dataContractStActions.updateDataContract(updatedContract);
+      dataContractStActions.updateDataContract(result.dataContractInfo);
 
       // Lấy contract đã cập nhật
-      return updatedContract;
+      return result;
     },
-    onSuccess: (updatedContract: TDataContract | undefined) => {
+    onSuccess(result: any | undefined) {
       // Invalidate queries để cập nhật danh sách
       queryClient.invalidateQueries({ queryKey: ["dataContracts"] });
 
       stateFns.setResult({
-        message: `Data Contract ${state.currentContractName} is approved`,
-        data: updatedContract,
+        message: `Data Contract ${state.currentContractName} is approved and Ruleset ${result.rulesetName} is created`,
+        data: result.dataContractInfo,
       });
     },
-    onError: (error: any) => {
+    onError(error: any) {
       stateFns.setResult({
         error,
         data: undefined,
@@ -96,6 +97,7 @@ export function CheckDataContract(props: CheckDataContractProps) {
       // Reject data contract và cập nhật state
       const updatedContract = await DataContractAPI.reqRejectDataContract({
         name,
+        version: contract.version,
         isMock,
       });
 

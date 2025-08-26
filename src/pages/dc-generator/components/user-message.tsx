@@ -1,3 +1,4 @@
+import Markdown from "react-markdown";
 import ChatBubble from "@cloudscape-design/chat-components/chat-bubble";
 import ButtonGroup from "@cloudscape-design/components/button-group";
 import StatusIndicator from "@cloudscape-design/components/status-indicator";
@@ -24,7 +25,7 @@ export default function UserMessage(props: TUserMessageProps) {
         />
       }
     >
-      {props.message.content}
+      <Markdown>{props.message.content}</Markdown>
     </ChatBubble>
   );
 }

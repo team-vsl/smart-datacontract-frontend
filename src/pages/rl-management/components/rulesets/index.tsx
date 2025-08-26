@@ -141,7 +141,7 @@ function RulesetList(props: TRulesetListProps) {
           }
         }}
         selectionType="single"
-        trackBy="id"
+        trackBy="name"
         empty={
           <Box textAlign="center" color="inherit">
             <b>No data</b>

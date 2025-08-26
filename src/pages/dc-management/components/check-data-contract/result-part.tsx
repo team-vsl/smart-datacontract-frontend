@@ -58,10 +58,9 @@ export default function ResultPart(props: CheckDataResultPartProps) {
 
       <Box>
         <ColumnLayout columns={2} variant="text-grid">
-          <FormField label="ID">{props.result.data.id}</FormField>
           <FormField label="Tên">{props.result.data.name}</FormField>
           <FormField label="Version">{props.result.data.version}</FormField>
-          <FormField label="Trạng thái">
+          <FormField label="State">
             <StatusIndicator
               type={
                 DataContractHelpers.getStatusIndicatorType(

@@ -1,3 +1,4 @@
+import { unstable_batchedUpdates } from "react-dom";
 import { useMutation } from "@tanstack/react-query";
 import {
   Container,
@@ -8,6 +9,7 @@ import {
   Button,
   Header,
   Link,
+  StatusIndicator,
 } from "@cloudscape-design/components";
 import LoadingBar from "@cloudscape-design/chat-components/loading-bar";
 
@@ -99,11 +101,14 @@ export default function DataContractGeneratorPage() {
                     isMock: CONFIGS.IS_MOCK_API,
                   })
                   .then((value: any) => {
-                    let content = value.message;
-                    dcGeneratorStActions.addMessage(
-                      createMessage(content, CONV_ROLES.AI),
-                      { canRemoveAIPlaceHolderMessage: true },
-                    );
+                    let { aiResponse, dataContractContent } = value;
+                    unstable_batchedUpdates(() => {
+                      dcGeneratorStActions.setContent(dataContractContent);
+                      dcGeneratorStActions.addMessage(
+                        createMessage(aiResponse, CONV_ROLES.AI),
+                        { canRemoveAIPlaceHolderMessage: true },
+                      );
+                    });
                   })
                   .catch((error: any) => {
                     let content = error.message;
@@ -132,28 +137,37 @@ export default function DataContractGeneratorPage() {
             </Header>
           }
           footer={
-            <div className="flex gap-2">
-              <Button
-                disabled={uploadDcMutation.isPending}
-                onClick={() => {
-                  dcGeneratorStActions.setEditable(!state.isEditable);
-                }}
-              >
-                {state.isEditable ? "Done" : "Edit"}
-              </Button>
-              <Button
-                disabled={uploadDcMutation.isPending}
-                onClick={() => {
-                  uploadDcMutation
-                    .mutateAsync({ content: state.code })
-                    .then((value: any) =>
-                      console.log("Upload data contract:", value),
-                    );
-                }}
-                variant="primary"
-              >
-                Upload
-              </Button>
+            <div className="flex items-center">
+              <div className="flex gap-2 me-2">
+                <Button
+                  disabled={uploadDcMutation.isPending}
+                  onClick={() => {
+                    dcGeneratorStActions.setEditable(!state.isEditable);
+                  }}
+                >
+                  {state.isEditable ? "Done" : "Edit"}
+                </Button>
+                <Button
+                  disabled={uploadDcMutation.isPending}
+                  onClick={() => {
+                    uploadDcMutation
+                      .mutateAsync({ content: state.code })
+                      .then((value: any) =>
+                        console.log("Upload data contract:", value),
+                      );
+                  }}
+                  variant="primary"
+                >
+                  Upload
+                </Button>
+              </div>
+              <div className="flex">
+                {uploadDcMutation.isSuccess && (
+                  <StatusIndicator type="success">
+                    Data Contract is uploaded successfully
+                  </StatusIndicator>
+                )}
+              </div>
             </div>
           }
         >
