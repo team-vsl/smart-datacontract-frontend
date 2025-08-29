@@ -62,7 +62,8 @@ type TJobRunProps = {};
  * @returns
  */
 function JobRunList(props: TJobRunListProps) {
-  const canDisplayResult = props.jbrs.length > 0 && !props.isFetching && !props.isError;
+  const canDisplayResult =
+    props.jbrs.length > 0 && !props.isFetching && !props.isError;
 
   const [selectedItems, setSelectedItems] = useState();
 
@@ -84,7 +85,9 @@ function JobRunList(props: TJobRunListProps) {
             />{" "}
             <div className="ms-3">
               {props.isFetching && (
-                <StatusIndicator type="loading">Đang tải dữ liệu...</StatusIndicator>
+                <StatusIndicator type="loading">
+                  Loading Job Runs...
+                </StatusIndicator>
               )}
               {/* Hiển thị lỗi */}
               {props.isError && (
@@ -122,7 +125,11 @@ function JobRunList(props: TJobRunListProps) {
             cell: (item) => {
               const type = JobHelpers.getStatusIndicatorType(item.jobRunState);
 
-              return <StatusIndicator type={type as any}>{item.jobRunState}</StatusIndicator>;
+              return (
+                <StatusIndicator type={type as any}>
+                  {item.jobRunState}
+                </StatusIndicator>
+              );
             },
             sortingField: "jobRunState",
           },
@@ -144,9 +151,9 @@ function JobRunList(props: TJobRunListProps) {
         trackBy="id"
         empty={
           <Box textAlign="center" color="inherit">
-            <b>Không có dữ liệu</b>
+            <b>No data</b>
             <Box padding={{ bottom: "s" }} variant="p" color="inherit">
-              Không tìm thấy job run nào với trạng thái đã chọn.
+              Cannot find any Job Run
             </Box>
           </Box>
         }
@@ -181,7 +188,9 @@ function JobRunDetail(props: TJobRunDetailProps) {
             />
             <div className="ms-3">
               {props.isFetching && (
-                <StatusIndicator type="loading">Đang tải dữ liệu...</StatusIndicator>
+                <StatusIndicator type="loading">
+                  Loading detail of Job Run...
+                </StatusIndicator>
               )}
               {/* Hiển thị lỗi */}
               {props.isError && (
@@ -196,7 +205,7 @@ function JobRunDetail(props: TJobRunDetailProps) {
     >
       {props.isIdle && (
         <Box variant="p" textAlign="center">
-          Chọn một Job Run trên list để xem chi tiết
+          Select one Job in list to view detail
         </Box>
       )}
 
@@ -207,7 +216,11 @@ function JobRunDetail(props: TJobRunDetailProps) {
           <FormField label="Attempt">{props.currentJobRun.attempt}</FormField>
           <FormField label="State">
             <StatusIndicator
-              type={JobHelpers.getStatusIndicatorType(props.currentJobRun.jobRunState) as any}
+              type={
+                JobHelpers.getStatusIndicatorType(
+                  props.currentJobRun.jobRunState,
+                ) as any
+              }
             >
               {props.currentJobRun.jobRunState}
             </StatusIndicator>
@@ -266,14 +279,8 @@ export default function JobRun(props: TJobRunProps) {
       const result = await jobRunQuerier.refetch();
       if (result.data) {
         stateFns.setCurrentJobRun(result.data as TJobRun);
-      } else {
-        alert(
-          `Không tìm thấy Job Run của job [${state.currentJobName}] với id: ${state.currentJobRunId}`,
-        );
       }
-    } catch (error) {
-      alert(`Lỗi khi tìm Job: ${error}`);
-    }
+    } catch (error) {}
   };
 
   const handleGetJobRuns = async function () {
@@ -283,13 +290,8 @@ export default function JobRun(props: TJobRunProps) {
       if (result.data) {
         stateFns.setJBRS(result.data as TJobRun[]);
       } else {
-        alert(
-          `Không tìm thấy Job Run của job [${state.currentJobName}] với id: ${state.currentJobRunId}`,
-        );
       }
-    } catch (error) {
-      alert(`Lỗi khi tìm Job: ${error}`);
-    }
+    } catch (error) {}
   };
 
   // Lấy job run mới khi currentJobRunId thay đổi
@@ -314,11 +316,13 @@ export default function JobRun(props: TJobRunProps) {
             <SpaceBetween size="xs" direction="horizontal">
               <Input
                 value={state.currentJobName || ""}
-                onChange={({ detail }) => stateFns.setCurrentJobName(detail.value)}
-                placeholder="Nhập tên Job"
+                onChange={({ detail }) =>
+                  stateFns.setCurrentJobName(detail.value)
+                }
+                placeholder="Enter Job name"
               />
               <Button onClick={handleGetJobRuns} variant="primary">
-                Tìm kiếm
+                Search
               </Button>
             </SpaceBetween>
           </Container>

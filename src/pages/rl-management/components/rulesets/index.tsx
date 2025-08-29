@@ -15,6 +15,7 @@ import {
   Table,
   TextFilter,
 } from "@cloudscape-design/components";
+import CodeView from "@cloudscape-design/code-view/code-view";
 
 // Import constants
 import { CONFIGS } from "@/utils/constants/configs";
@@ -31,6 +32,9 @@ import { useStateManager } from "@/hooks/use-state-manager";
 import { RLStateManager } from "./state";
 import { useRulesetState, rulesetStActions } from "@/states/ruleset";
 
+// Import utils
+import * as ErrorUtils from "@/utils/error";
+
 // Import types
 import type { TRuleset } from "@/objects/ruleset/types";
 
@@ -41,14 +45,17 @@ type TRulesetListProps = {
   isIdle: boolean;
   error: Error | null;
   setCurrentRulesetName(name: string): void;
+  handleGetRulesets(): void;
 };
 
 type TRulesetDetailProps = {
+  currentRulesetContent: string | null;
   currentRuleset: TRuleset | null;
   isFetching: boolean;
   isError: boolean;
   isIdle: boolean;
   error: Error | null;
+  handleGetRuleset(): void;
 };
 
 type TRulesetsProps = {};
@@ -65,17 +72,31 @@ function RulesetList(props: TRulesetListProps) {
         <Header variant="h3">
           <div className="flex items-center">
             <p className="me-3">Ruleset List</p>
-            {props.isFetching && (
-              <StatusIndicator type="loading">
-                Đang tải dữ liệu...
-              </StatusIndicator>
-            )}
-            {/* Hiển thị lỗi */}
-            {props.isError && (
-              <StatusIndicator type="error">
-                {(props.error as Error)?.message || "Không thể tải dữ liệu"}
-              </StatusIndicator>
-            )}
+            <Button
+              iconName="refresh"
+              ariaLabel="Refresh"
+              loadingText="Refreshing table content"
+              onClick={() => {
+                props.handleGetRulesets();
+              }}
+              loading={props.isFetching}
+              disabled={props.isFetching}
+            />
+            <div className="ms-3">
+              {/* Hiển thị loading state */}
+              {props.isFetching && (
+                <StatusIndicator type="loading">
+                  Loading Rulesets...
+                </StatusIndicator>
+              )}
+
+              {/* Hiển thị lỗi */}
+              {props.isError && (
+                <StatusIndicator type="error">
+                  {ErrorUtils.getErrorMessage(props.error)}
+                </StatusIndicator>
+              )}
+            </div>
           </div>
         </Header>
       }
@@ -88,14 +109,8 @@ function RulesetList(props: TRulesetListProps) {
         }}
         columnDefinitions={[
           {
-            id: "id",
-            header: "ID",
-            cell: (item) => item.id,
-            sortingField: "id",
-          },
-          {
             id: "name",
-            header: "Tên",
+            header: "Name",
             cell: (item) => item.name,
             sortingField: "name",
           },
@@ -107,7 +122,7 @@ function RulesetList(props: TRulesetListProps) {
           },
           {
             id: "state",
-            header: "Trạng thái",
+            header: "State",
             cell: (item) => (
               <StatusIndicator
                 type={RulesetHelpers.getStatusIndicatorType(item.state) as any}
@@ -121,16 +136,17 @@ function RulesetList(props: TRulesetListProps) {
         onSelectionChange={({ detail }) => {
           if (detail.selectedItems.length > 0) {
             setSelectedItems(detail.selectedItems as any);
+            console.log(detail.selectedItems[0].name);
             props.setCurrentRulesetName(detail.selectedItems[0].name);
           }
         }}
         selectionType="single"
-        trackBy="id"
+        trackBy="name"
         empty={
           <Box textAlign="center" color="inherit">
-            <b>Không có dữ liệu</b>
+            <b>No data</b>
             <Box padding={{ bottom: "s" }} variant="p" color="inherit">
-              Không tìm thấy ruleset nào với trạng thái đã chọn.
+              Cannot find any Ruleset with selected state.
             </Box>
           </Box>
         }
@@ -143,61 +159,71 @@ function RulesetDetail(props: TRulesetDetailProps) {
   const canDisplayResult = !props.isFetching && !props.isError && !props.isIdle;
 
   return (
-    <Container header={<Header variant="h3">Ruleset Detail</Header>}>
-      {props.isIdle && (
-        <Box variant="p" textAlign="center">
-          Chọn một Job trên list để xem chi tiết
-        </Box>
-      )}
+    <Container
+      header={
+        <Header variant="h3">
+          <div className="flex items-center">
+            <p className="me-3">Ruleset Detail</p>
+            <Button
+              iconName="refresh"
+              ariaLabel="Refresh"
+              loadingText="Refreshing table content"
+              onClick={() => {
+                props.handleGetRuleset();
+              }}
+              loading={props.isFetching}
+              disabled={props.isFetching}
+            />
+            <div className="ms-3">
+              {/* Hiển thị loading state */}
+              {props.isFetching && (
+                <StatusIndicator type="loading">
+                  Loading detail of Ruleset...
+                </StatusIndicator>
+              )}
 
-      {/* Hiển thị loading state */}
-      {props.isFetching && (
-        <StatusIndicator type="loading">Đang tải dữ liệu...</StatusIndicator>
-      )}
-
-      {/* Hiển thị lỗi */}
-      {props.isError && (
-        <StatusIndicator type="error">
-          {(props.error as Error)?.message || "Không thể tải dữ liệu"}
-        </StatusIndicator>
-      )}
-
+              {/* Hiển thị lỗi */}
+              {props.isError && (
+                <StatusIndicator type="error">
+                  {ErrorUtils.getErrorMessage(props.error)}
+                </StatusIndicator>
+              )}
+            </div>
+          </div>
+        </Header>
+      }
+    >
       {canDisplayResult && props.currentRuleset && (
-        <ColumnLayout columns={2} variant="text-grid">
-          <FormField label="ID">{props.currentRuleset.id}</FormField>
-          <FormField label="Tên">{props.currentRuleset.name}</FormField>
-          <FormField label="Version">
-            {props.currentRuleset.version || ""}
-          </FormField>
-          <FormField label="Trạng thái">
-            <StatusIndicator
-              type={
-                RulesetHelpers.getStatusIndicatorType(
-                  props.currentRuleset.state,
-                ) as any
-              }
-            >
-              {props.currentRuleset.state}
-            </StatusIndicator>
-          </FormField>
-          <FormField label="Ngày tạo">
-            {props.currentRuleset.createdAt}
-          </FormField>
-
-          {props.currentRuleset.reason && (
-            <FormField label="Lý do từ chối">
-              <Box color="text-status-error">{props.currentRuleset.reason}</Box>
+        <>
+          <ColumnLayout columns={2} variant="text-grid">
+            <FormField label="Name">{props.currentRuleset.name}</FormField>
+            <FormField label="Version">
+              {props.currentRuleset.version || ""}
             </FormField>
-          )}
+            <FormField label="State">
+              <StatusIndicator
+                type={
+                  RulesetHelpers.getStatusIndicatorType(
+                    props.currentRuleset.state,
+                  ) as any
+                }
+              >
+                {props.currentRuleset.state}
+              </StatusIndicator>
+            </FormField>
+            <FormField label="Create Date">
+              {props.currentRuleset.createdAt}
+            </FormField>
+          </ColumnLayout>
 
-          {props.currentRuleset.description && (
-            <Box margin={{ top: "l" }}>
-              <FormField label="Mô tả">
-                {props.currentRuleset.description}
+          {props.currentRulesetContent && (
+            <Box margin={{ top: "l" }} variant="div">
+              <FormField label="Content" stretch={true}>
+                <CodeView lineNumbers content={props.currentRulesetContent} />
               </FormField>
             </Box>
           )}
-        </ColumnLayout>
+        </>
       )}
     </Container>
   );
@@ -214,17 +240,19 @@ export default function Ruleset(props: TRulesetsProps) {
   const rulesetQuerier = useQuery({
     queryKey: ["ruleset", state.currentRulesetName],
     queryFn: async function () {
-      if (!state.currentRulesetName) return null;
-      try {
-        const ruleset = await RulesetAPI.reqGetRuleset({
+      if (!state.currentRulesetName || !state.currentRulesetState) return null;
+
+      return await Promise.all([
+        RulesetAPI.reqGetRulesetInfo({
           name: state.currentRulesetName,
           isMock: CONFIGS.IS_MOCK_API,
-        });
-        return ruleset;
-      } catch (error) {
-        console.error("Error fetching ruleset:", error);
-        return null;
-      }
+        }),
+        RulesetAPI.reqGetRuleset({
+          name: state.currentRulesetName,
+          state: state.currentRulesetState,
+          isMock: CONFIGS.IS_MOCK_API,
+        }),
+      ]);
     },
     enabled: false,
   });
@@ -234,17 +262,11 @@ export default function Ruleset(props: TRulesetsProps) {
     queryKey: ["rulesets", state.currentRulesetState],
     queryFn: async function () {
       if (!state.currentRulesetState) return [];
-      console.log("Đang lọc theo trạng thái:", state.currentRulesetState);
-      try {
-        const filtered = await RulesetAPI.reqGetRulesetsByState({
-          state: state.currentRulesetState,
-          isMock: CONFIGS.IS_MOCK_API,
-        });
-        return filtered;
-      } catch (error) {
-        console.error("Error fetching rulesets:", error);
-        return [];
-      }
+
+      return await RulesetAPI.reqGetRulesetsByState({
+        state: state.currentRulesetState,
+        isMock: CONFIGS.IS_MOCK_API,
+      });
     },
     enabled: false,
   });
@@ -260,18 +282,14 @@ export default function Ruleset(props: TRulesetsProps) {
     try {
       // Tìm ruleset theo ID hoặc tên từ API
       const result = await rulesetQuerier.refetch();
-      console.log("Data:", result.data);
 
       if (result.data) {
-        stateFns.setCurrentRuleset(result.data as TRuleset);
-      } else {
-        alert(
-          `Không tìm thấy ruleset với ID hoặc tên: ${state.currentRulesetId}`,
-        );
+        const [rl, rlContent] = result.data;
+        stateFns.setCurrentRuleset(rl);
+        stateFns.setCurrentRulesetContent(rlContent);
       }
     } catch (error) {
       console.error("Error finding ruleset:", error);
-      alert(`Lỗi khi tìm ruleset: ${error}`);
     }
   };
 
@@ -284,20 +302,17 @@ export default function Ruleset(props: TRulesetsProps) {
 
       if (result.data) {
         rulesetStActions.setRLS(result.data);
-      } else {
-        alert(`Không tìm thấy ruleset với state: ${state.currentRulesetState}`);
       }
     } catch (error) {
       console.error("Error finding ruleset:", error);
-      alert(`Lỗi khi tìm ruleset: ${error}`);
     }
   };
 
   // Chuyển đổi danh sách trạng thái cho Select component
   const stateOptions = [
-    { label: "Chọn trạng thái", value: "" },
-    { label: "Đang kích hoạt", value: STATE_DICT.ACTIVE },
-    { label: "Chưa kích hoạt", value: STATE_DICT.INACTIVE },
+    { label: "Select state", value: "" },
+    { label: "Activated", value: STATE_DICT.ACTIVE },
+    { label: "Inactivated", value: STATE_DICT.INACTIVE },
   ];
 
   // Lấy chi tiết ruleset mới khi id thay đổi
@@ -310,7 +325,7 @@ export default function Ruleset(props: TRulesetsProps) {
   useEffect(() => {
     handleGetRulesetsByState();
   }, [state.currentRulesetState]);
-
+  console.log(state.currentRulesetContent);
   return (
     <ExpandableSection
       headerText="Get/List Rulesets"
@@ -323,7 +338,7 @@ export default function Ruleset(props: TRulesetsProps) {
         <ColumnLayout columns={1}>
           {/* List Rulesets - Dropdown chọn state */}
           <Container header={<Header variant="h3">List Rulesets</Header>}>
-            <FormField label="Trạng thái">
+            <FormField label="State">
               <Select
                 selectedOption={
                   stateOptions.find(
@@ -335,7 +350,7 @@ export default function Ruleset(props: TRulesetsProps) {
                   handleStateChange(detail.selectedOption.value as string)
                 }
                 options={stateOptions}
-                placeholder="Chọn trạng thái"
+                placeholder="Select state"
               />
             </FormField>
           </Container>
@@ -349,14 +364,17 @@ export default function Ruleset(props: TRulesetsProps) {
           isIdle={!rulesetsQuerier.isEnabled && !rulesetsQuerier.isSuccess}
           error={rulesetsQuerier.error}
           setCurrentRulesetName={stateFns.setCurrentRulesetName}
+          handleGetRulesets={handleGetRulesetsByState}
         />
 
         <RulesetDetail
+          currentRulesetContent={state.currentRulesetContent}
           currentRuleset={state.currentRuleset}
           isFetching={rulesetQuerier.isFetching}
           isError={rulesetQuerier.isError}
           isIdle={!rulesetQuerier.isEnabled && !rulesetQuerier.isSuccess}
           error={rulesetQuerier.error}
+          handleGetRuleset={handleGetRuleset}
         />
       </SpaceBetween>
     </ExpandableSection>

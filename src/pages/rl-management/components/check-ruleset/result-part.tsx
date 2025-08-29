@@ -9,14 +9,14 @@ import {
 } from "@cloudscape-design/components";
 
 // Import constants
-import { STATE_DICT } from "@/utils/constants/dc";
+import { STATE_DICT } from "@/utils/constants/rl";
 
 // Import objects
 import * as RulesetHelpers from "@/objects/ruleset/helpers";
 
 type CheckRLResultPartProps = {
-  isApprovePending: boolean;
-  isRejectPending: boolean;
+  isActivatePending: boolean;
+  isInactivatePending: boolean;
   result?: any;
 };
 
@@ -26,20 +26,18 @@ type CheckRLResultPartProps = {
  * @returns
  */
 export default function ResultPart(props: CheckRLResultPartProps) {
-  if (props.isApprovePending || props.isRejectPending)
+  if (props.isActivatePending || props.isInactivatePending)
     return (
       <Container header={<Header variant="h3">Kết quả</Header>}>
-        <StatusIndicator type="loading">Đang xử lý yêu cầu...</StatusIndicator>
+        <StatusIndicator type="loading">Processing...</StatusIndicator>
       </Container>
     );
 
   if (!props.result || (props.result && !props.result.data))
     return (
-      <Container header={<Header variant="h3">Kết quả</Header>}>
+      <Container header={<Header variant="h3">Result</Header>}>
         <Box textAlign="center" color="text-body-secondary">
-          <em>
-            Chưa có kết quả. Vui lòng nhập ID và chọn Approve hoặc Reject.
-          </em>
+          <em>No result.</em>
         </Box>
       </Container>
     );
@@ -57,14 +55,13 @@ export default function ResultPart(props: CheckRLResultPartProps) {
       {props.result.data && (
         <Box>
           <ColumnLayout columns={2} variant="text-grid">
-            <FormField label="ID">{props.result.data.id}</FormField>
-            <FormField label="Tên">{props.result.data.name}</FormField>
+            <FormField label="Name">{props.result.data.name}</FormField>
             <FormField label="Version">{props.result.data.version}</FormField>
-            <FormField label="Trạng thái">
+            <FormField label="State">
               <StatusIndicator
                 type={
                   RulesetHelpers.getStatusIndicatorType(
-                    props.result.data.state
+                    props.result.data.state,
                   ) as any
                 }
               >
@@ -72,38 +69,30 @@ export default function ResultPart(props: CheckRLResultPartProps) {
               </StatusIndicator>
             </FormField>
 
-            {props.result.data.status === STATE_DICT.APPROVED && (
+            {props.result.data.status === STATE_DICT.ACTIVE && (
               <>
-                <FormField label="Thời gian chấp thuận">
-                  {props.result.data.approvedAt &&
-                    new Date(props.result.data.approvedAt).toLocaleString()}
+                <FormField label="Activated at">
+                  {props.result.data.activatedAt &&
+                    new Date(props.result.data.activatedAt).toLocaleString()}
                 </FormField>
-                <FormField label="Người chấp thuận">
-                  {props.result.data.approvedBy}
+                <FormField label="Activated by">
+                  {props.result.data.activatedBy}
                 </FormField>
               </>
             )}
 
-            {props.result.data.status === STATE_DICT.REJECTED && (
+            {props.result.data.status === STATE_DICT.INACTIVE && (
               <>
-                <FormField label="Thời gian từ chối">
-                  {props.result.data.rejectedAt &&
-                    new Date(props.result.data.rejectedAt).toLocaleString()}
+                <FormField label="Inactivated At">
+                  {props.result.data.inactivatedAt &&
+                    new Date(props.result.data.inactivatedAt).toLocaleString()}
                 </FormField>
-                <FormField label="Người từ chối">
-                  {props.result.data.rejectedBy}
+                <FormField label="Inactivated by">
+                  {props.result.data.inactivatedBy}
                 </FormField>
               </>
             )}
           </ColumnLayout>
-
-          {props.result.data.reason && (
-            <Box margin={{ top: "m" }}>
-              <FormField label="Lý do từ chối">
-                <Box color="text-status-error">{props.result.data.reason}</Box>
-              </FormField>
-            </Box>
-          )}
         </Box>
       )}
     </SpaceBetween>

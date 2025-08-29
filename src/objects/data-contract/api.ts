@@ -33,15 +33,23 @@ export type TGetDataContractByStateParams = _TBase & {
 
 export type TGetDataContractParams = _TBase & {
   name: string;
+  version?: string;
   state?: string;
 };
 
 export type TApproveDataContractParams = _TBase & {
   name: string;
+  version: string;
+};
+
+export type TApproveDataContractResPayload = {
+  dataContractInfo: TDataContract;
+  rulesetName: string;
 };
 
 export type TRejectDataContractParams = _TBase & {
   name: string;
+  version: string;
 };
 
 export type TUploadDataContractParams = _TBase & {
@@ -202,24 +210,29 @@ export async function reqGetDataContractInfo(params: TGetDataContractParams) {
 export async function reqApproveDataContract(
   params: TApproveDataContractParams,
 ) {
-  const { name, isMock = false } = params || {};
+  const { name, version, isMock = false } = params || {};
   const tokenHeader = API.generateBearerToken(API.getToken(), true) as object;
 
   if (isMock) {
     const target = dcs.find((dc) => dc.name === name);
 
-    return new Promise<TDataContract>((resolve) => {
+    return new Promise<TApproveDataContractResPayload>((resolve) => {
       if (target) target.state = STATE_DICT.APPROVED;
 
       setTimeout(() => {
-        resolve(target as unknown as TDataContract);
+        resolve({
+          dataContractInfo: target as unknown as TDataContract,
+          rulesetName: `${target?.name} Ruleset`,
+        });
       }, 500);
     });
   }
 
-  const response = await api.post<TDataContract>(
-    `/data-contracts/${name}`,
-    undefined,
+  const response = await api.post<TApproveDataContractResPayload>(
+    `/data-contracts/${name}/approval`,
+    {
+      version,
+    },
     {
       headers: tokenHeader,
     },
@@ -233,7 +246,7 @@ export async function reqApproveDataContract(
  * @param params
  */
 export async function reqRejectDataContract(params: TRejectDataContractParams) {
-  const { name, isMock = false } = params || {};
+  const { name, version, isMock = false } = params || {};
   const tokenHeader = API.generateBearerToken(API.getToken(), true) as object;
 
   if (isMock) {
@@ -249,8 +262,10 @@ export async function reqRejectDataContract(params: TRejectDataContractParams) {
   }
 
   const response = await api.post<TDataContract>(
-    `/data-contracts/${name}`,
-    undefined,
+    `/data-contracts/${name}/rejection`,
+    {
+      version,
+    },
     {
       headers: tokenHeader,
     },
@@ -270,13 +285,17 @@ export async function reqUploadDataContract(params: TUploadDataContractParams) {
   if (isMock) {
     return new Promise<TDataContract>((resolve) => {
       setTimeout(() => {
-        resolve("");
+        resolve({
+          name: "Uploaded Contract",
+          version: "1.0.0",
+          createdAt: new Date().toISOString(),
+        } as TDataContract);
       }, 500);
     });
   }
 
   const response = await api.post<TDataContract>(
-    "/data-contract",
+    "/data-contract/upload",
     { content },
     {
       headers: tokenHeader,

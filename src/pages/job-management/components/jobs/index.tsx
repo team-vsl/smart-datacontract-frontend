@@ -61,7 +61,8 @@ type TJobProps = {};
  * @returns
  */
 function JobList(props: TJobListProps) {
-  const canDisplayResult = props.jbs.length > 0 && !props.isFetching && !props.isError;
+  const canDisplayResult =
+    props.jbs.length > 0 && !props.isFetching && !props.isError;
 
   const [selectedItems, setSelectedItems] = useState();
 
@@ -83,7 +84,9 @@ function JobList(props: TJobListProps) {
             />
             <div className="ms-3">
               {props.isFetching && (
-                <StatusIndicator type="loading">Đang tải dữ liệu...</StatusIndicator>
+                <StatusIndicator type="loading">
+                  Loading Jobs...
+                </StatusIndicator>
               )}
               {/* Hiển thị lỗi */}
               {props.isError && (
@@ -133,9 +136,9 @@ function JobList(props: TJobListProps) {
         trackBy="id"
         empty={
           <Box textAlign="center" color="inherit">
-            <b>Không có dữ liệu</b>
+            <b>No data</b>
             <Box padding={{ bottom: "s" }} variant="p" color="inherit">
-              Không tìm thấy job nào với trạng thái đã chọn.
+              Cannot find any Job
             </Box>
           </Box>
         }
@@ -170,7 +173,9 @@ function JobDetail(props: TJobDetailProps) {
             />
             <div className="ms-3">
               {props.isFetching && (
-                <StatusIndicator type="loading">Đang tải dữ liệu...</StatusIndicator>
+                <StatusIndicator type="loading">
+                  Loading detail of Job...
+                </StatusIndicator>
               )}
               {/* Hiển thị lỗi */}
               {props.isError && (
@@ -185,7 +190,7 @@ function JobDetail(props: TJobDetailProps) {
     >
       {props.isIdle && (
         <Box variant="p" textAlign="center">
-          Chọn một Job trên list để xem chi tiết
+          Select one Job in list to view detail
         </Box>
       )}
 
@@ -244,9 +249,7 @@ export default function Job(props: TJobProps) {
         stateFns.setCurrentJob(result.data as TJob);
       } else {
       }
-    } catch (error) {
-      alert(`Lỗi khi tìm Job: ${error}`);
-    }
+    } catch (error) {}
   };
 
   const handleGetJobs = async function () {
@@ -256,9 +259,7 @@ export default function Job(props: TJobProps) {
         jobStActions.setJBS(result.data as TJob[]);
       } else {
       }
-    } catch (error) {
-      alert(`Lỗi khi tìm Jobs: ${error}`);
-    }
+    } catch (error) {}
   };
 
   useEffect(() => {
@@ -286,11 +287,13 @@ export default function Job(props: TJobProps) {
             <SpaceBetween size="xs" direction="horizontal">
               <Input
                 value={state.currentJobName || ""}
-                onChange={({ detail }) => stateFns.setCurrentJobName(detail.value)}
-                placeholder="Nhập tên Job"
+                onChange={({ detail }) =>
+                  stateFns.setCurrentJobName(detail.value)
+                }
+                placeholder="Enter Job name"
               />
               <Button onClick={handleGetJob} variant="primary">
-                Tìm kiếm
+                Search
               </Button>
             </SpaceBetween>
           </Container>

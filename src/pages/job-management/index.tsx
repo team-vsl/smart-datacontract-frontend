@@ -13,7 +13,10 @@ export default function JobManagementPage() {
   return (
     <ContentLayout
       header={
-        <Header variant="h1" description="Quản lý Job">
+        <Header
+          variant="h1"
+          description="You can manage all available jobs here"
+        >
           Job Management
         </Header>
       }

@@ -45,17 +45,16 @@ function RoutesSwitcher() {
     refreshTokensMutation,
     reSignInUserOffline,
   } = useAuth();
+
   const loadingShown =
-    signInMutation.isPending || refreshTokensMutation.isPending;
+    (signInMutation.isPending ||
+      refreshTokensMutation.isPending ||
+      !isAuthenticated) &&
+    !refreshTokensMutation.isError;
 
   useEffect(() => {
-    // If user doesn't authenticate, navigate
-    // he/she to Root Path
     if (!isAuthenticated) {
-      // Sign in with ID token
       const idToken = readCookie(CONFIGS.ID_TOKEN_COOKIE_NAME);
-
-      // User is signed in
       if (idToken) {
         reSignInUserOffline(idToken);
       } else {
@@ -65,11 +64,10 @@ function RoutesSwitcher() {
     }
   }, [isAuthenticated]);
 
-  if (loadingShown) return <LoadingSection />;
+  const routes = isAuthenticated ? authenticatedRoutes : unauthenticatedRoutes;
+  const element = useRoutes(routes);
 
-  return isAuthenticated
-    ? useRoutes(authenticatedRoutes)
-    : useRoutes(unauthenticatedRoutes);
+  return loadingShown ? <LoadingSection /> : element;
 }
 
 export default function App() {

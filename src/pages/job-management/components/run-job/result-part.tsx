@@ -30,25 +30,27 @@ type RunJobResultPartProps = {
 export default function ResultPart(props: RunJobResultPartProps) {
   if (props.isPending)
     return (
-      <Container header={<Header variant="h3">Kết quả</Header>}>
-        <StatusIndicator type="loading">Đang xử lý yêu cầu...</StatusIndicator>
+      <Container header={<Header variant="h3">Result</Header>}>
+        <StatusIndicator type="loading">Processing...</StatusIndicator>
       </Container>
     );
 
   if (!props.result || (props.result && !props.result.data))
     return (
-      <Container header={<Header variant="h3">Kết quả</Header>}>
+      <Container header={<Header variant="h3">Result</Header>}>
         <Box textAlign="center" color="text-body-secondary">
-          <em>Chưa có job nào đang chạy, vui lòng chọn một job để chạy</em>
+          <em>There isn't any running job. Please select any job to run.</em>
         </Box>
       </Container>
     );
 
   const jobRun = props.result!.data!;
 
+  console.log("Props:", props);
+
   return (
     <Container>
-      <Header variant="h3">Chi tiết kết quả</Header>
+      <Header variant="h3">Result Detail</Header>
       <div className="mb-3">
         <StatusIndicator
           type={JobHelpers.getStatusIndicatorType(jobRun.jobRunState) as any}
@@ -73,7 +75,7 @@ export default function ResultPart(props: RunJobResultPartProps) {
         <FormField label="Complete Date">
           {jobRun.completedOn
             ? new Date(jobRun.completedOn).toLocaleString()
-            : "Chưa biết"}
+            : "Unknown"}
         </FormField>
       </ColumnLayout>
     </Container>
