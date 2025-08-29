@@ -46,6 +46,8 @@ export default function ResultPart(props: RunJobResultPartProps) {
 
   const jobRun = props.result!.data!;
 
+  console.log("Props:", props);
+
   return (
     <Container>
       <Header variant="h3">Result Detail</Header>

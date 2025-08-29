@@ -12,8 +12,10 @@ export type CheckRLInteractionPartProps = {
   isInactivatePending: boolean;
   currentRulesetName: string;
   currentRulesetVersion: string;
+  currentJobName: string;
   onCurrentNameInputChange(detail: any): void;
   onCurrentVersionInputChange(detail: any): void;
+  onCurrentJobNameChange(detail: any): void;
   onActivateBtnClick(detail: any): void;
   onInactivateBtnClick(detail: any): void;
 };
@@ -47,8 +49,8 @@ export default function InteractionPart(props: CheckRLInteractionPartProps) {
         <FormField label="Apply to job">
           <Input
             placeholder="Enter Job name"
-            value={props.currentRulesetVersion}
-            onChange={({ detail }) => props.onCurrentVersionInputChange(detail)}
+            value={props.currentJobName}
+            onChange={({ detail }) => props.onCurrentJobNameChange(detail)}
             disabled={props.isActivatePending || props.isInactivatePending}
           />
         </FormField>

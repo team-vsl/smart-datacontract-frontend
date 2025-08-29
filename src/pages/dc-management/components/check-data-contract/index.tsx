@@ -42,7 +42,7 @@ export function CheckDataContract(props: CheckDataContractProps) {
 
       // Kiểm tra data contract có tồn tại không
       const contract = await DataContractAPI.reqGetDataContractInfo({
-        name,
+        name: name.trim(),
         isMock,
       });
 
@@ -52,7 +52,7 @@ export function CheckDataContract(props: CheckDataContractProps) {
 
       // Approve data contract và cập nhật state
       const result = await DataContractAPI.reqApproveDataContract({
-        name,
+        name: name.trim(),
         version: contract.version,
         isMock,
       });
@@ -86,7 +86,7 @@ export function CheckDataContract(props: CheckDataContractProps) {
 
       // Kiểm tra data contract có tồn tại không
       const contract = await DataContractAPI.reqGetDataContractInfo({
-        name,
+        name: name.trim(),
         isMock,
       });
 

@@ -149,7 +149,7 @@ export async function reqGetRulesetInfo(params: TGetRulesetParams) {
   return response.data.data;
 }
 
-export async function reqActiveRuleset(params: TActiveRulesetParams) {
+export async function reqActivateRuleset(params: TActiveRulesetParams) {
   const {
     name,
     version,
@@ -183,7 +183,7 @@ export async function reqActiveRuleset(params: TActiveRulesetParams) {
   return response.data.data;
 }
 
-export async function reqInactiveRuleset(params: TInactiveRulesetParams) {
+export async function reqInactivateRuleset(params: TInactiveRulesetParams) {
   const { name, version, isMock = false } = params || {};
 
   const tokenHeader = API.generateBearerToken(API.getToken(), true) as object;

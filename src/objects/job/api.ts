@@ -52,15 +52,9 @@ export async function reqStartJobRun(params: TStartJobRunParams) {
   if (isMock) {
     // Tạm thời thì setup đại cấu trúc mẫu trả về từ Data Contract Generate.
     // Sau này sẽ xử lý sau.
-    return new Promise<TJobRun>((resolve) => {
-      const mockNewJobRun: TJobRun = {
-        id: "jr_mocked_20250801_001_" + Date.now().toString(),
-        attempt: 0,
-        jobName: "Banking Marketing Job",
-        jobMode: "VISUAL",
-        startedOn: "2025-08-01T11:35:00.000000+07:00",
-        lastModifiedOn: "2025-08-01T11:36:30.000000+07:00",
-        jobRunState: "RUNNING",
+    return new Promise<any>((resolve) => {
+      const mockNewJobRun = {
+        jobRunId: "jr_mocked_20250801_001_" + Date.now().toString(),
       };
 
       setTimeout(() => {
@@ -72,7 +66,7 @@ export async function reqStartJobRun(params: TStartJobRunParams) {
   const response = await api.post<TJobRun>(
     `/glue-jobs/${jobName}`,
     {},
-    { headers: tokenHeader }
+    { headers: tokenHeader },
   );
 
   return response.data.data;
@@ -96,11 +90,11 @@ export async function reqGetJobRun(params: TGetJobRunParams) {
     });
   }
 
-  const response = await api.get<TJobRun[]>(
+  const response = await api.get<TJobRun>(
     `/glue-jobs/${jobName}/run-status/${id}`,
     {
       headers: tokenHeader,
-    }
+    },
   );
 
   return response.data.data;
@@ -126,7 +120,7 @@ export async function reqGetJobRuns(params: TGetJobRunsParams) {
     `/glue-jobs/${jobName}/run-status`,
     {
       headers: tokenHeader,
-    }
+    },
   );
 
   return response.data.data;

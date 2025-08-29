@@ -49,16 +49,21 @@ export default function RunJob(props: RunJobProps) {
       let isMock = CONFIGS.IS_MOCK_API;
 
       // Kiểm tra data contract có tồn tại không
-      const contract = await JobAPI.reqGetJob({ jobName, isMock });
+      const job = await JobAPI.reqGetJob({ jobName, isMock });
 
-      if (!contract) {
+      if (!job) {
         throw new Error(`Cannot find Job with name: ${jobName}`);
       }
 
       // Reject data contract và cập nhật state
-      const newJobRun = await JobAPI.reqStartJobRun({
+      const startJobRunResPayload = await JobAPI.reqStartJobRun({
         jobName,
         isMock,
+      });
+
+      const newJobRun = await JobAPI.reqGetJobRun({
+        id: startJobRunResPayload.jobRunId,
+        jobName: state.currentJobName!,
       });
 
       jobStActions.addJobRun(newJobRun);
